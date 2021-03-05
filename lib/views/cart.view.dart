@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
@@ -13,6 +14,7 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
+import 'package:plataforma_compras/views/addAddress.view.dart';
 
 class CartView extends StatelessWidget{
   @override
@@ -43,6 +45,7 @@ class _SmallScreenState extends State<_SmallScreen> {
   @override
   Widget build(BuildContext context) {
     var cart = context.watch<Cart>();
+    var catalog = context.read<Catalog>();
     return SafeArea (
       child: LayoutBuilder (
         builder: (context, constraints) {
@@ -85,7 +88,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    cart.getItem(index).product_name,
+                                    cart.getItem(index).productName,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       fontSize: 16.0,
@@ -103,7 +106,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     child: Row (
                                       children: [
                                         Text(
-                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).product_price),
+                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).productPrice),
                                           style: TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 16.0,
@@ -142,7 +145,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   children: [
                                     Container(
                                       child: Text(
-                                        (cart.getItem(index).avail > 1) ? cart.getItem(index).avail.toString() + ' uds.' : cart.getItem(index).avail.toString() + ' ud.',
+                                        (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' uds.' : cart.getItem(index).purchased.toString() + ' ud.',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 24.0,
@@ -161,38 +164,30 @@ class _SmallScreenState extends State<_SmallScreen> {
                                         children: [
                                           Expanded(
                                             child: Visibility(
-                                              visible: (cart.getItem(index).avail > 1) ? true : false,
+                                              visible: (cart.getItem(index).purchased > 1) ? true : false,
                                               child: FlatButton(
                                                 padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                                 child: Container (
-                                                  alignment: Alignment.center,
-                                                  decoration: BoxDecoration (
-                                                    shape: BoxShape.rectangle,
-                                                    borderRadius: BorderRadius.circular(18.0),
-                                                    //color: colorFondo,
-                                                    color: tanteLadenAmber500,
-                                                  ),
-                                                  child: Container (
-                                                      alignment: Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        shape: BoxShape.rectangle,
-                                                        borderRadius: BorderRadius.circular(18.0),
-                                                        color: tanteLadenAmber500,
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.rectangle,
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      color: tanteLadenAmber500,
+                                                    ),
+                                                    padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                    child: Text(
+                                                      '-',
+                                                      style: TextStyle(
+                                                          fontFamily: 'SF Pro Display',
+                                                          fontSize: 24,
+                                                          fontWeight: FontWeight.w900,
+                                                          color: tanteLadenIconBrown
                                                       ),
-                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                      child: Text(
-                                                        '-',
-                                                        style: TextStyle(
-                                                            fontFamily: 'SF Pro Display',
-                                                            fontSize: 24,
-                                                            fontWeight: FontWeight.w900,
-                                                            color: tanteLadenIconBrown
-                                                        ),
-                                                      )
-                                                  ),
+                                                    )
                                                 ),
                                                 onPressed: () {
                                                   setState(() {
+                                                    catalog.remove(cart.getItem(index));
                                                     cart.remove(cart.getItem(index));
                                                   });
                                                 },
@@ -201,28 +196,21 @@ class _SmallScreenState extends State<_SmallScreen> {
                                                 padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                                 child: Container (
                                                   alignment: Alignment.center,
-                                                  decoration: BoxDecoration (
+                                                  decoration: BoxDecoration(
                                                     shape: BoxShape.rectangle,
                                                     borderRadius: BorderRadius.circular(18.0),
-                                                    //color: colorFondo,
                                                     color: tanteLadenAmber500,
                                                   ),
-                                                  child: Container (
-                                                    alignment: Alignment.center,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.rectangle,
-                                                      borderRadius: BorderRadius.circular(18.0),
-                                                      color: tanteLadenAmber500,
-                                                    ),
-                                                    padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                    child: IconButton(
-                                                        icon: Image.asset('assets/images/logoDelete.png'),
-                                                    ),
+                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  child: IconButton(
+                                                    icon: Image.asset('assets/images/logoDelete.png'),
+                                                    onPressed: null,
                                                   ),
                                                 ),
                                                 onPressed: () {
                                                   setState(() {
-                                                    cart.remove(cart.getItem(index));
+                                                    catalog.remove (cart.getItem(index));
+                                                    cart.remove (cart.getItem(index));
                                                   });
                                                 },
                                               ),
@@ -240,37 +228,28 @@ class _SmallScreenState extends State<_SmallScreen> {
                                             child: FlatButton(
                                               padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                               child: Container (
-                                                //padding: EdgeInsets.all(3.0),
                                                 alignment: Alignment.center,
-                                                decoration: BoxDecoration (
+                                                decoration: BoxDecoration(
                                                   shape: BoxShape.rectangle,
                                                   borderRadius: BorderRadius.circular(18.0),
                                                   //color: colorFondo,
                                                   color: tanteLadenAmber500,
                                                 ),
-                                                child: Container (
-                                                  alignment: Alignment.center,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.rectangle,
-                                                    borderRadius: BorderRadius.circular(18.0),
-                                                    //color: colorFondo,
-                                                    color: tanteLadenAmber500,
+                                                padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                child: Text (
+                                                  '+',
+                                                  style: TextStyle (
+                                                    fontFamily: 'SF Pro Display',
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: tanteLadenIconBrown,
                                                   ),
-                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                  child: Text (
-                                                    '+',
-                                                    style: TextStyle (
-                                                      fontFamily: 'SF Pro Display',
-                                                      fontSize: 24,
-                                                      fontWeight: FontWeight.w900,
-                                                      color: tanteLadenIconBrown,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
+                                                  textAlign: TextAlign.center,
                                                 ),
                                               ),
                                               onPressed: () {
                                                 setState(() {
+                                                  catalog.add(cart.getItem(index));
                                                   cart.add(cart.getItem(index));
                                                 });
                                               },
@@ -321,6 +300,7 @@ class _LargeScreenState extends State<_LargeScreen> {
   @override
   Widget build(BuildContext context) {
     var cart = context.watch<Cart>();
+    var catalog = context.read<Catalog>();
     return SafeArea (
       child: LayoutBuilder (
           builder: (context, constraints) {
@@ -363,7 +343,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      cart.getItem(index).product_name,
+                                      cart.getItem(index).productName,
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 16.0,
@@ -381,7 +361,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       child: Row (
                                         children: [
                                           Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).product_price),
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).productPrice),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w900,
                                               fontSize: 16.0,
@@ -423,7 +403,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                         children: [
                                           Container(
                                             child: Text(
-                                              (cart.getItem(index).avail > 1) ? cart.getItem(index).avail.toString() + ' uds.' : cart.getItem(index).avail.toString() + ' ud.',
+                                              (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' uds.' : cart.getItem(index).purchased.toString() + ' ud.',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w700,
                                                 fontSize: 24.0,
@@ -442,38 +422,30 @@ class _LargeScreenState extends State<_LargeScreen> {
                                               children: [
                                                 Expanded(
                                                   child: Visibility(
-                                                    visible: (cart.getItem(index).avail > 1) ? true : false,
+                                                    visible: (cart.getItem(index).purchased > 1) ? true : false,
                                                     child: FlatButton(
                                                       padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                                       child: Container (
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration (
-                                                          shape: BoxShape.rectangle,
-                                                          borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
-                                                          color: tanteLadenAmber500,
-                                                        ),
-                                                        child: Container (
-                                                            alignment: Alignment.center,
-                                                            decoration: BoxDecoration(
-                                                              shape: BoxShape.rectangle,
-                                                              borderRadius: BorderRadius.circular(18.0),
-                                                              color: tanteLadenAmber500,
+                                                          alignment: Alignment.center,
+                                                          decoration: BoxDecoration(
+                                                            shape: BoxShape.rectangle,
+                                                            borderRadius: BorderRadius.circular(18.0),
+                                                            color: tanteLadenAmber500,
+                                                          ),
+                                                          padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                          child: Text(
+                                                            '-',
+                                                            style: TextStyle(
+                                                                fontFamily: 'SF Pro Display',
+                                                                fontSize: 24,
+                                                                fontWeight: FontWeight.w900,
+                                                                color: tanteLadenIconBrown
                                                             ),
-                                                            padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                            child: Text(
-                                                              '-',
-                                                              style: TextStyle(
-                                                                  fontFamily: 'SF Pro Display',
-                                                                  fontSize: 24,
-                                                                  fontWeight: FontWeight.w900,
-                                                                  color: tanteLadenIconBrown
-                                                              ),
-                                                            )
-                                                        ),
+                                                          )
                                                       ),
                                                       onPressed: () {
                                                         setState(() {
+                                                          catalog.remove(cart.getItem(index));
                                                           cart.remove(cart.getItem(index));
                                                         });
                                                       },
@@ -482,28 +454,20 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                       padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                                       child: Container (
                                                         alignment: Alignment.center,
-                                                        decoration: BoxDecoration (
+                                                        decoration: BoxDecoration(
                                                           shape: BoxShape.rectangle,
                                                           borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
                                                           color: tanteLadenAmber500,
                                                         ),
-                                                        child: Container (
-                                                          alignment: Alignment.center,
-                                                          decoration: BoxDecoration(
-                                                            shape: BoxShape.rectangle,
-                                                            borderRadius: BorderRadius.circular(18.0),
-                                                            color: tanteLadenAmber500,
-                                                          ),
-                                                          padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                          child: IconButton(
-                                                              icon: Image.asset('assets/images/logoDelete.png'),
-                                                              onPressed: null
-                                                          ),
+                                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                        child: IconButton(
+                                                            icon: Image.asset('assets/images/logoDelete.png'),
+                                                            onPressed: null
                                                         ),
                                                       ),
                                                       onPressed: () {
                                                         setState(() {
+                                                          catalog.remove(cart.getItem(index));
                                                           cart.remove(cart.getItem(index));
                                                         });
                                                       },
@@ -522,37 +486,28 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                   child: FlatButton(
                                                     padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
                                                     child: Container (
-                                                      //padding: EdgeInsets.all(3.0),
                                                       alignment: Alignment.center,
-                                                      decoration: BoxDecoration (
+                                                      decoration: BoxDecoration(
                                                         shape: BoxShape.rectangle,
                                                         borderRadius: BorderRadius.circular(18.0),
                                                         //color: colorFondo,
                                                         color: tanteLadenAmber500,
                                                       ),
-                                                      child: Container (
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration(
-                                                          shape: BoxShape.rectangle,
-                                                          borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
-                                                          color: tanteLadenAmber500,
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                      child: Text (
+                                                        '+',
+                                                        style: TextStyle (
+                                                          fontFamily: 'SF Pro Display',
+                                                          fontSize: 24,
+                                                          fontWeight: FontWeight.w900,
+                                                          color: tanteLadenIconBrown,
                                                         ),
-                                                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                        child: Text (
-                                                          '+',
-                                                          style: TextStyle (
-                                                            fontFamily: 'SF Pro Display',
-                                                            fontSize: 24,
-                                                            fontWeight: FontWeight.w900,
-                                                            color: tanteLadenIconBrown,
-                                                          ),
-                                                          textAlign: TextAlign.center,
-                                                        ),
+                                                        textAlign: TextAlign.center,
                                                       ),
                                                     ),
                                                     onPressed: () {
                                                       setState(() {
+                                                        catalog.add(cart.getItem(index));
                                                         cart.add(cart.getItem(index));
                                                       });
                                                     },
@@ -598,214 +553,6 @@ class _LargeScreenState extends State<_LargeScreen> {
   }
 }
 
-class _CartItemView extends StatefulWidget {
-  _CartItemViewState createState() => _CartItemViewState();
-}
-class _CartItemViewState extends State<_CartItemView> {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
-        decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                  color: Colors.brown,
-                  width: 2.0,
-                  style: BorderStyle.solid,
-                )
-            )
-        ),
-        child: Row (
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-                flex: 1,
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-                  child: AspectRatio(
-                    aspectRatio: 3.0 / 2.0,
-                    child: CachedNetworkImage(
-                      placeholder: (context, url) => CircularProgressIndicator(),
-                      imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                    ),
-                  ),
-                ),
-            ),
-            Expanded(
-                flex: 2,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Estoy en el segundo.',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 3,
-                        softWrap: false,
-                      ),
-                      SizedBox(height: 15.0,),
-                      Container(
-                        child: Row (
-                          children: [
-                            Text(
-                              new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(12),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16.0,
-                                fontFamily: 'SF Pro Display',
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.start,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              softWrap: false,
-                            ),
-                            Text(
-                              '/ud.',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w300,
-                                fontSize: 16.0,
-                                fontFamily: 'SF Pro Display',
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.start,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-            ),
-            Expanded(
-                flex: 2,
-                child: Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          child: Text(
-                            '1' + ' pack',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 24.0,
-                              fontFamily: 'SF Pro Display',
-                              fontStyle: FontStyle.normal,
-                              color: tanteLadenIconBrown,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        SizedBox(height: 5.0,),
-                        Container(
-                          child: Row (
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: FlatButton(
-                                  padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                  child: Container (
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration (
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.circular(18.0),
-                                      //color: colorFondo,
-                                      color: tanteLadenAmber500,
-                                    ),
-                                    child: Container (
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.rectangle,
-                                          borderRadius: BorderRadius.circular(18.0),
-                                          color: tanteLadenAmber500,
-                                        ),
-                                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                                        child: Text(
-                                          '-',
-                                          style: TextStyle(
-                                              fontFamily: 'SF Pro Display',
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w900,
-                                              color: tanteLadenIconBrown
-                                          ),
-                                        )
-                                    ),
-                                    //height: 38,
-                                  ),
-                                  //height: 40,
-                                ),
-                                flex: 3,
-                              ),
-                              Expanded(
-                                child: SizedBox(
-                                  width: 10.0,
-                                ),
-                                flex: 1,
-                              ),
-                              Expanded(
-                                child: FlatButton(
-                                  padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                  child: Container (
-                                    //padding: EdgeInsets.all(3.0),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration (
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.circular(18.0),
-                                      //color: colorFondo,
-                                      color: tanteLadenAmber500,
-                                    ),
-                                    child: Container (
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.rectangle,
-                                        borderRadius: BorderRadius.circular(18.0),
-                                        //color: colorFondo,
-                                        color: tanteLadenAmber500,
-                                      ),
-                                      padding: EdgeInsets.symmetric(vertical: 2.0),
-                                      child: Text (
-                                        '+',
-                                        style: TextStyle (
-                                          fontFamily: 'SF Pro Display',
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w900,
-                                          color: tanteLadenIconBrown,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    //height: 38,
-                                  ),
-                                  //height: 40,
-                                ),
-                                flex: 3,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )
-                )
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _BottonNavigatorBar extends StatefulWidget {
   _BottonNavigatorBarState createState() => _BottonNavigatorBarState();
@@ -822,7 +569,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
   _showSnackBar (String content, {bool error = false}) {
     _scaffoldKey.currentState.showSnackBar(SnackBar(
       content:
-      Text('${error ? "An unexpected error occurred: " : ""}${content}'),
+      Text('${error ? "An unexpected error occurred: " : ""}' + content),
     ));
   }
   badStatusCode(http.Response response) {
@@ -843,19 +590,19 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
           body: jsonEncode(<String, dynamic>{
             'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
               return {
-                'product_id': e.product_id,
-                'product_name': e.product_name,
-                'product_description': e.product_description,
-                'product_type': e.product_type,
+                'product_id': e.productId,
+                'product_name': e.productName,
+                'product_description': e.productDescription,
+                'product_type': e.productType,
                 'brand': e.brand,
-                'num_images': e.num_images,
-                'num_videos': e.num_videos,
-                'avail': e.avail,
-                'product_price': e.product_price,
-                'persone_id': e.persone_id,
-                'persone_name': e.persone_name,
-                'tax_id': e.tax_id,
-                'tax_apply': e.tax_apply
+                'num_images': e.numImages,
+                'num_videos': e.numVideos,
+                'purchased': e.purchased,
+                'product_price': e.productPrice,
+                'persone_id': e.personeId,
+                'persone_name': e.personeName,
+                'tax_id': e.taxId,
+                'tax_apply': e.taxApply
               };
             }).toList()
           })
@@ -1003,17 +750,32 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                   elevation: 0.0,
                                   onPressed: () async {
                                     try {
-                                      _showPleaseWait(true);
-                                      final String message = await processPurchase(cart);
-                                      debugPrint ('the returned message is:' + message);
-                                      _showPleaseWait(false);
                                       var widgetImage = Image.asset('assets/images/infoMessage.png');
-                                      await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                                      Navigator.pop(context);
+                                      final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
+                                      debugPrint('Before the displayDialogAcceptCancel');
+                                      final bool res = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
+                                      debugPrint('After the displayDialogAcceptCancel');
+                                      if (res) {
+                                        _showPleaseWait(true);
+                                        final String message = await processPurchase(cart);
+                                        debugPrint ('the returned message is:' + message);
+                                        _showPleaseWait(false);
+                                        await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
+                                        cart.clearCart();
+                                        var catalog = context.read<Catalog>();
+                                        catalog.clearCatalog();
+                                        Navigator.pop(context);
+                                      }
+                                      Navigator.push (
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) => AddAddressView()
+                                          )
+                                      );
                                     } catch (error) {
                                       _showPleaseWait(false);
                                       debugPrint('Just before calling _showSnackBar');
-                                      debugPrint('El valor del error es: ' + error.toString());
+                                      debugPrint('The error message is: ' + error.toString());
                                       _showSnackBar(error, error: true);
                                     }
                                   },
@@ -1031,7 +793,8 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                           ],
                         )
                     )
-                )
+                ),
+                SizedBox(height: 4.0,)
               ],
             ),
           ),
