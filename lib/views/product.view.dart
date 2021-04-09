@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
+import 'package:carousel_slider/carousel_slider.dart';
 
 import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
@@ -10,7 +12,6 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/sizes.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
-import 'package:plataforma_compras/controllers/product.controller.dart';
 
 class ProductView extends StatelessWidget {
   final ProductAvail currentProduct;
@@ -28,7 +29,7 @@ class ProductView extends StatelessWidget {
           }
         ),
         title: Text(
-          currentProduct.product_name,
+          currentProduct.productName,
           style: TextStyle(
             fontFamily: 'SF Pro Display',
             fontSize: 16.0,
@@ -55,45 +56,88 @@ class _SmallScreenState extends State<_SmallScreen> {
   _SmallScreenState(this.currentProduct);
 
   // private variables
-  ProductController _productController = new ProductController();
+  int _current = 0; // Var to save the current carousel image
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if (context.read<Cart>().numItems > 0) {
-      var cart = context.read<Cart>();
-      cart.items.forEach((element) { if (element.product_id == currentProduct.product_id) _productController.numUnits = element.avail;});
-    }
   }
   @override
   Widget build(BuildContext context) {
-
+    debugPrint('El productId es: ' + currentProduct.productId.toString());
+    debugPrint('El número de images es: ' + currentProduct.numImages.toString());
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             var cart = context.read<Cart>();
-            print('El alto de la pantalla es: ' + constraints.maxHeight.toString());
-            print('El ancho de la pantalla es: ' + constraints.maxWidth.toString());
+            var catalog = context.read<Catalog>();
+            final List<String> listImagesProduct = [];
+            for (var i = 0; i < currentProduct.numImages; i++){
+              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_' + i.toString() + '.gif');
+            }
             return ListView(
               children: [
-                Row(
+                currentProduct.numImages > 1
+                ? Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      alignment: Alignment.center,
-                      width: constraints.maxWidth,
-                      child: AspectRatio(
-                        aspectRatio: 3.0 / 2.0,
-                        child: CachedNetworkImage(
-                            placeholder: (context, url) => CircularProgressIndicator(),
-                            imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                            fit: BoxFit.fitWidth
-                        ),
+                    CarouselSlider (
+                      items: listImagesProduct.map((url) => Container(
+                          child: AspectRatio (
+                            aspectRatio: 3.0 / 2.0,
+                            child: CachedNetworkImage(
+                              placeholder: (context, url) => CircularProgressIndicator(),
+                              imageUrl: url,
+                              fit: BoxFit.scaleDown,
+                              errorWidget: (context, url, error) => Icon(Icons.error),
+                            ),
+                          ),
+                        )
+                      ).toList(),
+                      options: CarouselOptions(
+                        autoPlay: true,
+                        enlargeCenterPage: true,
+                        aspectRatio: 2.0,
+                        onPageChanged: (index, reason) {
+                          setState(() {
+                            _current = index;
+                          });
+                        }
                       ),
+                    ),
+                    Row (
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: listImagesProduct.map((url) {
+                        int index = listImagesProduct.indexOf(url);
+                        return Container(
+                          width: 8.0,
+                          height: 8.0,
+                          margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _current == index
+                              ? Color.fromRGBO(0, 0, 0, 0.9)
+                              : Color.fromRGBO(0, 0, 0, 0.4)
+                          ),
+                        );
+                      }).toList(),
                     )
                   ],
+                )
+                : Container(
+                  alignment: Alignment.center,
+                  width: constraints.maxWidth,
+                  child: AspectRatio(
+                    aspectRatio: 3.0 / 2.0,
+                    child: CachedNetworkImage(
+                      placeholder: (context, url) => CircularProgressIndicator(),
+                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
+                      fit: BoxFit.scaleDown,
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                  ),
                 ),
                 //SizedBox(height: 20.0),
                 SizedBox (height: constraints.maxHeight * HeightInDpis_20),
@@ -110,7 +154,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.product_price.toString())),
+                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.productPrice.toString())),
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 40.0,
@@ -143,7 +187,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.product_name,
+                        currentProduct.productName,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 24.0,
@@ -168,7 +212,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.product_description,
+                        currentProduct.productDescription,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 24.0,
@@ -248,21 +292,20 @@ class _SmallScreenState extends State<_SmallScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
-                          if (_productController.numUnits > 1){
+                          if (currentProduct.purchased > 0) {
                             setState(() {
-                              _productController.decrement();
+                              cart.remove (currentProduct);
+                              catalog.remove(currentProduct);
                             });
-                            //var cart = context.read<Cart>();
-                            cart.remove (currentProduct);
                           }
                         },
-                        child: Container(
+                        child: Container (
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(2.0),
                           decoration: BoxDecoration (
-                              color: tanteLadenBackgroundWhite,
+                              color: tanteLadenAmber500,
                               shape: BoxShape.circle,
                               border: Border.all(
                                   color: tanteLadenButtonBorderGray,
@@ -290,7 +333,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                       padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
                       child: Text(
-                        _productController.numUnits.toString(),
+                        currentProduct.purchased.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 24.0,
@@ -300,20 +343,18 @@ class _SmallScreenState extends State<_SmallScreen> {
                         ),
                       ),
                     ),
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
                           setState(() {
-                            _productController.increment();
+                            cart.add(currentProduct);
+                            catalog.add(currentProduct);
                           });
-                          //var cart = context.read<Cart>();
-                          cart.add(currentProduct);
-                          debugPrint ('El importe es: ' + cart.totalPrice.toString());
                         },
                         child: Container(
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(2.0),
                           decoration: BoxDecoration(
-                            color: tanteLadenBackgroundWhite,
+                            color: tanteLadenAmber500,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Color(0xFF6C6D77),
@@ -360,49 +401,109 @@ class _LargeScreenState extends State<_LargeScreen> {
   _LargeScreenState(this.currentProduct);
 
   // private variables
-  ProductController _productController = new ProductController();
+  int _current = 0; // Var to save the current carousel image
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if (context.read<Cart>().numItems > 0) {
-      var cart = context.read<Cart>();
-      cart.items.forEach((element) { if (element.product_id == currentProduct.product_id) _productController.numUnits = element.avail;});
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('El productId es: ' + currentProduct.productId.toString());
+    debugPrint('El número de images es: ' + currentProduct.numImages.toString());
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            print('El alto de la pantalla es: ' + constraints.maxHeight.toString());
-            print('El ancho de la pantalla es: ' + constraints.maxWidth.toString());
+            var cart = context.read<Cart>();
+            var catalog = context.read<Catalog>();
+            final List<String> listImagesProduct = [];
+            for (var i = 0; i < currentProduct.numImages; i++){
+              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_' + i.toString() + '.gif');
+            }
             return ListView(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                currentProduct.numImages > 1
+                ? Column(
                   children: [
-                    Spacer(flex: 1,),
+                    Row (
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Spacer(flex: 1),
+                        Flexible(
+                          flex: 2,
+                          child: CarouselSlider (
+                            items: listImagesProduct.map((url) => Container (
+                              alignment: Alignment.center,
+                              width: constraints.maxWidth,
+                              padding: EdgeInsets.only(top: 10.0),
+                              child: AspectRatio (
+                                aspectRatio: 3.0 / 2.0,
+                                child: CachedNetworkImage(
+                                  placeholder: (context, url) => CircularProgressIndicator(),
+                                  imageUrl: url,
+                                  fit: BoxFit.scaleDown,
+                                  errorWidget: (context, url, error) => Icon(Icons.error),
+                                ),
+                              ) ,
+                            )).toList(),
+                            options: CarouselOptions(
+                                autoPlay: true,
+                                enlargeCenterPage: true,
+                                aspectRatio: 3.0 / 2.0,
+                                onPageChanged: (index, reason) {
+                                  setState(() {
+                                    _current = index;
+                                  });
+                                }
+                            ),
+                          ),
+                        ),
+                        Spacer(flex: 1)
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: listImagesProduct.map((url) {
+                        int index = listImagesProduct.indexOf(url);
+                        return Container(
+                          width: 8.0,
+                          height: 8.0,
+                          margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _current == index
+                                  ? Color.fromRGBO(0, 0, 0, 0.9)
+                                  : Color.fromRGBO(0, 0, 0, 0.4)
+                          ),
+                        );
+                      }).toList(),
+                    )
+                  ],
+                )
+                : Row (
+                  children: [
+                    Spacer(flex: 1),
                     Flexible(
                       flex: 2,
                       child: Container(
                         alignment: Alignment.center,
                         width: constraints.maxWidth,
-                        padding: EdgeInsets.only(top: 10.0),
                         child: AspectRatio(
                           aspectRatio: 3.0 / 2.0,
                           child: CachedNetworkImage(
-                              placeholder: (context, url) => CircularProgressIndicator(),
-                              imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                              fit: BoxFit.fitWidth
+                            placeholder: (context, url) => CircularProgressIndicator(),
+                            //imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                            imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
+                            fit: BoxFit.scaleDown,
+                            errorWidget: (context, url, error) => Icon(Icons.error),
                           ),
                         ),
                       ),
                     ),
-                    Spacer(flex: 1)
+                    Spacer(flex: 1,)
                   ],
                 ),
                 //SizedBox(height: 20.0),
@@ -420,7 +521,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.product_price.toString())),
+                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.productPrice.toString())),
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 40.0,
@@ -453,7 +554,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.product_name,
+                        currentProduct.productName,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 24.0,
@@ -478,7 +579,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.product_description,
+                        currentProduct.productDescription,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 24.0,
@@ -558,21 +659,20 @@ class _LargeScreenState extends State<_LargeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
-                          if (_productController.numUnits > 1){
+                          if (currentProduct.purchased > 0) {
                             setState(() {
-                              _productController.decrement();
+                              cart.remove (currentProduct);
+                              catalog.remove(currentProduct);
                             });
-                            var cart = context.read<Cart>();
-                            cart.remove(currentProduct);
                           }
                         },
                         child: Container(
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(2.0),
                           decoration: BoxDecoration (
-                              color: tanteLadenBackgroundWhite,
+                              color: tanteLadenAmber500,
                               shape: BoxShape.circle,
                               border: Border.all(
                                   color: tanteLadenButtonBorderGray,
@@ -600,7 +700,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                       padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
                       child: Text(
-                        _productController.numUnits.toString(),
+                        currentProduct.purchased.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 24.0,
@@ -610,19 +710,18 @@ class _LargeScreenState extends State<_LargeScreen> {
                         ),
                       ),
                     ),
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
                           setState(() {
-                            _productController.increment();
+                            cart.add(currentProduct);
+                            catalog.add(currentProduct);
                           });
-                          var cart = context.read<Cart>();
-                          cart.add(currentProduct);
                         },
                         child: Container(
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(2.0),
                           decoration: BoxDecoration(
-                            color: tanteLadenBackgroundWhite,
+                            color: tanteLadenAmber500,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Color(0xFF6C6D77),
@@ -673,16 +772,11 @@ class DetailWidgetState extends State<DetailWidget> {
   DetailWidgetState();
 
   // private variables
-  ProductController _productController = new ProductController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    if (context.read<Cart>().numItems > 0) {
-      var cart = context.read<Cart>();
-      cart.items.forEach((element) { if (element.product_id == widget.currentProduct.product_id) _productController.numUnits = element.avail;});
-    }
   }
 
   @override
@@ -691,10 +785,7 @@ class DetailWidgetState extends State<DetailWidget> {
         child : LayoutBuilder(
           builder: (context, constraints) {
             var cart = context.read<Cart>();
-            debugPrint('PRODUCT.VIEW. El alto de la pantalla es: ' + constraints.maxHeight.toString());
-            debugPrint('PRODUCT.VIEW. El ancho de la pantalla es: ' + constraints.maxWidth.toString());
-            //debugPrint('El valor del item es: ' + this.currentProduct.product_name);
-            debugPrint('El valor del item es: ' + widget.currentProduct.product_name);
+            var catalog = context.read<Catalog>();
             return ListView(
               children: [
                 Row(
@@ -729,7 +820,7 @@ class DetailWidgetState extends State<DetailWidget> {
                       Padding(
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(widget.currentProduct.product_price.toString())),
+                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(widget.currentProduct.productPrice.toString())),
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 40.0,
@@ -762,7 +853,7 @@ class DetailWidgetState extends State<DetailWidget> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        widget.currentProduct.product_name,
+                        widget.currentProduct.productName,
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 24.0,
@@ -787,7 +878,7 @@ class DetailWidgetState extends State<DetailWidget> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        widget.currentProduct.product_description,
+                        widget.currentProduct.productDescription,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 24.0,
@@ -868,13 +959,13 @@ class DetailWidgetState extends State<DetailWidget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
-                          if (_productController.numUnits > 1){
+                          if (widget.currentProduct.purchased > 0) {
                             setState(() {
-                              _productController.decrement();
+                              cart.remove (widget.currentProduct);
+                              catalog.remove(widget.currentProduct);
                             });
-                            cart.remove(widget.currentProduct);
                           }
                         },
                         child: Container(
@@ -909,7 +1000,7 @@ class DetailWidgetState extends State<DetailWidget> {
                       //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                       padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
                       child: Text(
-                        _productController.numUnits.toString(),
+                        widget.currentProduct.purchased.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 24.0,
@@ -919,13 +1010,12 @@ class DetailWidgetState extends State<DetailWidget> {
                         ),
                       ),
                     ),
-                    FlatButton(
+                    TextButton(
                         onPressed: () {
                           setState(() {
-                            _productController.increment();
+                            cart.add(widget.currentProduct);
+                            catalog.add(widget.currentProduct);
                           });
-                          cart.add(widget.currentProduct);
-                          debugPrint ('El importe es: ' + cart.totalPrice.toString());
                         },
                         child: Container(
                           alignment: Alignment.center,
