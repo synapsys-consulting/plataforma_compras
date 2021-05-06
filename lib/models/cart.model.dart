@@ -19,7 +19,7 @@ class Cart with ChangeNotifier {
       });
     }
     if (!founded) {
-      final itemCart = new ProductAvail(
+      final itemCart = new ProductAvail (
           productId: item.productId,
           productName: item.productName,
           productDescription: item.productDescription,
