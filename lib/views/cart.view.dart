@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
@@ -14,9 +14,16 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
+import 'package:plataforma_compras/views/loginPage.view.dart';
+import 'package:plataforma_compras/utils/showSnackBar.dart';
+import 'package:plataforma_compras/models/address.model.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:plataforma_compras/views/addAddress.view.dart';
+import 'package:plataforma_compras/views/confirmPurchase.view.dart';
 
-class CartView extends StatelessWidget{
+
+
+class CartView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +82,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                                 aspectRatio: 3.0 / 2.0,
                                 child: CachedNetworkImage(
                                   placeholder: (context, url) => CircularProgressIndicator(),
-                                  imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                  //imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                  imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productId.toString() + '_0.gif',
+                                  fit: BoxFit.scaleDown,
+                                  errorWidget: (context, url, error) => Icon(Icons.error),
                                 ),
                               ),
                             )
@@ -165,8 +175,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           Expanded(
                                             child: Visibility(
                                               visible: (cart.getItem(index).purchased > 1) ? true : false,
-                                              child: FlatButton(
-                                                padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                              child: TextButton(
                                                 child: Container (
                                                     alignment: Alignment.center,
                                                     decoration: BoxDecoration(
@@ -192,8 +201,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                                   });
                                                 },
                                               ),
-                                              replacement: FlatButton(
-                                                padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                              replacement: TextButton(
                                                 child: Container (
                                                   alignment: Alignment.center,
                                                   decoration: BoxDecoration(
@@ -225,8 +233,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: FlatButton(
-                                              padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                            child: TextButton(
                                               child: Container (
                                                 alignment: Alignment.center,
                                                 decoration: BoxDecoration(
@@ -330,7 +337,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   aspectRatio: 3.0 / 2.0,
                                   child: CachedNetworkImage(
                                     placeholder: (context, url) => CircularProgressIndicator(),
-                                    imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                    //imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productId.toString() + '_0.gif',
+                                    fit: BoxFit.scaleDown,
+                                    errorWidget: (context, url, error) => Icon(Icons.error),
                                   ),
                                 ),
                               )
@@ -423,8 +433,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                 Expanded(
                                                   child: Visibility(
                                                     visible: (cart.getItem(index).purchased > 1) ? true : false,
-                                                    child: FlatButton(
-                                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                                    child: TextButton(
                                                       child: Container (
                                                           alignment: Alignment.center,
                                                           decoration: BoxDecoration(
@@ -450,8 +459,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                         });
                                                       },
                                                     ),
-                                                    replacement: FlatButton(
-                                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                                    replacement: TextButton(
                                                       child: Container (
                                                         alignment: Alignment.center,
                                                         decoration: BoxDecoration(
@@ -483,8 +491,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                 ),
                                                 Expanded(
                                                   flex: 3,
-                                                  child: FlatButton(
-                                                    padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                                  child: TextButton(
                                                     child: Container (
                                                       alignment: Alignment.center,
                                                       decoration: BoxDecoration(
@@ -560,29 +567,22 @@ class _BottonNavigatorBar extends StatefulWidget {
 class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
   bool _pleaseWait = false;
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   _showPleaseWait(bool b) {
     setState(() {
       _pleaseWait = b;
     });
   }
-  _showSnackBar (String content, {bool error = false}) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(
-      content:
-      Text('${error ? "An unexpected error occurred: " : ""}' + content),
-    ));
-  }
-  badStatusCode(http.Response response) {
+  _badStatusCode(http.Response response) {
     debugPrint("Bad status code ${response.statusCode} returned from server.");
     debugPrint("Response body ${response.body} returned from server.");
     throw Exception(
         'Bad status code ${response.statusCode} returned from server.');
   }
-  Future<String> processPurchase(Cart cartPurchased) async {
+  Future<String> _processPurchase(Cart cartPurchased) async {
     String message = '';
     try {
-      final String url = "$SERVER_IP/savePurchasedProducts";
-
+      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
       final http.Response res = await http.post(url,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
@@ -614,7 +614,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
       } else {
         // If that response was not OK, throw an error.
         debugPrint('There is an error.');
-        badStatusCode(res);
+        _badStatusCode(res);
       }
       return message;
     } catch (e) {
@@ -624,9 +624,9 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return LayoutBuilder (
       builder: (context, constraints) {
-        return SafeArea(
+        return SafeArea (
           child: Container(
             height: (constraints.maxHeight ~/ 10).toDouble(),
             decoration: BoxDecoration(
@@ -683,21 +683,21 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Consumer<Cart>(
-                                  builder: (context, cart, child) => Container(
-                                    padding: EdgeInsets.only(top: 5.0),
-                                    child: Text(
-                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalPrice),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 24.0,
-                                        fontFamily: 'SF Pro Display',
-                                      ),
-                                      textAlign: TextAlign.end,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      softWrap: false,
+                                builder: (context, cart, child) => Container(
+                                  padding: EdgeInsets.only(top: 5.0),
+                                  child: Text(
+                                    new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalPrice),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 24.0,
+                                      fontFamily: 'SF Pro Display',
                                     ),
-                                  )
+                                    textAlign: TextAlign.end,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: false,
+                                  ),
+                                )
                               )
                             ],
                           ),
@@ -716,9 +716,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                           children: <Widget>[
                             Consumer<Cart>(
                               builder: (context, cart, child) {
-                                Widget tmpBuilder = RaisedButton(
-                                  padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                                Widget tmpBuilder = GestureDetector(
                                   child: Container(
                                     padding: EdgeInsets.symmetric(horizontal: 80.0),
                                     alignment: Alignment.center,
@@ -747,36 +745,76 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                     ),
                                     height: 64.0,
                                   ),
-                                  elevation: 0.0,
-                                  onPressed: () async {
+                                  onTap: () async {
                                     try {
-                                      var widgetImage = Image.asset('assets/images/infoMessage.png');
-                                      final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-                                      debugPrint('Before the displayDialogAcceptCancel');
-                                      final bool res = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-                                      debugPrint('After the displayDialogAcceptCancel');
-                                      if (res) {
-                                        _showPleaseWait(true);
-                                        final String message = await processPurchase(cart);
-                                        debugPrint ('the returned message is:' + message);
-                                        _showPleaseWait(false);
-                                        await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                                        cart.clearCart();
-                                        var catalog = context.read<Catalog>();
-                                        catalog.clearCatalog();
-                                        Navigator.pop(context);
-                                      }
-                                      Navigator.push (
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => AddAddressView()
-                                          )
-                                      );
-                                    } catch (error) {
+                                      debugPrint ('Comienzo el tramitar pedido');
+                                      _showPleaseWait(true);
+                                      final SharedPreferences prefs = await _prefs;
+                                      final String token = prefs.get ('token') ?? '';
+                                      debugPrint ('el token es: ' + token);
                                       _showPleaseWait(false);
-                                      debugPrint('Just before calling _showSnackBar');
-                                      debugPrint('The error message is: ' + error.toString());
-                                      _showSnackBar(error, error: true);
+                                      if (token == '') {
+                                        // login not yet done
+                                        Navigator.push (
+                                            context,
+                                            MaterialPageRoute (
+                                                builder: (context) => (LoginPageView())
+                                            )
+                                        );
+                                      } else {
+                                        // login yet done
+                                        // test if the user has an address
+                                        debugPrint ('Estoy en el else de login yet done');
+                                        Map<String, dynamic> payload;
+                                        payload = json.decode(
+                                            utf8.decode(
+                                                base64.decode (base64.normalize(token.split(".")[1]))
+                                            )
+                                        );
+                                        _showPleaseWait(true);
+                                        debugPrint ("El user_id es: " + payload['user_id'].toString());
+                                        final Uri url = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                                        debugPrint ("La URL es: " + url.toString());
+
+                                        final http.Response res = await http.get (
+                                            url,
+                                            headers: <String, String>{
+                                              'Content-Type': 'application/json; charset=UTF-8',
+                                              //'Authorization': jwt
+                                            }
+                                        );
+                                        _showPleaseWait(false);
+                                        if (res.statusCode == 200) {
+                                          // if exists address
+                                          // Process the order
+                                          debugPrint ('OK. ');
+                                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                                          final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                                          if (resultListAddress.length > 0) {
+                                            Navigator.push (
+                                                context,
+                                                MaterialPageRoute (
+                                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString()))
+                                                )
+                                            );
+                                          } else {
+                                            // if not exists address
+                                            Navigator.push (
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
+                                                )
+                                            );
+                                          }
+                                        } else {
+                                          // Error
+                                          _showPleaseWait(false);
+                                          ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                                        }
+                                      }
+                                    } catch (e) {
+                                      _showPleaseWait(false);
+                                      ShowSnackBar.showSnackBar(context, e.toString(), error: true);
                                     }
                                   },
                                 );
