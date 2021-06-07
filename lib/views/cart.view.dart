@@ -111,7 +111,40 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     maxLines: 3,
                                     softWrap: false,
                                   ),
-                                  SizedBox(height: 15.0,),
+                                  SizedBox(height: 2.0,),
+                                  Text(
+                                    cart.getItem(index).businessName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.start,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                  ),
+                                  SizedBox(height: 2.0),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        child: Text(
+                                            'Unid. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 12.0,
+                                              fontFamily: 'SF Pro Display',
+                                              fontStyle: FontStyle.normal,
+                                              color: Color(0xFF6C6D77),
+                                            ),
+                                            textAlign: TextAlign.start
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  SizedBox(height: 2.0),
                                   Container(
                                     child: Row (
                                       children: [
@@ -148,7 +181,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                             )
                         ),
                         Expanded(
-                            flex: 2,
+                            flex: 1,
                             child: Container(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -209,10 +242,15 @@ class _SmallScreenState extends State<_SmallScreen> {
                                                     borderRadius: BorderRadius.circular(18.0),
                                                     color: tanteLadenAmber500,
                                                   ),
-                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  padding: EdgeInsets.zero,
                                                   child: IconButton(
-                                                    icon: Image.asset('assets/images/logoDelete.png'),
+                                                    icon: Image.asset(
+                                                      'assets/images/logoDelete.png',
+                                                      fit: BoxFit.fill,
+                                                    ),
                                                     onPressed: null,
+                                                    iconSize: 20.0,
+                                                    padding: EdgeInsets.zero,
                                                   ),
                                                 ),
                                                 onPressed: () {
@@ -366,7 +404,40 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       maxLines: 3,
                                       softWrap: false,
                                     ),
-                                    SizedBox(height: 15.0,),
+                                    SizedBox(height: 2.0,),
+                                    Text(
+                                      cart.getItem(index).businessName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: 12.0,
+                                        fontFamily: 'SF Pro Display',
+                                        fontStyle: FontStyle.normal,
+                                        color: Colors.black,
+                                      ),
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                    ),
+                                    SizedBox(height: 2.0),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          child: Text(
+                                              'Unid. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w300,
+                                                fontSize: 12.0,
+                                                fontFamily: 'SF Pro Display',
+                                                fontStyle: FontStyle.normal,
+                                                color: Color(0xFF6C6D77),
+                                              ),
+                                              textAlign: TextAlign.start
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    SizedBox(height: 2.0),
                                     Container(
                                       child: Row (
                                         children: [
@@ -467,10 +538,15 @@ class _LargeScreenState extends State<_LargeScreen> {
                                                           borderRadius: BorderRadius.circular(18.0),
                                                           color: tanteLadenAmber500,
                                                         ),
-                                                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                        padding: EdgeInsets.zero,
                                                         child: IconButton(
-                                                            icon: Image.asset('assets/images/logoDelete.png'),
-                                                            onPressed: null
+                                                          icon: Image.asset(
+                                                            'assets/images/logoDelete.png',
+                                                            fit: BoxFit.fill,
+                                                          ),
+                                                          onPressed: null,
+                                                          iconSize: 20.0,
+                                                          padding: EdgeInsets.all(8.0),
                                                         ),
                                                       ),
                                                       onPressed: () {
@@ -573,54 +649,6 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
       _pleaseWait = b;
     });
   }
-  _badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        _badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -628,7 +656,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
       builder: (context, constraints) {
         return SafeArea (
           child: Container(
-            height: (constraints.maxHeight ~/ 10).toDouble(),
+            height: (constraints.maxWidth > 1200) ? (constraints.maxHeight ~/ 6).toDouble() : (constraints.maxHeight ~/ 8).toDouble(),
             decoration: BoxDecoration(
                 border: Border(
                     top: BorderSide(
@@ -646,7 +674,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Expanded(
-                          flex: 1,
+                          flex: 2,
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -794,7 +822,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                             Navigator.push (
                                                 context,
                                                 MaterialPageRoute (
-                                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString()))
+                                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
                                                 )
                                             );
                                           } else {
