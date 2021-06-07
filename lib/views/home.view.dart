@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 import 'package:plataforma_compras/models/productAvail.model.dart';
@@ -14,8 +15,11 @@ import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
 import 'package:plataforma_compras/views/cart.view.dart';
-import 'package:plataforma_compras/views/product.view.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
+import 'package:plataforma_compras/views/product.view.dart';
+import 'package:plataforma_compras/views/lookingForProducts.view.dart';
+import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
+import 'package:plataforma_compras/views/loginPage.view.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -36,9 +40,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
   Future<List<ProductAvail>> itemsProductsAvailable;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  bool _isUserLogged = true;
+  String _name = 'Ángel Ruiz Cantón';
+  bool _pleaseWait = false;
+
+  _showPleaseWait(bool b) {
+    setState(() {
+      _pleaseWait = b;
+    });
+  }
 
   @override
   void initState() {
@@ -46,22 +61,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     itemsProductsAvailable = _getProductsAvailable();
   }
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
   // Private method which get the available products from the database
   Future<List<ProductAvail>> _getProductsAvailable () async {
     //final String url = "$SERVER_IP/getProducts";
-    final String url = "$SERVER_IP/getProductsAvail";
+    final Uri url = Uri.parse('$SERVER_IP/getProductsAvail');
 
-    print ('The string is: ' + url);
     final http.Response res = await http.get (
         url,
         headers: <String, String>{
@@ -70,16 +74,246 @@ class _MyHomePageState extends State<MyHomePage> {
         }
     );
     debugPrint('After the http call.');
-    if (res.statusCode == 200){
+    if (res.statusCode == 200) {
       debugPrint ('The Rest API has responsed.');
       final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
       debugPrint ('Entre medias de la api RESPONSE.');
       final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+      resultListProducts.forEach((element) {
+        Provider.of<Catalog>(context, listen: false).add(element);
+        //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+      });
       debugPrint ('Antes de terminar de responder la API.');
       return resultListProducts;
     } else {
       final List<ProductAvail> resultListProducts = [];
       return resultListProducts;
+    }
+  }
+  Drawer _createEndDrawer(bool isUserLogged, String name) {
+
+    if (isUserLogged) {
+      return new Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ListTile (
+              title: SafeArea(
+                child: Text (
+                  name,
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    color: tanteLadenOnPrimary,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.bold
+                  )
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoPersonalData.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Datos personales',
+                style: TextStyle(
+                  fontFamily: 'SF Pro Display',
+                  fontSize: 20,
+                  fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoDirections.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Direcciones',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoPaymentMethod1.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Métodos de pago',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoMyPurchases.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Mis pedidos',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoHelp.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Ayuda',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton(
+                icon: Image.asset('assets/images/logoInformation.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Información',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            )
+          ],
+        ),
+      );
+    } else {
+      return new Drawer (
+        child: ListView (
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader (
+              decoration: BoxDecoration (
+                color: tanteLadenBackgroundWhite,
+              ),
+              margin: EdgeInsets.zero,
+              //padding: EdgeInsets.zero,
+              child: ListView (
+                children: [
+                  Text('Invitado',
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      color: tanteLadenOnPrimary,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ],
+              )
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              child: Center(
+                child: Text (
+                  'Identifícate',
+                  style: TextStyle(
+                      fontSize: 16.0,
+                      color: tanteLadenOnPrimary,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.bold
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 10.0,),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              child: Center(
+                child: Text(
+                  'Para poder comprar, necesitas una cuenta, así podrás comprar más rápido y también te podremos dar un mejor servicio.',
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.normal,
+                    color: tanteLadenOnPrimary,
+                  ),
+                  textAlign: TextAlign.justify,
+                  maxLines: 3,
+                  softWrap: true,
+                ),
+              ),
+            ),
+            SizedBox(height: 10.0,),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: GestureDetector(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 80.0),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration (
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(8.0),
+                      gradient: LinearGradient(
+                          colors: <Color>[
+                            Color (0xFF833C26),
+                            //Color (0XFF863F25),
+                            //Color (0xFF8E4723),
+                            Color (0xFF9A541F),
+                            //Color (0xFFB16D1A),
+                            //Color (0xFFDE9C0D),
+                            Color (0xFFF9B806),
+                            Color (0XFFFFC107),
+                          ]
+                      )
+                  ),
+                  child: const Text(
+                    'Indentifícate',
+                    style: TextStyle(
+                        fontSize: 18.0,
+                        color: tanteLadenBackgroundWhite
+                    ),
+                  ),
+                  height: 64.0,
+                ),
+                onTap: () {
+                  Navigator.push (
+                      context,
+                      MaterialPageRoute (
+                          builder: (context) => (LoginPageView())
+                      )
+                  );
+                },
+              ),
+            ),
+            Divider(),
+            ListTile (
+              leading: Image.asset('assets/images/logoHelp.png'),
+              title: Text('Ayuda'),
+            ),
+            Divider(),
+            ListTile (
+              leading: Image.asset('assets/images/logoInformation.png'),
+              title: Text('Información'),
+            )
+          ],
+        ),
+      );
     }
   }
   @override
@@ -91,6 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -101,6 +336,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: IconButton(
                   //icon: Image.asset('assets/images/cart_fill_round.png'),
                   icon: Image.asset('assets/images/logoPantallaInicioAmber.png'),
+                  onPressed: null,
                 ),
               );
             }
@@ -113,7 +349,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 flex: 1,
                 child: IconButton(
                   icon: Image.asset('assets/images/search_left.png'),
-                  onPressed: null
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => LookingForProducts()
+                    ));
+                  }
                 ),
               ),
               Spacer(),
@@ -142,20 +382,28 @@ class _MyHomePageState extends State<MyHomePage> {
           IconButton(
             icon: Image.asset('assets/images/profile.png'),
             tooltip: 'Perfil',
-            onPressed: null
+            onPressed: () async {
+              _showPleaseWait(true);
+              final SharedPreferences prefs = await _prefs;
+              final String token = prefs.get ('token') ?? '';
+              debugPrint ('el token es: ' + token);
+              _showPleaseWait(false);
+
+              _scaffoldKey.currentState.openEndDrawer();
+            }
           )
         ],
         elevation: 0.0,
       ),
+      endDrawer: _createEndDrawer(_isUserLogged,_name),
       body: FutureBuilder <List<ProductAvail>>(
           future: itemsProductsAvailable,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final List<ProductAvail>listProductsAvail = snapshot.data;
-              debugPrint('Estamos en el Portrait.');
+              //final List<ProductAvail>listProductsAvail = snapshot.data;
               return new ResponsiveWidget(
-                largeScreen: _LargeScreen(listProductsAvail),
-                smallScreen: _SmallScreen(listProductsAvail),
+                largeScreen: _LargeScreen(),
+                smallScreen: _SmallScreen(),
               );
             } else if (snapshot.hasError) {
               return Center(
@@ -181,37 +429,40 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 class _SmallScreen extends StatefulWidget {
-  _SmallScreen (
-    this.listProductsAvail,
-  );
-  final List<ProductAvail> listProductsAvail;
-
   _SmallScreenState createState() => _SmallScreenState();
-
 }
 class _SmallScreenState extends State<_SmallScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
-    bool visible = true;
+    var catalog = context.watch<Catalog>();
+    var cart = context.read<Cart>();
     return SafeArea(
       child: Padding(
           padding: const EdgeInsets.only(top: 5.0),
-          child: GridView.builder(
-              itemCount: widget.listProductsAvail.length,
+          child: GridView.builder (
+              itemCount: catalog.numItems,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 200.0 / 303.0
               ),
               itemBuilder: (BuildContext context, int index) {
-                var cart = context.watch<Cart>();
-                return Card(
+                return Card (
                   clipBehavior: Clip.antiAlias,
                   elevation: 0,
                   shape: ContinuousRectangleBorder(
                       borderRadius: BorderRadius.circular(0.0)
                   ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints){
+                  child: LayoutBuilder (
+                    builder: (context, constraints) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -219,24 +470,36 @@ class _SmallScreenState extends State<_SmallScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Container(
-                                //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
-                                alignment: Alignment.center,
-                                width: constraints.maxWidth,
-                                child: AspectRatio(
-                                  aspectRatio: 3.0 / 2.0,
-                                  child: CachedNetworkImage(
-                                    placeholder: (context, url) => CircularProgressIndicator(),
-                                    imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                    fit: BoxFit.fitWidth,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push (
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => ProductView(catalog.items[index])
+                                      )
+                                  );
+                                },
+                                child: Container(
+                                  //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
+                                  alignment: Alignment.center,
+                                  width: constraints.maxWidth,
+                                  child: AspectRatio(
+                                    aspectRatio: 3.0 / 2.0,
+                                    child: CachedNetworkImage(
+                                      placeholder: (context, url) => CircularProgressIndicator(),
+                                      //imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productId.toString() + '_0.gif',
+                                      fit: BoxFit.scaleDown,
+                                      errorWidget: (context, url, error) => Icon(Icons.error),
+                                    ),
                                   ),
                                 ),
                               )
                             ],
                           ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                            child: Row(
+                            padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
+                            child: Row (
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
@@ -247,8 +510,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 3.0),
                                   child: Text(
-                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(widget.listProductsAvail[index].product_price.toString())),
-                                      //new NumberFormat.currency(symbol: '€', decimalDigits:2).format(double.parse(listProductsAvail[index].product_price.toString())),
+                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(catalog.items[index].productPrice.toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,
@@ -257,30 +519,17 @@ class _SmallScreenState extends State<_SmallScreen> {
                                       textAlign: TextAlign.start
                                   ),
                                 ),
-                                Text(
-                                    widget.listProductsAvail[index].brand,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 16.0,
-                                      fontFamily: 'SF Pro Display',
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(0xFF36B0F8),
-                                    ),
-                                    textAlign: TextAlign.start
-
-                                )
                               ],
                             ),
                           ),
-                          SizedBox(height: 4.0),
-                          Row(
+                          Row (
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Container(
+                              Container (
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                 width: constraints.maxWidth,
                                 child: Text(
-                                  widget.listProductsAvail[index].product_name,
+                                  catalog.items[index].productName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16.0,
@@ -296,39 +545,13 @@ class _SmallScreenState extends State<_SmallScreen> {
                               )
                             ],
                           ),
-                          SizedBox(height: 2.0),
-                          Row(
+                          Row (
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Container(
+                              Container (
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                width: constraints.maxWidth,
-                                child: Text(
-                                  widget.listProductsAvail[index].product_description,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 12.0,
-                                    fontFamily: 'SF Pro Display',
-                                    fontStyle: FontStyle.normal,
-                                    color: Color(0xFF36B0F8),
-                                  ),
-                                  textAlign: TextAlign.start,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                ),
-                              )
-                            ],
-                          ),
-                          SizedBox(height: 2.0),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                width: constraints.maxWidth,
-                                child: Text(
-                                  widget.listProductsAvail[index].brand,
+                                child: Text (
+                                  catalog.items[index].businessName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w300,
                                     fontSize: 12.0,
@@ -343,397 +566,37 @@ class _SmallScreenState extends State<_SmallScreen> {
                               )
                             ],
                           ),
-                          SizedBox(height: 14.0),
-                          Padding(
+                          Container(
                             padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                            child: Expanded(
-                                child: Visibility(
-                                  visible: visible,
-                                  child: FlatButton(
-                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                      onPressed: () {
-
-                                        //var cart = context.read<Cart>();
-                                        //cart.add(listProductsAvail[index]);
-
-                                        Navigator.push (
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => ProductView(widget.listProductsAvail[index])
-                                            )
-                                        );
-                                      },
-                                      child: Container(
-                                        alignment: Alignment.center,
-                                        padding: EdgeInsets.all(2.0),
-                                        decoration: BoxDecoration (
-                                            shape: BoxShape.rectangle,
-                                            borderRadius: BorderRadius.circular(4.0),
-                                            color: tanteLadenBrown500,
-                                            gradient: LinearGradient(
-                                              colors: <Color>[
-                                                Color (0xFF833C26),
-                                                Color (0xFF9A541F),
-                                                Color (0xFFF9B806),
-                                                Color (0XFFFFC107),
-                                              ],
-                                            )
-                                        ),
-                                        child: Container(
-                                          //padding: EdgeInsets.all(3.0),
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.rectangle,
-                                            borderRadius: BorderRadius.circular(4.0),
-                                            //color: colorFondo,
-                                            color: tanteLadenBackgroundWhite,
-                                          ),
-                                          child: Text (
-                                            'Comprar',
-                                            style: TextStyle (
-                                              fontFamily: 'SF Pro Display',
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.black,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          //height: 38,
-                                        ),
-                                        height: 40,
-                                      )
-                                  ),
-                                  replacement: Container(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Container(
-                                            child: Text(
-                                              (widget.listProductsAvail[index].avail > 1) ? widget.listProductsAvail[index].avail.toString() + ' uds.' : widget.listProductsAvail[index].avail.toString() + ' ud.',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 24.0,
-                                                fontFamily: 'SF Pro Display',
-                                                fontStyle: FontStyle.normal,
-                                                color: tanteLadenIconBrown,
-                                              ),
-                                              textAlign: TextAlign.right,
-                                            ),
-                                          ),
-                                          SizedBox(height: 5.0,),
-                                          Container(
-                                            child: Row (
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Visibility(
-                                                    visible: (widget.listProductsAvail[index].avail > 1) ? true : false,
-                                                    child: FlatButton(
-                                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                                      child: Container (
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration (
-                                                          shape: BoxShape.rectangle,
-                                                          borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
-                                                          color: tanteLadenAmber500,
-                                                        ),
-                                                        child: Container (
-                                                            alignment: Alignment.center,
-                                                            decoration: BoxDecoration(
-                                                              shape: BoxShape.rectangle,
-                                                              borderRadius: BorderRadius.circular(18.0),
-                                                              color: tanteLadenAmber500,
-                                                            ),
-                                                            padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                            child: Text(
-                                                              '-',
-                                                              style: TextStyle(
-                                                                  fontFamily: 'SF Pro Display',
-                                                                  fontSize: 24,
-                                                                  fontWeight: FontWeight.w900,
-                                                                  color: tanteLadenIconBrown
-                                                              ),
-                                                            )
-                                                        ),
-                                                      ),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          cart.remove(cart.getItem(index));
-                                                        });
-                                                      },
-                                                    ),
-                                                    replacement: FlatButton(
-                                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                                      child: Container (
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration (
-                                                          shape: BoxShape.rectangle,
-                                                          borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
-                                                          color: tanteLadenAmber500,
-                                                        ),
-                                                        child: Container (
-                                                          alignment: Alignment.center,
-                                                          decoration: BoxDecoration(
-                                                            shape: BoxShape.rectangle,
-                                                            borderRadius: BorderRadius.circular(18.0),
-                                                            color: tanteLadenAmber500,
-                                                          ),
-                                                          padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                          child: IconButton(
-                                                              icon: Image.asset('assets/images/logoDelete.png'),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      onPressed: () {
-                                                        setState(() {
-                                                          cart.remove(cart.getItem(index));
-                                                        });
-                                                      },
-                                                    ),
-                                                  ),
-                                                  flex: 3,
-                                                ),
-                                                Expanded(
-                                                  child: SizedBox(
-                                                    width: 10.0,
-                                                  ),
-                                                  flex: 1,
-                                                ),
-                                                Expanded(
-                                                  flex: 3,
-                                                  child: FlatButton(
-                                                    padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                                    child: Container (
-                                                      //padding: EdgeInsets.all(3.0),
-                                                      alignment: Alignment.center,
-                                                      decoration: BoxDecoration (
-                                                        shape: BoxShape.rectangle,
-                                                        borderRadius: BorderRadius.circular(18.0),
-                                                        //color: colorFondo,
-                                                        color: tanteLadenAmber500,
-                                                      ),
-                                                      child: Container (
-                                                        alignment: Alignment.center,
-                                                        decoration: BoxDecoration(
-                                                          shape: BoxShape.rectangle,
-                                                          borderRadius: BorderRadius.circular(18.0),
-                                                          //color: colorFondo,
-                                                          color: tanteLadenAmber500,
-                                                        ),
-                                                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                                                        child: Text (
-                                                          '+',
-                                                          style: TextStyle (
-                                                            fontFamily: 'SF Pro Display',
-                                                            fontSize: 24,
-                                                            fontWeight: FontWeight.w900,
-                                                            color: tanteLadenIconBrown,
-                                                          ),
-                                                          textAlign: TextAlign.center,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        cart.add(cart.getItem(index));
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                  ),
-                                )
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                );
-              }
-          )
-      ),
-    );
-  }
-}
-class _LargeScreen extends StatelessWidget {
-  _LargeScreen(
-    this.listProductsAvail
-  );
-  final List<ProductAvail> listProductsAvail;
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Padding(
-                padding: const EdgeInsets.only(top: 5.0),
-                child: GridView.builder(
-                    itemCount: listProductsAvail.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        childAspectRatio: 200.0 / 281.0
-                    ),
-                    itemBuilder: (BuildContext context, int index) {
-                      return Card(
-                        clipBehavior: Clip.antiAlias,
-                        elevation: 0.0,
-                        shape: ContinuousRectangleBorder(
-                            borderRadius: BorderRadius.circular(0.0)
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            debugPrint('HOME.VIEW. PRIMERA VEZ. Estoy dentro de la pantalla grande. El ancho de Card es: ' + constraints.maxWidth.toString());
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
-                                      alignment: Alignment.center,
-                                      width: constraints.maxWidth,
-                                      child: AspectRatio(
-                                        aspectRatio: 3.0 / 2.0,
-                                        child: CachedNetworkImage(
-                                          placeholder: (context, url) => CircularProgressIndicator(),
-                                          imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                          fit: BoxFit.fitWidth,
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                                  child: Row(
+                            child: Visibility(
+                              visible : catalog.items[index].purchased == 0,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
-                                    mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Container(
-                                        child: Image.asset('assets/images/00001.png'),
-                                        padding: EdgeInsets.only(right: 8.0),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 3.0),
-                                        child: Text(
-                                            new NumberFormat.currency(locale:'en_US', symbol: '\$', decimalDigits:2).format(double.parse(listProductsAvail[index].product_price.toString())),
+                                        child: Text (
+                                            'Unid. mínim. venta: ' + catalog.items[index].minQuantitySell.toString(),
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 24.0,
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 12.0,
                                               fontFamily: 'SF Pro Display',
+                                              fontStyle: FontStyle.normal,
+                                              color: Color(0xFF6C6D77),
                                             ),
                                             textAlign: TextAlign.start
                                         ),
-                                      ),
-                                      Text(
-                                          listProductsAvail[index].brand,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 16.0,
-                                            fontFamily: 'SF Pro Display',
-                                            fontStyle: FontStyle.italic,
-                                            color: Color(0xFF36B0F8),
-                                          ),
-                                          textAlign: TextAlign.start
-
                                       )
                                     ],
                                   ),
-                                ),
-                                SizedBox(height: 4.0),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                      width: constraints.maxWidth,
-                                      child: Text(
-                                        listProductsAvail[index].product_name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 16.0,
-                                          fontFamily: 'SF Pro Display',
-                                          fontStyle: FontStyle.normal,
-                                          color: Colors.black,
-                                        ),
-                                        textAlign: TextAlign.start,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                SizedBox(height: 2.0),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                      width: constraints.maxWidth,
-                                      child: Text(
-                                        listProductsAvail[index].product_description,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w300,
-                                          fontSize: 12.0,
-                                          fontFamily: 'SF Pro Display',
-                                          fontStyle: FontStyle.normal,
-                                          color: Color(0xFF36B0F8),
-                                        ),
-                                        textAlign: TextAlign.start,
-                                        overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                SizedBox(height: 2.0),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 15.0),
-                                      child: Text(
-                                          listProductsAvail[index].brand,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w300,
-                                            fontSize: 12.0,
-                                            fontFamily: 'SF Pro Display',
-                                            fontStyle: FontStyle.normal,
-                                            color: Color(0xFF6C6D77),
-                                          ),
-                                          textAlign: TextAlign.start
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                SizedBox(height: 14.0),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                                  child: FlatButton(
-                                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
+                                  TextButton(
                                       onPressed: () {
-                                        //var cart = context.read<Cart>();
-                                        //cart.add(listProductsAvail[index]);
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => ProductView(listProductsAvail[index])
-                                            )
-                                        );
+                                        setState(() {
+                                          catalog.add(catalog.getItem(index));
+                                          cart.add(catalog.getItem(index));
+                                        });
                                       },
                                       child: Container(
                                         alignment: Alignment.center,
@@ -761,7 +624,7 @@ class _LargeScreen extends StatelessWidget {
                                               color: tanteLadenBackgroundWhite
                                           ),
                                           child: Text (
-                                            'Comprar',
+                                            'Añadir',
                                             style: TextStyle (
                                               fontFamily: 'SF Pro Display',
                                               fontSize: 16,
@@ -775,49 +638,186 @@ class _LargeScreen extends StatelessWidget {
                                         height: 40,
                                       )
                                   ),
-                                ),
-                                //SizedBox(height: 15.0),
-                              ],
-                            );
-                          },
-                        ),
+                                ],
+                              ),
+                              replacement: Container(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        child: Text(
+                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' uds.' : catalog.items[index].purchased.toString() + ' ud.',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 24.0,
+                                            fontFamily: 'SF Pro Display',
+                                            fontStyle: FontStyle.normal,
+                                            color: tanteLadenIconBrown,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      Container(
+                                        child: Row (
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Visibility(
+                                                visible: (catalog.items[index].purchased > 1) ? true : false,
+                                                child: TextButton(
+                                                  child: Container (
+                                                      alignment: Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.rectangle,
+                                                        borderRadius: BorderRadius.circular(18.0),
+                                                        color: tanteLadenAmber500,
+                                                      ),
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                      child: Text(
+                                                        '-',
+                                                        style: TextStyle(
+                                                            fontFamily: 'SF Pro Display',
+                                                            fontSize: 24,
+                                                            fontWeight: FontWeight.w900,
+                                                            color: tanteLadenIconBrown
+                                                        ),
+                                                      )
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      if (catalog.items[index].purchased > 1) {
+                                                        cart.remove(catalog.items[index]);
+                                                        catalog.remove(catalog.items[index]);
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                                replacement: TextButton(
+                                                  child: Container (
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.rectangle,
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      color: tanteLadenAmber500,
+                                                    ),
+                                                    padding: EdgeInsets.zero,
+                                                    child: IconButton(
+                                                      onPressed: null,
+                                                      icon: Image.asset(
+                                                        'assets/images/logoDeleteKlein.png',
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      iconSize: 20.0,
+                                                      padding: EdgeInsets.all(8.0),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      cart.remove(catalog.items[index]);
+                                                      catalog.remove(catalog.items[index]);
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              flex: 3,
+                                            ),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              flex: 1,
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: TextButton(
+                                                child: Container (
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius: BorderRadius.circular(18.0),
+                                                    //color: colorFondo,
+                                                    color: tanteLadenAmber500,
+                                                  ),
+                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  child: Text (
+                                                    '+',
+                                                    style: TextStyle (
+                                                      fontFamily: 'SF Pro Display',
+                                                      fontSize: 24,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: tanteLadenIconBrown,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    cart.add(catalog.items[index]);
+                                                    catalog.add(catalog.items[index]);
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                              ),
+                            ),
+                          ),
+                        ],
                       );
-                    }
-                )
-            ),
-          ),
-        ],
+                    },
+                  ),
+                );
+              }
+          )
       ),
     );
-    //return returnValue;
   }
 }
+class _LargeScreen extends StatefulWidget {
+  //_LargeScreen(
+  //  this.listProductsAvail
+  //);
+  //final List<ProductAvail> listProductsAvail;
+  _LargeScreenState createState() => _LargeScreenState();
 
-class _HomeWidget extends StatelessWidget {
-  _HomeWidget (
-      this.listProductsAvail,
-      );
-  final List<ProductAvail> listProductsAvail;
+}
+class _LargeScreenState extends State<_LargeScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
+    var catalog = context.watch<Catalog>();
+    var cart = context.read<Cart>();
     return SafeArea(
       child: Padding(
           padding: const EdgeInsets.only(top: 5.0),
           child: GridView.builder(
-              itemCount: listProductsAvail.length,
+              itemCount: catalog.numItems,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 200.0 / 303.0
+                  crossAxisCount: 3,
+                  childAspectRatio: 200.0 / 281.0
               ),
               itemBuilder: (BuildContext context, int index) {
                 return Card(
                   clipBehavior: Clip.antiAlias,
-                  elevation: 0,
+                  elevation: 0.0,
                   shape: ContinuousRectangleBorder(
                       borderRadius: BorderRadius.circular(0.0)
                   ),
                   child: LayoutBuilder(
-                    builder: (context, constraints){
+                    builder: (context, constraints) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -825,16 +825,27 @@ class _HomeWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Container(
-                                //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
-                                alignment: Alignment.center,
-                                width: constraints.maxWidth,
-                                child: AspectRatio(
-                                  aspectRatio: 3.0 / 2.0,
-                                  child: CachedNetworkImage(
-                                    placeholder: (context, url) => CircularProgressIndicator(),
-                                    imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                    fit: BoxFit.fitWidth,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push (
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => ProductView(catalog.items[index])
+                                      )
+                                  );
+                                },
+                                child: Container(
+                                  //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
+                                  alignment: Alignment.center,
+                                  width: constraints.maxWidth,
+                                  child: AspectRatio(
+                                    aspectRatio: 3.0 / 2.0,
+                                    child: CachedNetworkImage(
+                                      placeholder: (context, url) => CircularProgressIndicator(),
+                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productId.toString() + '_0.gif',
+                                      fit: BoxFit.scaleDown,
+                                      errorWidget: (context, url, error) => Icon(Icons.error),
+                                    ),
                                   ),
                                 ),
                               )
@@ -853,7 +864,7 @@ class _HomeWidget extends StatelessWidget {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 3.0),
                                   child: Text(
-                                      new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(listProductsAvail[index].product_price.toString())),
+                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(catalog.items[index].productPrice.toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,
@@ -862,18 +873,6 @@ class _HomeWidget extends StatelessWidget {
                                       textAlign: TextAlign.start
                                   ),
                                 ),
-                                Text(
-                                    listProductsAvail[index].brand,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 16.0,
-                                      fontFamily: 'SF Pro Display',
-                                      fontStyle: FontStyle.italic,
-                                      color: Color(0xFF36B0F8),
-                                    ),
-                                    textAlign: TextAlign.start
-
-                                )
                               ],
                             ),
                           ),
@@ -885,7 +884,7 @@ class _HomeWidget extends StatelessWidget {
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                 width: constraints.maxWidth,
                                 child: Text(
-                                  listProductsAvail[index].product_name,
+                                  catalog.items[index].productName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16.0,
@@ -907,15 +906,14 @@ class _HomeWidget extends StatelessWidget {
                             children: [
                               Container(
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                width: constraints.maxWidth,
                                 child: Text(
-                                  listProductsAvail[index].product_description,
+                                  catalog.items[index].businessName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w300,
                                     fontSize: 12.0,
                                     fontFamily: 'SF Pro Display',
                                     fontStyle: FontStyle.normal,
-                                    color: Color(0xFF36B0F8),
+                                    color: Color(0xFF6C6D77),
                                   ),
                                   textAlign: TextAlign.start,
                                   overflow: TextOverflow.ellipsis,
@@ -930,80 +928,199 @@ class _HomeWidget extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
-                                padding: EdgeInsets.only(left: 15.0, right: 15.0),
-                                width: constraints.maxWidth,
+                                padding: EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
                                 child: Text(
-                                  listProductsAvail[index].brand,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 12.0,
-                                    fontFamily: 'SF Pro Display',
-                                    fontStyle: FontStyle.normal,
-                                    color: Color(0xFF6C6D77),
-                                  ),
-                                  textAlign: TextAlign.start,
-                                  overflow: TextOverflow.ellipsis,
-                                  softWrap: false,
+                                    'Unidades mínimas de venta: ' + catalog.items[index].minQuantitySell.toString() + ' por ' + catalog.items[index].idUnit,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                    textAlign: TextAlign.start
                                 ),
                               )
                             ],
                           ),
-                          SizedBox(height: 14.0),
-                          Padding(
+                          Container(
                             padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                            child: FlatButton(
-                                padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-                                onPressed: () {
-                                  //var cart = context.read<Cart>();
-                                  //cart.add(listProductsAvail[index]);
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => ProductView(listProductsAvail[index])
-                                      )
-                                  );
-                                },
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  padding: EdgeInsets.all(2.0),
-                                  decoration: BoxDecoration (
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.circular(4.0),
-                                      color: tanteLadenBrown500,
-                                      gradient: LinearGradient(
-                                        colors: <Color>[
-                                          Color (0xFF833C26),
-                                          Color (0xFF9A541F),
-                                          Color (0xFFF9B806),
-                                          Color (0XFFFFC107),
-                                        ],
+                            child: Visibility(
+                              visible : catalog.items[index].purchased == 0,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  TextButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          catalog.add(catalog.getItem(index));
+                                          cart.add(catalog.getItem(index));
+                                        });
+                                      },
+                                      child: Container(
+                                        alignment: Alignment.center,
+                                        padding: EdgeInsets.all(2.0),
+                                        decoration: BoxDecoration (
+                                            shape: BoxShape.rectangle,
+                                            borderRadius: BorderRadius.circular(4.0),
+                                            color: tanteLadenBrown500,
+                                            gradient: LinearGradient(
+                                              colors: <Color>[
+                                                Color (0xFF833C26),
+                                                Color (0xFF9A541F),
+                                                Color (0xFFF9B806),
+                                                Color (0XFFFFC107),
+                                              ],
+                                            )
+                                        ),
+                                        child: Container(
+                                          //padding: EdgeInsets.all(3.0),
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                              shape: BoxShape.rectangle,
+                                              borderRadius: BorderRadius.circular(4.0),
+                                              //color: colorFondo,
+                                              color: tanteLadenBackgroundWhite
+                                          ),
+                                          child: Text (
+                                            'Añadir',
+                                            style: TextStyle (
+                                              fontFamily: 'SF Pro Display',
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          //height: 38,
+                                        ),
+                                        height: 40,
                                       )
                                   ),
-                                  child: Container(
-                                    //padding: EdgeInsets.all(3.0),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.circular(4.0),
-                                      //color: colorFondo,
-                                      color: tanteLadenBackgroundWhite,
-                                    ),
-                                    child: Text (
-                                      'Comprar',
-                                      style: TextStyle (
-                                        fontFamily: 'SF Pro Display',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black,
+                                ],
+                              ),
+                              replacement: Container(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        child: Text(
+                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' uds.' : catalog.items[index].purchased.toString() + ' ud.',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 24.0,
+                                            fontFamily: 'SF Pro Display',
+                                            fontStyle: FontStyle.normal,
+                                            color: tanteLadenIconBrown,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    //height: 38,
-                                  ),
-                                  height: 40,
-                                )
+                                      Container(
+                                        child: Row (
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Visibility(
+                                                visible: (catalog.items[index].purchased > 1) ? true : false,
+                                                child: TextButton(
+                                                  child: Container (
+                                                      alignment: Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.rectangle,
+                                                        borderRadius: BorderRadius.circular(18.0),
+                                                        color: tanteLadenAmber500,
+                                                      ),
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                      child: Text(
+                                                        '-',
+                                                        style: TextStyle(
+                                                            fontFamily: 'SF Pro Display',
+                                                            fontSize: 24,
+                                                            fontWeight: FontWeight.w900,
+                                                            color: tanteLadenIconBrown
+                                                        ),
+                                                      )
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      if (catalog.items[index].purchased > 1) {
+                                                        cart.remove(catalog.items[index]);
+                                                        catalog.remove(catalog.items[index]);
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                                replacement: TextButton(
+                                                  child: Container (
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.rectangle,
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      color: tanteLadenAmber500,
+                                                    ),
+                                                    child: IconButton(
+                                                      onPressed: null,
+                                                      icon: Image.asset('assets/images/logoDeleteKlein.png'),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      cart.remove(catalog.items[index]);
+                                                      catalog.remove(catalog.items[index]);
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              flex: 3,
+                                            ),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              flex: 1,
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: TextButton(
+                                                child: Container (
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius: BorderRadius.circular(18.0),
+                                                    //color: colorFondo,
+                                                    color: tanteLadenAmber500,
+                                                  ),
+                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  child: Text (
+                                                    '+',
+                                                    style: TextStyle (
+                                                      fontFamily: 'SF Pro Display',
+                                                      fontSize: 24,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: tanteLadenIconBrown,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    cart.add(catalog.items[index]);
+                                                    catalog.add(catalog.items[index]);
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                              ),
                             ),
                           ),
+                          //SizedBox(height: 15.0),
                         ],
                       );
                     },
@@ -1015,3 +1132,4 @@ class _HomeWidget extends StatelessWidget {
     );
   }
 }
+
