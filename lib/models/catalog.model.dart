@@ -9,35 +9,54 @@ class Catalog with ChangeNotifier {
 
   void add (ProductAvail item) {
     bool founded = false;
-    //this._items.forEach((element) {debugPrint('The element is: ' + element.productId.toString());});
     if (this._items.length > 0) {
       this.items.forEach((element) {
         if (element.productId == item.productId) {
-          element.avail += 1;
+          element.purchased += 1;
           founded = true;
         }
       });
     }
     if (!founded) {
-      item.avail = 1;
-      _items.add(item);
+      final itemCatalog = new ProductAvail(
+        productId: item.productId,
+        productName: item.productName,
+        productDescription: item.productDescription,
+        productType: item.productType,
+        brand: item.brand,
+        numImages: item.numImages,
+        numVideos: item.numVideos,
+        avail: item.avail,
+        purchased: 0,
+        productPrice: item.productPrice,
+        personeId: item.productId,
+        personeName: item.personeName,
+        businessName: item.businessName,
+        email: item.email,
+        taxId: item.taxId,
+        taxApply: item.taxApply,
+        idUnit: item.idUnit,
+        remark: item.remark,
+        minQuantitySell: item.minQuantitySell
+      );
+      _items.add(itemCatalog);
     }
     notifyListeners();
   }
   void remove (ProductAvail item){
-    bool founded = false;
     if (this._items.length > 0) {
-      this.items.forEach((element) { if (element.productId == item.productId) (element.avail == 1) ? founded = true : element.avail -= 1;});
+      this.items.forEach((element) {
+        if (element.productId == item.productId) (element.purchased == 1) ? element.purchased = 0 : element.purchased -= 1;
+      });
     }
-    if (founded) this._items.remove(item);
     notifyListeners();
   }
   void incrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.avail += 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += 1;});
     notifyListeners();
   }
   void decrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.avail -= 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= 1;});
     notifyListeners();
   }
   ProductAvail  getItem (int index) {
