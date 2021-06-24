@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:plataforma_compras/models/address.model.dart';
-import 'package:plataforma_compras/models/addressesList.dart';
-import 'package:plataforma_compras/models/defaultAddressList.dart';
+import 'package:plataforma_compras/models/addressesList.model.dart';
+import 'package:plataforma_compras/models/defaultAddressList.model.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
@@ -38,8 +38,10 @@ class ManageAddressesState extends State<ManageAddresses> {
       debugPrint ('The Rest API has responsed.');
       final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
       final List<Address> resultListAddresses = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-      resultListAddresses.forEach((element) {
-        if (element.statusId == 'D'){
+      Provider.of<DefaultAddressList>(context, listen: false).clearDefaultAddressList();
+      Provider.of<AddressesList>(context, listen: false).clearAddressList();
+      resultListAddresses.forEach((element){
+        if (element.statusId == 'D') {
           Provider.of<DefaultAddressList>(context, listen: false).add(element);
         } else {
           Provider.of<AddressesList>(context, listen: false).add(element);
