@@ -32,6 +32,7 @@ class DefaultAddressList extends ChangeNotifier {
     return _items[index];
   }
   int get numItems => this._items.length;
+
   void clearDefaultAddressList () {
     this._items.clear();
     notifyListeners();
