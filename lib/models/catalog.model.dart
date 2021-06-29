@@ -12,7 +12,7 @@ class Catalog with ChangeNotifier {
     if (this._items.length > 0) {
       this.items.forEach((element) {
         if (element.productId == item.productId) {
-          element.purchased += 1;
+          element.purchased += element.minQuantitySell;   // Always purchase the minimun queantity sell
           founded = true;
         }
       });
@@ -43,20 +43,20 @@ class Catalog with ChangeNotifier {
     }
     notifyListeners();
   }
-  void remove (ProductAvail item){
+  void remove (ProductAvail item) {
     if (this._items.length > 0) {
       this.items.forEach((element) {
-        if (element.productId == item.productId) (element.purchased == 1) ? element.purchased = 0 : element.purchased -= 1;
+        if (element.productId == item.productId) (element.purchased == element.minQuantitySell) ? element.purchased = 0 : element.purchased -= element.minQuantitySell; // Always purchase the minimun queantity sell
       });
     }
     notifyListeners();
   }
   void incrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += element.minQuantitySell;});  // Always purchase the minimun queantity sell
     notifyListeners();
   }
   void decrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= element.minQuantitySell;});  // Always purchase the minimun queantity sell
     notifyListeners();
   }
   ProductAvail  getItem (int index) {
