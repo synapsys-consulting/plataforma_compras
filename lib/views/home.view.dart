@@ -19,7 +19,10 @@ import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/views/product.view.dart';
 import 'package:plataforma_compras/views/lookingForProducts.view.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
-import 'package:plataforma_compras/views/loginPage.view.dart';
+import 'package:plataforma_compras/views/login.view.dart';
+import 'package:plataforma_compras/utils/showSnackBar.dart';
+import 'package:plataforma_compras/views/personalData.view.dart';
+import 'package:plataforma_compras/views/manageAddresses.view.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -45,9 +48,10 @@ class _MyHomePageState extends State<MyHomePage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  bool _isUserLogged = true;
-  String _name = 'Ángel Ruiz Cantón';
+  bool _isUserLogged = false;
+  String _name = '';
   bool _pleaseWait = false;
+  String _token = '';
 
   _showPleaseWait(bool b) {
     setState(() {
@@ -59,6 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _isUserLogged = false;
+    _name = '';
+    _token = '';
     itemsProductsAvailable = _getProductsAvailable();
   }
   // Private method which get the available products from the database
@@ -93,17 +100,17 @@ class _MyHomePageState extends State<MyHomePage> {
   Drawer _createEndDrawer(bool isUserLogged, String name) {
 
     if (isUserLogged) {
-      return new Drawer(
-        child: ListView(
+      return new Drawer (
+        child: ListView (
           padding: EdgeInsets.zero,
           children: [
             ListTile (
-              title: SafeArea(
+              title: SafeArea (
                 child: Text (
                   name,
-                  style: TextStyle(
+                  style: TextStyle (
                     fontSize: 24.0,
-                    color: tanteLadenOnPrimary,
+                    color: tanteLadenIconBrown,
                     fontFamily: 'SF Pro Display',
                     fontWeight: FontWeight.bold
                   )
@@ -113,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Divider(),
             ListTile (
               leading: IconButton(
-                icon: Image.asset('assets/images/logoPersonalData.png'),
+                icon: Image.asset ('assets/images/logoPersonalData.png'),
                 onPressed: null,
               ),
               title: Text(
@@ -124,31 +131,47 @@ class _MyHomePageState extends State<MyHomePage> {
                   fontWeight: FontWeight.normal
                 ),
               ),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => PersonalData(_token)
+                ));
+              },
             ),
             Divider(),
             ListTile (
-              leading: IconButton(
-                icon: Image.asset('assets/images/logoDirections.png'),
-                onPressed: null,
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoDirections.png'),
+                onPressed: null
               ),
-              title: Text(
+              title: Text (
                 'Direcciones',
-                style: TextStyle(
+                style: TextStyle (
                     fontFamily: 'SF Pro Display',
                     fontSize: 20,
                     fontWeight: FontWeight.normal
                 ),
               ),
+              onTap: () {
+                Map<String, dynamic> payload;
+                payload = json.decode(
+                    utf8.decode(
+                        base64.decode (base64.normalize(_token.split(".")[1]))
+                    )
+                );
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => ManageAddresses(payload['persone_id'].toString())
+                ));
+              },
             ),
             Divider(),
             ListTile (
-              leading: IconButton(
-                icon: Image.asset('assets/images/logoPaymentMethod1.png'),
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoPaymentMethod1.png'),
                 onPressed: null,
               ),
               title: Text(
                 'Métodos de pago',
-                style: TextStyle(
+                style: TextStyle (
                     fontFamily: 'SF Pro Display',
                     fontSize: 20,
                     fontWeight: FontWeight.normal
@@ -157,13 +180,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Divider(),
             ListTile (
-              leading: IconButton(
-                icon: Image.asset('assets/images/logoMyPurchases.png'),
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoMyPurchases.png'),
                 onPressed: null,
               ),
               title: Text(
                 'Mis pedidos',
-                style: TextStyle(
+                style: TextStyle (
                     fontFamily: 'SF Pro Display',
                     fontSize: 20,
                     fontWeight: FontWeight.normal
@@ -172,13 +195,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Divider(),
             ListTile (
-              leading: IconButton(
-                icon: Image.asset('assets/images/logoHelp.png'),
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoHelp.png'),
                 onPressed: null,
               ),
               title: Text(
                 'Ayuda',
-                style: TextStyle(
+                style: TextStyle (
                     fontFamily: 'SF Pro Display',
                     fontSize: 20,
                     fontWeight: FontWeight.normal
@@ -187,11 +210,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Divider(),
             ListTile (
-              leading: IconButton(
-                icon: Image.asset('assets/images/logoInformation.png'),
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoInformation.png'),
                 onPressed: null,
               ),
-              title: Text(
+              title: Text (
                 'Información',
                 style: TextStyle(
                     fontFamily: 'SF Pro Display',
@@ -199,7 +222,28 @@ class _MyHomePageState extends State<MyHomePage> {
                     fontWeight: FontWeight.normal
                 ),
               ),
-            )
+            ),
+            Divider(),
+            ListTile (
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoExit.png'),
+                onPressed: null,
+              ),
+              title: Text (
+                'Salir',
+                style: TextStyle (
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+              onTap: () async {
+                final SharedPreferences prefs = await _prefs;
+                prefs.setString ('token', '');
+                Navigator.pop(context);
+              },
+            ),
+            Divider(),
           ],
         ),
       );
@@ -208,32 +252,27 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListView (
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader (
-              decoration: BoxDecoration (
-                color: tanteLadenBackgroundWhite,
-              ),
-              margin: EdgeInsets.zero,
-              //padding: EdgeInsets.zero,
-              child: ListView (
-                children: [
-                  Text('Invitado',
-                    style: TextStyle(
+            ListTile(
+              title: SafeArea (
+                child: Text('Invitado',
+                  style: TextStyle (
                       fontSize: 24.0,
-                      color: tanteLadenOnPrimary,
+                      color: tanteLadenIconBrown,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.bold
-                    ),
                   ),
-                ],
+                ),
               )
             ),
+            Divider(),
+            SizedBox(height: 50.0),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              padding: const EdgeInsets.symmetric (horizontal: 15.0),
               child: Center(
                 child: Text (
                   'Identifícate',
-                  style: TextStyle(
-                      fontSize: 16.0,
+                  style: TextStyle (
+                      fontSize: 20.0,
                       color: tanteLadenOnPrimary,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.bold
@@ -241,26 +280,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
-            SizedBox(height: 10.0,),
-            Padding(
+            SizedBox (height: 10.0,),
+            Padding (
               padding: const EdgeInsets.symmetric(horizontal: 15.0),
               child: Center(
                 child: Text(
                   'Para poder comprar, necesitas una cuenta, así podrás comprar más rápido y también te podremos dar un mejor servicio.',
                   style: TextStyle(
-                    fontSize: 12.0,
+                    fontSize: 16.0,
                     fontFamily: 'SF Pro Display',
                     fontWeight: FontWeight.normal,
                     color: tanteLadenOnPrimary,
                   ),
                   textAlign: TextAlign.justify,
-                  maxLines: 3,
+                  maxLines: 4,
                   softWrap: true,
                 ),
               ),
             ),
-            SizedBox(height: 10.0,),
-            Padding(
+            SizedBox (height: 20.0,),
+            Padding (
               padding: const EdgeInsets.all(15.0),
               child: GestureDetector(
                 child: Container(
@@ -283,7 +322,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                   ),
                   child: const Text(
-                    'Indentifícate',
+                    'Identifícate',
                     style: TextStyle(
                         fontSize: 18.0,
                         color: tanteLadenBackgroundWhite
@@ -295,22 +334,44 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.push (
                       context,
                       MaterialPageRoute (
-                          builder: (context) => (LoginPageView())
+                          builder: (context) => (LoginView(COME_FROM_DRAWER))   //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
                       )
                   );
                 },
               ),
             ),
+            SizedBox (height: 20.0,),
             Divider(),
             ListTile (
-              leading: Image.asset('assets/images/logoHelp.png'),
-              title: Text('Ayuda'),
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoHelp.png'),
+                onPressed: null,
+              ),
+              title: Text(
+                'Ayuda',
+                style: TextStyle (
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
             ),
             Divider(),
             ListTile (
-              leading: Image.asset('assets/images/logoInformation.png'),
-              title: Text('Información'),
-            )
+              leading: IconButton (
+                icon: Image.asset ('assets/images/logoInformation.png'),
+                onPressed: null,
+              ),
+              title: Text (
+                'Información',
+                style: TextStyle(
+                    fontFamily: 'SF Pro Display',
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal
+                ),
+              ),
+            ),
+            Divider(),
           ],
         ),
       );
@@ -324,6 +385,38 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    Widget tmpBuilder = IconButton (
+      icon: Image.asset ('assets/images/profile.png'),
+      tooltip: 'Perfil',
+      onPressed: () async {
+        try {
+          _showPleaseWait(true);
+          final SharedPreferences prefs = await _prefs;
+          final String token = prefs.get ('token') ?? '';
+          debugPrint ('el token es: ' + token);
+          if (token == '') {
+            _isUserLogged = false;
+            _name = '';
+            _token = '';
+          } else {
+            Map<String, dynamic> payload;
+            payload = json.decode(
+                utf8.decode(
+                    base64.decode (base64.normalize(token.split(".")[1]))
+                )
+            );
+            _token = token;
+            _isUserLogged = true;
+            _name = payload['user_firstname'] + ' ' + payload['user_lastname'];
+          }
+          _showPleaseWait(false);
+
+          _scaffoldKey.currentState.openEndDrawer();
+        } catch (e) {
+          ShowSnackBar.showSnackBar(context, e, error: true);
+        }
+      }
+    );
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -379,23 +472,17 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         actions: <Widget>[
-          IconButton(
-            icon: Image.asset('assets/images/profile.png'),
-            tooltip: 'Perfil',
-            onPressed: () async {
-              _showPleaseWait(true);
-              final SharedPreferences prefs = await _prefs;
-              final String token = prefs.get ('token') ?? '';
-              debugPrint ('el token es: ' + token);
-              _showPleaseWait(false);
-
-              _scaffoldKey.currentState.openEndDrawer();
-            }
+          _pleaseWait
+          ? Stack (
+            key:  ObjectKey("stack"),
+            alignment: AlignmentDirectional.center,
+            children: [tmpBuilder, _pleaseWaitWidget],
           )
+          : Stack(key:  ObjectKey("stack"), children: [tmpBuilder])
         ],
         elevation: 0.0,
       ),
-      endDrawer: _createEndDrawer(_isUserLogged,_name),
+      endDrawer: _createEndDrawer (_isUserLogged,_name),
       body: FutureBuilder <List<ProductAvail>>(
           future: itemsProductsAvailable,
           builder: (context, snapshot) {
@@ -497,7 +584,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               )
                             ],
                           ),
-                          Padding(
+                          Padding (
                             padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
                             child: Row (
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -578,7 +665,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text (
-                                            'Unid. mínim. venta: ' + catalog.items[index].minQuantitySell.toString(),
+                                            'Unids. mínim. venta: ' + catalog.items[index].minQuantitySell.toString(),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
                                               fontSize: 12.0,
@@ -646,7 +733,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text(
-                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' uds.' : catalog.items[index].purchased.toString() + ' ud.',
+                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + 's.' : catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + '.',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 24.0,
@@ -930,7 +1017,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                               Container(
                                 padding: EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
                                 child: Text(
-                                    'Unidades mínimas de venta: ' + catalog.items[index].minQuantitySell.toString() + ' por ' + catalog.items[index].idUnit,
+                                    'Unidades mínimas de venta: ' + catalog.items[index].minQuantitySell.toString(),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w300,
                                       fontSize: 12.0,
@@ -1005,7 +1092,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                     children: [
                                       Container(
                                         child: Text(
-                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' uds.' : catalog.items[index].purchased.toString() + ' ud.',
+                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + 's.' : catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + '.',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 24.0,
