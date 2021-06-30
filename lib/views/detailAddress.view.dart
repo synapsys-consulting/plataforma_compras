@@ -2,25 +2,28 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/models/addressGeoLocation.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
-import 'package:plataforma_compras/models/cart.model.dart';
-import 'package:plataforma_compras/models/catalog.model.dart';
-import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
+import 'package:plataforma_compras/views/confirmPurchase.view.dart';
+import 'package:plataforma_compras/models/address.model.dart';
+import 'package:plataforma_compras/models/defaultAddressList.model.dart';
+import 'package:plataforma_compras/models/addressesList.model.dart';
 
 class DetailAddressView extends StatefulWidget {
-  DetailAddressView({Key key, this.address, this.personeId}) : super(key: key);
+  DetailAddressView({Key key, @required this.address, @required this.personeId, @required this.fromWhereCalledIs}) : super(key: key);
   final AddressGeoLocation address;
   final String personeId;
+  final int fromWhereCalledIs;  // 2: ist called from purchase management; 1: ist called from the Drawer option
   @override
-  State<StatefulWidget> createState() {
+  _DetailAddressViewState createState() {
     return _DetailAddressViewState();
   }
 }
@@ -28,6 +31,7 @@ class _DetailAddressViewState extends State<DetailAddressView> {
   AddressGeoLocation _addressOut;
   bool _pleaseWait = false;
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   _showPleaseWait(bool b) {
     setState(() {
@@ -44,56 +48,10 @@ class _DetailAddressViewState extends State<DetailAddressView> {
   void dispose() {
     super.dispose();
   }
-  _badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        _badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
-  }
   @override
   Widget build(BuildContext context) {
+    var addressesList = context.read<AddressesList>();
+    var defaultAddressList = context.read<DefaultAddressList>();
     final Widget tmpBuilder = Container(
       alignment: Alignment.center,
       child: TextButton(
@@ -129,32 +87,46 @@ class _DetailAddressViewState extends State<DetailAddressView> {
                 })
             ).timeout(TIMEOUT);
             if (res.statusCode == 200) {
-              var widgetImage = Image.asset ('assets/images/infoMessage.png');
-              final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-              debugPrint('Before the displayDialogAcceptCancel');
-              final bool responseUser = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-              debugPrint('After the displayDialogAcceptCancel');
-              if (responseUser) {
-                var cart = context.read<Cart>();
-                final String message = await _processPurchase(cart);
-                debugPrint ('the returned message is:' + message);
-                _showPleaseWait(false);
-                await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                cart.clearCart();
-                var catalog = context.read<Catalog>();
-                catalog.clearCatalog();
-                Navigator.popUntil(context, ModalRoute.withName('/'));
-                //Navigator.pop(context);
-                //Navigator.pop(context);
-                //Navigator.pop(context);
-                //Navigator.pop(context);
-                //Navigator.pop(context);
+              final Map<String, dynamic> resultJson = json.decode(res.body)['address'].cast<String, dynamic>();
+              final Address resultAddress = Address.fromJson(resultJson);
+              final List<Address> resultListAddress = [resultAddress];
+              final SharedPreferences prefs = await _prefs;
+              final String token = prefs.get ('token') ?? '';
+              Map<String, dynamic> payload;
+              payload = json.decode(
+                  utf8.decode(
+                      base64.decode(base64.normalize(token.split(".")[1]))
+                  )
+              );
+              if (defaultAddressList.numItems == 0) {
+                defaultAddressList.add(resultAddress);
+              } else {
+                addressesList.add(resultAddress);
+              }
+              _showPleaseWait(false);
+              if (widget.fromWhereCalledIs == COME_FROM_ANOTHER) {  // 2: ist called from purchase management; 1: ist called from the Drawer option
+                //const COME_FROM_DRAWER = 1;
+                // const COME_FROM_ANOTHER = 2;
+                Navigator.push (
+                    context,
+                    MaterialPageRoute (
+                        builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                    )
+                );
+              } else {
+                // 2: ist called from purchase management; 1: ist called from the Drawer option
+                //const COME_FROM_DRAWER = 1;
+                // const COME_FROM_ANOTHER = 2;
+                //Navigator.popUntil(context, ModalRoute.withName('/'));
+                Navigator.pop(context);
+                Navigator.pop(context);
               }
             } else {
               _showPleaseWait (false);
             }
           } catch (e) {
             _showPleaseWait (false);
+            debugPrint ('El error es: ' + e.toString());
             ShowSnackBar.showSnackBar(context, e, error: true);
           }
         },
@@ -261,7 +233,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     widget.addressOut.streetName = _streetNameController.text;
   }
   _onStreetNumberChanged(){
-    widget.addressOut.streetName = _streetNumberController.text;
+    widget.addressOut.streetNumber = _streetNumberController.text;
   }
   _onFlatDoorChanged() {
     widget.addressOut.flatDoor = _flatDoorController.text;
