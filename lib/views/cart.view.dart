@@ -14,7 +14,7 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
-import 'package:plataforma_compras/views/loginPage.view.dart';
+import 'package:plataforma_compras/views/login.view.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/models/address.model.dart';
 import 'package:plataforma_compras/models/catalog.model.dart';
@@ -131,7 +131,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            'Unid. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                            'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
                                               fontSize: 12.0,
@@ -163,7 +163,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           softWrap: false,
                                         ),
                                         Text(
-                                          '/ud.',
+                                          cart.getItem(index).idUnit + '.',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w300,
                                             fontSize: 16.0,
@@ -188,7 +188,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   children: [
                                     Container(
                                       child: Text(
-                                        (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' uds.' : cart.getItem(index).purchased.toString() + ' ud.',
+                                        (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + 's.' : cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + '.',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 24.0,
@@ -424,7 +424,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       children: [
                                         Container(
                                           child: Text(
-                                              'Unid. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                              'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w300,
                                                 fontSize: 12.0,
@@ -456,7 +456,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                             softWrap: false,
                                           ),
                                           Text(
-                                            '/ud.',
+                                            cart.getItem(index).idUnit + '.',
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
                                               fontSize: 16.0,
@@ -484,7 +484,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                         children: [
                                           Container(
                                             child: Text(
-                                              (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' uds.' : cart.getItem(index).purchased.toString() + ' ud.',
+                                              (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + 's.' : cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + '.',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w700,
                                                 fontSize: 24.0,
@@ -786,7 +786,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                         Navigator.push (
                                             context,
                                             MaterialPageRoute (
-                                                builder: (context) => (LoginPageView())
+                                                builder: (context) => (LoginView(COME_FROM_ANOTHER))  //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
                                             )
                                         );
                                       } else {
@@ -830,7 +830,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                             Navigator.push (
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
+                                                    builder: (context) => (AddAddressView(payload['persone_id'].toString()))
                                                 )
                                             );
                                           }
