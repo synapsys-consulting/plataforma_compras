@@ -1,3 +1,12 @@
-const SERVER_IP = 'http://192.168.1.134:9000/server';
+const SERVER_IP = 'https://192.168.2.107:9000/server';
+//const SERVER_IP = 'https://52.55.250.28:9000/server';
+//const SERVER_IP = 'https://ec2-52-55-250-28.compute-1.amazonaws.com:9000/server';
+//const SERVER_IP = 'http://localhost:9000/server';
+//const SERVER_IP = 'http://127.0.0.1:9000/server';
+//const SERVER_IP = 'http://10.0.2.2:9000/server';
+//const SERVER_IP = 'http://192.168.1.134:9000/server';
+//const SERVER_IP = 'http://192.168.1.7:9000/server';
 const IMAGES_DIRECTORY = '/image/products/';
-const TIMEOUT = Duration(seconds: 10);
+const TIMEOUT = Duration(seconds: 20);
+const COME_FROM_DRAWER = 1;
+const COME_FROM_ANOTHER = 2;
