@@ -1,12 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 
 
 import 'package:plataforma_compras/views/home.view.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
+import 'package:plataforma_compras/models/defaultAddressList.model.dart';
+import 'package:plataforma_compras/models/addressesList.model.dart';
 
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        //final isValidHost = host == "52.55.250.28";
+        final isValidHost = host == "192.168.2.107";
+        //final isValidHost = host == "192.168.2.106";
+        return isValidHost;
+      };
+  }
+}
 void main() {
+  HttpOverrides.global = new MyHttpOverrides();
   runApp(MyApp());
 }
 
@@ -14,11 +32,33 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<Cart>(
-      create: (context) => Cart(),
+    //return ChangeNotifierProvider<Cart>(
+    //  create: (context) => Cart(),
+    //  child: MaterialApp (
+    //    title: 'Comprando',
+    //    theme: _tanteLadenTheme,
+    //    home: MyHomePage(title: 'Plataforma de Compras'),
+    //    debugShowCheckedModeBanner: true,
+    //  ),
+    //);
+    return MultiProvider (
+      providers: [
+        ChangeNotifierProvider<Cart>(
+          create: (context) => Cart(),
+        ),
+        ChangeNotifierProvider<Catalog>(
+          create: (context) => Catalog()
+        ),
+        ChangeNotifierProvider<DefaultAddressList>(
+          create: (context) => DefaultAddressList()
+        ),
+        ChangeNotifierProvider<AddressesList>(
+          create: (context) => AddressesList()
+        )
+      ],
       child: MaterialApp (
         title: 'Comprando',
-        theme: _TanteLadenTheme,
+        theme: _tanteLadenTheme,
         home: MyHomePage(title: 'Plataforma de Compras'),
         debugShowCheckedModeBanner: true,
       ),
@@ -26,7 +66,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-final ThemeData _TanteLadenTheme = _buildTanteLadenTheme();
+final ThemeData _tanteLadenTheme = _buildTanteLadenTheme();
 
 ThemeData _buildTanteLadenTheme(){
   final ThemeData base = ThemeData.from(
@@ -57,7 +97,11 @@ ThemeData _buildTanteLadenTheme(){
     ),
     scaffoldBackgroundColor: tanteLadenBackgroundWhite,
     cardColor: tanteLadenBackgroundWhite,
-    textSelectionColor: tanteLadenAmber100,
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: tanteLadenOnPrimary,
+      selectionColor: tanteLadenAmber100,
+      selectionHandleColor: tanteLadenAmber100
+    ),
     errorColor: tanteLadenErrorRed,
   );
 }
