@@ -33,6 +33,7 @@ class UpdatePasswordState extends State<UpdatePassword> {
   }
   @override
   void initState() {
+    super.initState();
     _pleaseWait = false;
   }
   @override
@@ -247,7 +248,111 @@ class _LargeScreenView extends StatefulWidget {
   }
 }
 class _LargeScreenViewState extends State<_LargeScreenView> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _newPasswordController = TextEditingController();
+  bool _passwordNoVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordNoVisible = true;
+    widget.passwordOut.password = _newPasswordController.text;
+    _newPasswordController.addListener(_onNewPasswordChanged);
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+  _onNewPasswordChanged() {
+    widget.passwordOut.password = _newPasswordController.text;
+  }
   @override
   Widget build(BuildContext context) {
+    return SafeArea(
+      child: Row(
+        children: [
+          Flexible(child: Container()),
+          Flexible(
+            flex: 2,
+            child: Center (
+              child: ListView (
+                padding: EdgeInsets.all(20.0),
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        child: Text (
+                          'Cambio de contraseña',
+                          style: TextStyle (
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20.0,
+                            fontFamily: 'SF Pro Display',
+                            fontStyle: FontStyle.normal,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox (height: 15.0),
+                  Text(
+                    'Introduzca su nueva contraseña.',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.normal,
+                      color: tanteLadenOnPrimary,
+                    ),
+                    textAlign: TextAlign.justify,
+                    maxLines: 2,
+                    softWrap: true,
+                  ),
+                  SizedBox (height: 20.0,),
+                  Form(
+                      autovalidateMode: AutovalidateMode.always,
+                      key: _formKey,
+                      child: Column (
+                        children: [
+                          TextFormField(
+                            controller: _newPasswordController,
+                            decoration: InputDecoration (
+                              labelText: 'Nueva password',
+                              labelStyle: TextStyle (
+                                color: tanteLadenIconBrown,
+                              ),
+                              suffixIcon: IconButton (
+                                  icon: Icon(_passwordNoVisible ? Icons.visibility_off : Icons.visibility),
+                                  onPressed: () {
+                                    setState(() {
+                                      _passwordNoVisible = ! _passwordNoVisible;
+                                    });
+                                  }
+                              ),
+                            ),
+                            validator: (String value) {
+                              if (value.isEmpty) {
+                                return 'Introduce una nueva contraseña.';
+                              } else {
+                                if (value.length < 5) {
+                                  return 'La contraseña debe tener al menos 5 caracteres o números';
+                                } else {
+                                  return null;
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Flexible(child: Container())
+        ],
+      ),
+    );
   }
 }
