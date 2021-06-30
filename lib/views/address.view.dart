@@ -1,0 +1,352 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:geolocator/geolocator.dart';
+
+import 'package:plataforma_compras/utils/colors.util.dart';
+import 'package:plataforma_compras/utils/credentials.util.dart';
+import 'package:plataforma_compras/views/detailAddress.view.dart';
+import 'package:plataforma_compras/utils/showSnackBar.dart';
+import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
+import 'package:plataforma_compras/models/addressGeoLocation.dart';
+
+class AddressView extends StatefulWidget {
+  final String personeId;
+  final int fromWhereCalledIs;  // 2: ist called from purchase management; 1: ist called from the Drawer option
+  AddressView (this.personeId, this.fromWhereCalledIs);
+  @override
+  _AddressViewState createState() => _AddressViewState();
+}
+
+class _AddressViewState extends State<AddressView> {
+
+  final TextEditingController _searchController = TextEditingController();
+  Timer _throttle;
+  List<String> _placeList;
+  List<AddressGeoLocation> _addressList;
+  bool _pleaseWait = false;
+  final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+
+  _showPleaseWait(bool b) {
+    setState(() {
+      _pleaseWait = b;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener (_onSearchChanged);
+  }
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    if (_placeList != null) _placeList.clear();
+    if (_addressList != null) _addressList.clear();
+    super.dispose();
+  }
+  _onSearchChanged() {
+    if (_throttle?.isActive ?? false) _throttle.cancel();
+    _throttle = Timer (const Duration(microseconds: 100), () {
+      _getLocationResults(_searchController.text);
+    });
+  }
+  ///
+  /// Get the Autocomplete address
+  ///
+  void _getLocationResults (String input) async {
+    if (input.isEmpty) {
+      return;
+    }
+    final String baseURL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+    final String type = 'address';
+    final String language = 'es';
+    // SPAIN coordinates
+    //String locationBias = 'circle:1300000@40.0000000,-4.0000000';
+    //String location = '40.0000000,-4.0000000';
+    //String radius = '1300000';
+    String components = 'country:es';
+    String request = '$baseURL?input=$input&type=$type&language=$language&components=$components&key=$PLACES_APY_KEY';
+    Response response = await Dio().get(
+      request,
+      options: Options(
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        }
+      )
+    );
+    final List<Map<String, dynamic>> predictions = response.data['predictions'].cast<Map<String, dynamic>>();
+    final status = response.data['status'];
+    if (status == "OK") {
+      List<String> displayResults = [];
+      List<AddressGeoLocation> tempAddressList = [];
+      for (var i = 0; i < predictions.length; i++) {
+        String name = predictions[i]['description'];
+        displayResults.add(name);
+        final List<Map<String, dynamic>> terms = predictions[i]['terms'].cast<Map<String, dynamic>>();
+        AddressGeoLocation tmpAddress = new AddressGeoLocation();
+        if (terms.length == 4) {
+          for (var j = 0; j < terms.length; j++) {
+            if (j == 0) {
+              tmpAddress.streetName = terms[j]['value'];
+            } else if (j == 1) {
+              tmpAddress.streetNumber = terms[j]['value'];
+            } else if (j == 2) {
+              tmpAddress.locality = terms[j]['value'];
+            } else if (j == 3) {
+              tmpAddress.country = terms[j]['value'];
+            }
+          }
+        }
+        if (terms.length == 3) {
+          for (var j = 0; j < terms.length; j++) {
+            if (j == 0) {
+              tmpAddress.streetName = terms[j]['value'];
+            } else if (j == 1) {
+              tmpAddress.locality = terms[j]['value'];
+            } else if (j == 2) {
+              tmpAddress.country = terms[j]['value'];
+            }
+          }
+        }
+        tempAddressList.add(tmpAddress);
+      }
+      setState(() {
+        _placeList = displayResults;
+        _addressList = tempAddressList;
+      });
+    }
+  }
+
+  ///
+  /// Determine the current position of the device.
+  ///
+  /// When the location services are not enabled or permissions
+  /// are denied the `Future` will return an error.
+  Future<AddressGeoLocation> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    AddressGeoLocation address = new AddressGeoLocation();
+    // Test if location services are enabled.
+    debugPrint ('Comienzo con _determinePosition');
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      debugPrint ('Paso al If serviceEnabled');
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      //return Future.error('Location services are disabled.');
+      return Future.error('El servicio de geolocalización no está abilitado en el aparato. Actívalo.');
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        // Permissions are denied forever, handle appropriately.
+        //return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+        return Future.error('Los permisos de geolocalización para la aplicación han sido denegados. Da permisos a la aplicación para usar la geolocalización.');
+      }
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error ('Has desautorizado a la aplicación para usar la geolocalización. Autorizala de nuevo en la configuración del teléfono.');
+      }
+    }
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    final myPosition = await Geolocator.getCurrentPosition();
+    final String language = 'es';
+    final String baseURL = 'https://maps.googleapis.com/maps/api/geocode/json';
+    //final String locationType = 'ROOFTOP';
+    //final String resultType = 'street_address|political|country|administrative_area_level_1|administrative_area_level_2|locality|sublocality|neighborhood|postal_code';
+    final String latLong = myPosition.toJson()['latitude'].toString() + ',' + myPosition.toJson()['longitude'].toString();
+    final String request = '$baseURL?latlng=$latLong&language=$language&key=$PLACES_APY_KEY';
+    Response response = await Dio().get(request);
+    final status = response.data['status'];
+    debugPrint ('El código de retorno es: ' + status);
+    if (status == 'OK') {
+      final List<Map<String, dynamic>> results = response.data['results'].cast<Map<String, dynamic>>(); // Query returns the results
+      final List<Map<String, dynamic>> addressComponents = results[0]['address_components'].cast<Map<String, dynamic>>(); // Take the first element [0] because is the most accurated result
+      for (var i = 0; i < addressComponents?.length; i++) {
+        debugPrint ('El valor de address_components es: ' + addressComponents[i]['types'][0] + '. Con valor: ' + addressComponents[i]['long_name']);
+        if (addressComponents[i]['types'][0] == 'street_number') {
+          address.streetNumber = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'route') {
+          address.streetName = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'locality') {
+          address.locality = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'administrative_area_level_2') {
+          address.province = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'administrative_area_level_1') {
+          address.state = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'country') {
+          address.country = addressComponents[i]['long_name'];
+        }
+        if (addressComponents[i]['types'][0] == 'postal_code') {
+          address.postalCode = addressComponents[i]['long_name'];
+        }
+      }
+    } else if (status == 'ZERO_RESULTS') {
+      Future.error('ZERO_RESULTS');
+    } else if (status == 'OVER_QUERY_LIMIT') {
+      Future.error('OVER_QUERY_LIMIT');
+    } else if (status == 'REQUEST_DENIED') {
+      Future.error('REQUEST_DENIED');
+    } else if (status == 'INVALID_REQUEST') {
+      Future.error('INVALID_REQUEST');
+    }
+    return address;
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0.0,
+        //automaticallyImplyLeading: false,   //if false and leading is null, leading space is given to title.
+        //leading: null,
+        backgroundColor: tanteLadenBackgroundWhite,
+        title: SafeArea (
+          child: _AccentColorOverride(
+            color: tanteLadenOnPrimary,
+            child: TextField (
+              controller: _searchController,
+              decoration: InputDecoration (
+                prefixIcon: Icon(Icons.youtube_searched_for_outlined),
+                labelText: 'Buscar calle',
+                //helperText: 'Teclea el nombre de la calle que quieres buscar',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                      _placeList.clear();
+                    });
+                  }
+                )
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: _buildBody(context),
+    );
+  }
+  Widget _buildBody (BuildContext context) {
+    Widget builder = ListView(
+      padding: EdgeInsets.only(top: 15.0),
+      children: <Widget>[
+        SizedBox(height: 15.0,),
+        ListTile (
+          leading: IconButton (
+            icon: Image.asset('assets/images/logoGetMyPlace.png'),
+            onPressed: null,
+          ),
+          title: Text (
+            'Ubicación actual',
+            style: TextStyle(
+              fontFamily: 'Avenir',
+              fontSize: 24.0,
+              fontWeight: FontWeight.w900,
+            ),
+            textAlign: TextAlign.left,
+          ),
+          onTap: () async {
+            try {
+              /// Determine the current position of the device.
+              ///
+              /// When the location services are not enabled or permissions
+              /// are denied the `Future` will return an error.
+              ///
+              _showPleaseWait(true);
+              final AddressGeoLocation address = await _determinePosition();
+              _showPleaseWait(false);
+              debugPrint ('Antes del Push. Imprimo el valor de la ciudad: ' + address.locality);
+              Navigator.push (
+                  context,
+                  MaterialPageRoute (
+                      builder: (context) => DetailAddressView (address: address, personeId: widget.personeId, fromWhereCalledIs: widget.fromWhereCalledIs,)
+                  )
+              );
+            } catch (err) {
+              _showPleaseWait(false);
+              ShowSnackBar.showSnackBar(context, err);
+              debugPrint ('El error es: ' + err);
+
+              //Navigator.push (
+              //    context,
+              //    MaterialPageRoute(
+              //        builder: (context) => DetailAddress(address: null)
+              //    )
+              //);
+            }
+          },
+        ),
+      ],
+    );
+    Widget buildStack = _pleaseWait
+      ? Stack(key: ObjectKey("stack"), children: [_pleaseWaitWidget, builder])
+      : Stack(key: ObjectKey("stack"), children: [builder]);
+    return (_placeList == null || _placeList?.length == 0) ?
+    buildStack:
+    ListView.builder (
+        itemCount: _placeList?.length ?? 0,
+        itemBuilder: (BuildContext context, int index) => buildPlaceCard(context, index)
+    );
+  }
+  Widget buildPlaceCard(BuildContext context, int index) {
+    return Card(
+      color: tanteLadenBackgroundWhite,
+      child: ListTile(
+        //leading: Icon(Icons.where_to_vote),
+        leading: Image.asset('assets/images/logoPlace.png'),
+        title: Text(
+          _placeList[index],
+          style: TextStyle(
+            color: tanteLadenOnPrimary,
+            fontFamily: 'SF Pro Display',
+            fontStyle: FontStyle.normal,
+            fontWeight: FontWeight.normal,
+            fontSize: 16,
+          ),
+          textAlign: TextAlign.justify,
+        ),
+        onTap: () {
+          Navigator.push (
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetailAddressView(address: _addressList[index], personeId: widget.personeId, fromWhereCalledIs: widget.fromWhereCalledIs)
+              )
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AccentColorOverride extends StatelessWidget {
+  const _AccentColorOverride ({Key key, this.color, this.child})
+      : super(key: key);
+
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      child: child,
+      data: Theme.of(context).copyWith(
+        accentColor: color,
+        brightness: Brightness.dark,
+      ),
+    );
+  }
+}
