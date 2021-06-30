@@ -14,13 +14,13 @@ import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/views/signUp.view.dart';
 import 'package:plataforma_compras/views/address.view.dart';
 import 'package:plataforma_compras/models/address.model.dart';
-import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
-import 'package:plataforma_compras/models/catalog.model.dart';
+import 'package:plataforma_compras/views/confirmPurchase.view.dart';
 
 class SigInView extends StatelessWidget {
-  SigInView (this.email);
+  SigInView (this.email, this.reason);
   final String email;
+  final int reason;   //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,16 +40,17 @@ class SigInView extends StatelessWidget {
         ],
       ),
       body: ResponsiveWidget (
-        smallScreen: _SmallScreenView (this.email),
-        largeScreen: _LargeScreenView (this.email),
+        smallScreen: _SmallScreenView (this.email, this.reason),
+        largeScreen: _LargeScreenView (this.email, this.reason),
       ),
     );
   }
 }
 
 class _SmallScreenView extends StatefulWidget {
-  _SmallScreenView(this.email);
+  _SmallScreenView(this.email, this.fromWhereCalledIs);
   final String email;
+  final int fromWhereCalledIs;   //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
 
   @override
   _SmallScreenViewState createState() {
@@ -80,54 +81,6 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     _password.dispose();
     super.dispose();
   }
-  badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
-  }
 
   @override
   Widget build (BuildContext context) {
@@ -157,7 +110,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                     // Sign in
                     final String token = json.decode(res.body)['token'].toString();
                     final SharedPreferences prefs = await _prefs;
-                    prefs.setString('token', token);
+                    prefs.setString ('token', token);
                     // See if there is an address for this user
                     Map<String, dynamic> payload;
                     payload = json.decode(
@@ -165,74 +118,85 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             base64.decode(base64.normalize(token.split(".")[1]))
                         )
                     );
-                    final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
-                    final http.Response resAddress = await http.get (
-                        urlAddress,
-                        headers: <String, String>{
-                          'Content-Type': 'application/json; charset=UTF-8',
-                          //'Authorization': jwt
-                        }
-                    );
-                    if (resAddress.statusCode == 200) {
-                      // exists an address for the user
-                      final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
-                      final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-                      if (resultListAddress.length > 0) {
-                        // if exists address
-                        var widgetImage = Image.asset ('assets/images/infoMessage.png');
-                        final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-                        debugPrint('Before the displayDialogAcceptCancel');
-                        final bool responseUser = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-                        debugPrint('After the displayDialogAcceptCancel');
-                        if (responseUser) {
-                          final String message = await _processPurchase(cart);
-                          debugPrint ('the returned message is:' + message);
+                    if (widget.fromWhereCalledIs == COME_FROM_ANOTHER) {
+                      // COME_FROM_ANOTHER = 2
+                      // COME_FROM_DRAWER = 1
+                      //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                      final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                      final http.Response resAddress = await http.get (
+                          urlAddress,
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            //'Authorization': jwt
+                          }
+                      );
+                      if (resAddress.statusCode == 200) {
+                        // exists an address for the user
+                        final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
+                        final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                        if (resultListAddress.length > 0) {
+                          // if exists address
                           _showPleaseWait(false);
-                          await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                          cart.clearCart();
-                          var catalog = context.read<Catalog>();
-                          catalog.clearCatalog();
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          Navigator.pop(context);
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute (
+                                  builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                              )
+                          );
                         } else {
+                          // if not exists address
                           _showPleaseWait(false);
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          Navigator.pop(context);
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute (
+                                  builder: (context) => (AddressView(payload['persone_id'].toString(), COME_FROM_ANOTHER))
+                              )
+                          );
                         }
-                      } else {
+                      } else if (resAddress.statusCode == 404) {
                         // if not exists address
                         _showPleaseWait(false);
                         Navigator.push (
                             context,
                             MaterialPageRoute (
-                                builder: (context) => (AddressView(personeId: payload['persone_id'].toString(),))
+                                builder: (context) => (AddressView(payload['persone_id'].toString(), COME_FROM_ANOTHER))
                             )
                         );
+                      } else {
+                        _showPleaseWait(false);
+                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                       }
-                    } else if (resAddress.statusCode == 404) {
-                      // if not exists address
-                      _showPleaseWait(false);
-                      Navigator.push (
-                          context,
-                          MaterialPageRoute (
-                              builder: (context) => (AddressView(personeId: payload['persone_id'].toString(),))
-                          )
-                      );
                     } else {
-                      _showPleaseWait(false);
-                      ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                      // 1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                      // The call comes from the drawer.
+                      Navigator.popUntil(context, ModalRoute.withName('/'));
                     }
                   } else if (res.statusCode == 404) {
+                    // User doesn't exists in the system
                     _showPleaseWait(false);
                     // Sign up
                     Navigator.push (
                         context,
                         MaterialPageRoute(
-                            builder: (context) => (SignUpView(widget.email))
+                            builder: (context) => (SignUpView(widget.email, widget.fromWhereCalledIs))
                         )
                     );
+                  } else if (res.statusCode == 403) {
+                    // User doesn't exist in the system
+                    _showPleaseWait(false);
+                    // Sign up
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                            (SignUpView(
+                                widget.email, widget.fromWhereCalledIs))
+                        )
+                    );
+                  } else if (res.statusCode == 402) {
+                    // Password is not right
+                    _showPleaseWait(false);
+                    ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                   } else {
                     // Error
                     _showPleaseWait(false);
@@ -394,8 +358,9 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   }
 }
 class _LargeScreenView extends StatefulWidget {
-  _LargeScreenView(this.email);
+  _LargeScreenView(this.email, this.fromWhereCalledIs);
   final String email;
+  final int fromWhereCalledIs;   //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
   @override
   _LargeScreenViewState createState() {
     return _LargeScreenViewState();
@@ -424,54 +389,6 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
   void dispose() {
     _password.dispose();
     super.dispose();
-  }
-  badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
   }
   @override
   Widget build(BuildContext context) {
@@ -509,86 +426,87 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               base64.decode(base64.normalize(token.split(".")[1]))
                           )
                       );
-                      final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
-                      final http.Response resAddress = await http.get (
-                          urlAddress,
-                          headers: <String, String>{
-                            'Content-Type': 'application/json; charset=UTF-8',
-                            //'Authorization': jwt
-                          }
-                      );
-                      if (resAddress.statusCode == 200) {
-                        // exists an address for the user
-                        final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
-                        final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-                        if (resultListAddress.length > 0) {
-                          // if exists address
-                          var widgetImage = Image.asset ('assets/images/infoMessage.png');
-                          final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-                          debugPrint('Before the displayDialogAcceptCancel');
-                          final bool responseUser = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-                          debugPrint('After the displayDialogAcceptCancel');
-                          if (responseUser) {
-                            final String message = await _processPurchase(cart);
-                            debugPrint ('the returned message is:' + message);
+                      if (widget.fromWhereCalledIs == COME_FROM_ANOTHER) {
+                        // COME_FROM_ANOTHER = 2
+                        // COME_FROM_DRAWER = 1
+                        //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                        final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                        final http.Response resAddress = await http.get (
+                            urlAddress,
+                            headers: <String, String>{
+                              'Content-Type': 'application/json; charset=UTF-8',
+                              //'Authorization': jwt
+                            }
+                        );
+                        if (resAddress.statusCode == 200) {
+                          // exists an address for the user
+                          final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                          if (resultListAddress.length > 0) {
+                            // if exists address
                             _showPleaseWait(false);
-                            await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                            cart.clearCart();
-                            var catalog = context.read<Catalog>();
-                            catalog.clearCatalog();
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                            Navigator.pop(context);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                                )
+                            );
                           } else {
+                            // if not exists address
                             _showPleaseWait(false);
-                            Navigator.pop(context);
-                            Navigator.pop(context);
-                            Navigator.pop(context);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(),))
+                                )
+                            );
                           }
-                        } else {
+                        } else if (resAddress.statusCode == 404) {
                           // if not exists address
                           _showPleaseWait(false);
-                          //Navigator.push (
-                          //    context,
-                          //    MaterialPageRoute (
-                          //        builder: (context) => (AddressView(personeId: payload['persone_id'].toString(),))
-                          //    )
-                          //);
                           Navigator.push (
                               context,
                               MaterialPageRoute (
-                                  builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString(),))
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString(),))
                               )
                           );
+                        } else {
+                          _showPleaseWait(false);
+                          ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                         }
-                      } else if (resAddress.statusCode == 404) {
-                        // if not exists address
-                        _showPleaseWait(false);
-                        //Navigator.push (
-                        //    context,
-                        //    MaterialPageRoute (
-                        //        builder: (context) => (AddressView(personeId: payload['persone_id'].toString(),))
-                        //    )
-                        //);
-                        Navigator.push (
-                            context,
-                            MaterialPageRoute (
-                                builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString(),))
-                            )
-                        );
                       } else {
-                        _showPleaseWait(false);
-                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                        // 1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                        // The call comes from the drawer.
+                        Navigator.popUntil(context, ModalRoute.withName('/'));
                       }
                     } else if (res.statusCode == 404) {
+                      // User doesn't exists in the system
                       _showPleaseWait(false);
                       // Sign up
-                      Navigator.push (
+                      Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => (SignUpView(widget.email))
+                              builder: (context) =>
+                              (SignUpView(
+                                  widget.email, widget.fromWhereCalledIs))
                           )
                       );
+                    } else if (res.statusCode == 403) {
+                      // User doesn't exist in the system
+                      _showPleaseWait(false);
+                      // Sign up
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                              (SignUpView(
+                                  widget.email, widget.fromWhereCalledIs))
+                          )
+                      );
+                    } else if (res.statusCode == 402) {
+                      // Password is not right
+                      _showPleaseWait(false);
+                      ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                     } else {
                       // Error
                       _showPleaseWait(false);
@@ -648,111 +566,124 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
             ),
             Flexible(
               flex: 2,
-              child: Center(
-                child: ListView(
-                  padding: EdgeInsets.all(20.0),
-                  children: <Widget>[
-                    Row (
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          child: Text (
-                            'Hola de nuevo',
-                            style: TextStyle (
-                              fontWeight: FontWeight.w900,
-                              fontSize: 36.0,
-                              fontFamily: 'SF Pro Display',
-                              fontStyle: FontStyle.normal,
-                              color: Colors.black,
+              child: Column(
+                children: <Widget>[
+                  Flexible(
+                    flex: 1,
+                    child: Container()
+                  ),
+                  Flexible(
+                    flex: 4,
+                    child: ListView(
+                      padding: EdgeInsets.all(20.0),
+                      children: <Widget>[
+                        Row (
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              child: Text (
+                                'Hola de nuevo',
+                                style: TextStyle (
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 36.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Colors.black,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 30.0,),
-                    Row (
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container (
-                          alignment: Alignment.centerLeft,
-                          child: Text (
-                            'Introduce tu contraseña.',
-                            style: TextStyle (
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16.0,
-                              fontFamily: 'SF Pro Display',
-                              fontStyle: FontStyle.normal,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.justify,
+                        SizedBox(height: 30.0,),
+                        Row (
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container (
+                              alignment: Alignment.centerLeft,
+                              child: Text (
+                                'Introduce tu contraseña.',
+                                style: TextStyle (
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.justify,
+                              ),
+                            )
+                          ],
+                        ),
+                        SizedBox (height: 20.0,),
+                        Form (
+                          autovalidateMode: AutovalidateMode.always,
+                          key: _formKey,
+                          child: Column (
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                controller: _password,
+                                decoration: InputDecoration (
+                                  labelText: 'password',
+                                  labelStyle: TextStyle (
+                                    color: tanteLadenIconBrown,
+                                  ),
+                                  suffixIcon: IconButton (
+                                      icon: Icon(_passwordNoVisible ? Icons.visibility_off : Icons.visibility),
+                                      onPressed: () {
+                                        setState(() {
+                                          _passwordNoVisible = ! _passwordNoVisible;
+                                        });
+                                      }
+                                  ),
+                                ),
+                                validator: (String value) {
+                                  if (value == null) {
+                                    return 'Introduce una password';
+                                  } else {
+                                    return null;
+                                  }
+                                },
+                                obscureText: _passwordNoVisible,
+                              ),
+                              SizedBox(height: 20.0,),
+                              Container(
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.all(0.0),
+                                child: TextButton(
+                                    onPressed: null,
+                                    child: Text(
+                                      'No recuerdo mi contraseña',
+                                      style: TextStyle(
+                                          fontFamily: 'SF Pro Display',
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.w500,
+                                          color: tanteLadenButtonBorderGray
+                                      ),
+                                      textAlign: TextAlign.left,
+                                    )
+                                ),
+                              ),
+                              SizedBox(height: 40.0,),
+                              _pleaseWait
+                              ? Stack (
+                                key:  ObjectKey("stack"),
+                                alignment: AlignmentDirectional.center,
+                                children: [tmpBuilder, _pleaseWaitWidget],
+                              )
+                              : Stack (key:  ObjectKey("stack"), children: [tmpBuilder],)
+                            ],
                           ),
                         )
                       ],
                     ),
-                    SizedBox (height: 20.0,),
-                    Form (
-                      autovalidateMode: AutovalidateMode.always,
-                      key: _formKey,
-                      child: Column (
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextFormField(
-                            controller: _password,
-                            decoration: InputDecoration (
-                              labelText: 'password',
-                              labelStyle: TextStyle (
-                                color: tanteLadenIconBrown,
-                              ),
-                              suffixIcon: IconButton (
-                                  icon: Icon(_passwordNoVisible ? Icons.visibility_off : Icons.visibility),
-                                  onPressed: () {
-                                    setState(() {
-                                      _passwordNoVisible = ! _passwordNoVisible;
-                                    });
-                                  }
-                              ),
-                            ),
-                            validator: (String value) {
-                              if (value == null) {
-                                return 'Introduce una password';
-                              } else {
-                                return null;
-                              }
-                            },
-                            obscureText: _passwordNoVisible,
-                          ),
-                          SizedBox(height: 20.0,),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.all(0.0),
-                            child: TextButton(
-                                onPressed: null,
-                                child: Text(
-                                  'No recuerdo mi contraseña',
-                                  style: TextStyle(
-                                      fontFamily: 'SF Pro Display',
-                                      fontSize: 20.0,
-                                      fontWeight: FontWeight.w500,
-                                      color: tanteLadenButtonBorderGray
-                                  ),
-                                  textAlign: TextAlign.left,
-                                )
-                            ),
-                          ),
-                          SizedBox(height: 40.0,),
-                          _pleaseWait
-                              ? Stack (
-                            key:  ObjectKey("stack"),
-                            alignment: AlignmentDirectional.center,
-                            children: [tmpBuilder, _pleaseWaitWidget],
-                          )
-                              : Stack (key:  ObjectKey("stack"), children: [tmpBuilder],)
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                  ),
+                  Flexible(
+                    flex: 1,
+                    child: Container()
+                  )
+                ],
               ),
             ),
             Flexible(
