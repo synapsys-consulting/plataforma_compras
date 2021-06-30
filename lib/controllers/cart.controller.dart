@@ -10,22 +10,23 @@ class CartController {
 
   void tramitarPedido(Cart cart) async {
     try {
-      final http.Response res = await http.post("$SERVER_IP/savePurchasedProducts",
+      var url = Uri.parse('$SERVER_IP/savePurchasedProducts');
+      final http.Response res = await http.post(url,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode(<String, dynamic>{
             'purchased_products': cart.items.map<Map<String, dynamic>>((e) {
               return {
-                'product_id': e.product_id,
-                'product_name': e.product_name,
-                'product_description': e.product_description,
-                'product_type': e.product_type,
+                'product_id': e.productId,
+                'product_name': e.productName,
+                'product_description': e.productDescription,
+                'product_type': e.productType,
                 'brand': e.brand,
-                'num_images': e.num_images,
-                'num_videos': e.num_videos,
+                'num_images': e.numImages,
+                'num_videos': e.numVideos,
                 'avail': e.avail,
-                'product_price': e.product_price,
+                'product_price': e.productPrice,
               };
             }
             ).toList()
