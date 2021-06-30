@@ -14,7 +14,7 @@ class Cart with ChangeNotifier {
     if (this._items.length > 0) {
       this.items.forEach((element) {
         if (element.productId == item.productId) {
-          element.purchased += 1;
+          element.purchased += element.minQuantitySell; // Always purchase the minimun queantity sell
           founded = true;
         }
       });
@@ -29,7 +29,7 @@ class Cart with ChangeNotifier {
         numImages: item.numImages,
         numVideos: item.numVideos,
         avail: item.avail,
-        purchased: 1,
+        purchased: item.minQuantitySell,  // Always purchase the minimun queantity sell
         productPrice: item.productPrice,
         personeId: item.productId,
         personeName: item.personeName,
@@ -53,11 +53,11 @@ class Cart with ChangeNotifier {
     if (this._items.length > 0) {
       this._items.forEach((element) {
         if (element.productId == item.productId) {
-          if (element.purchased == 1) {
+          if (element.purchased == element.minQuantitySell) {
             founded = true;
             tmpElement = element;
           } else {
-            element.purchased -= 1;
+            element.purchased -= element.minQuantitySell; // Always purchase the minimun queantity sell
           }
         }
       });
@@ -70,13 +70,13 @@ class Cart with ChangeNotifier {
     notifyListeners();
   }
   void incrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += element.minQuantitySell;});  // Always purchase the minimun queantity sell
     totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
     totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
   void decrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= 1;});
+    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= element.minQuantitySell;});  // Always purchase the minimun queantity sell
     totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
     totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
     notifyListeners();
