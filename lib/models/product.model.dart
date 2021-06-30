@@ -3,147 +3,124 @@ import 'package:flutter/material.dart';
 
 class Product {
   const Product({
-    @required this.product_id,
-    @required this.product_code,
-    @required this.product_category_id,
-    @required this.product_category,
-    @required this.product_name,
-    @required this.product_name_internal,
-    @required this.product_description,
-    @required this.brand_id,
+    @required this.productId,
+    @required this.productCode,
+    @required this.productCategoryId,
+    @required this.productCategory,
+    @required this.productName,
+    @required this.productNameInternal,
+    @required this.productDescription,
+    @required this.brandId,
     @required this.brand,
-    @required this.min_quantity_sell,
-    @required this.language_code,
-    @required this.product_price,
-    @required this.tax_id,
-    @required this.currency_id,
-    @required this.unit_id,
-    @required this.des_unit,
-    @required this.weeks_warning,
-    @required this.quantity_min_price,
-    @required this.quantity_max_price,
-    @required this.type_day_delivery,
-    @required this.des_delivery_type,
-    @required this.min_days_delivery,
-    @required this.max_days_delivery,
+    @required this.minQuantitySell,
+    @required this.languageCode,
+    @required this.productPrice,
+    @required this.taxId,
+    @required this.currencyId,
+    @required this.unitId,
+    @required this.desUnit,
+    @required this.weeksWarning,
+    @required this.quantityMinPrice,
+    @required this.quantityMaxPrice,
+    @required this.typeDayDelivery,
+    @required this.desDeliveryType,
+    @required this.minDaysDelivery,
+    @required this.maxDaysDelivery,
     @required this.remark,
-    @required this.days_delivery,
-    @required this.product_type_id,
-    @required this.provider_id,
-    @required this.persone_name,
-    @required this.partner_id,
-    @required this.partner_name,
-    @required this.eff_date,
-    @required this.exp_date,
-    @required this.days_exp,
-    @required this.expoiled_flag,
-    @required this.countable_flag,
-    @required this.source_id,
-    @required this.num_images,
-    @required this.num_videos
+    @required this.daysDelivery,
+    @required this.productTypeId,
+    @required this.providerId,
+    @required this.personeName,
+    @required this.partnerId,
+    @required this.partnerName,
+    @required this.effDate,
+    @required this.expDate,
+    @required this.daysExp,
+    @required this.expoiledFlag,
+    @required this.countableFlag,
+    @required this.sourceId,
+    @required this.numImages,
+    @required this.numVideos
   });
-  final int product_id;
-  final String product_code;
-  final int product_category_id;
-  final String product_category;
-  final String product_name;
-  final String product_name_internal;
-  final String product_description;
-  final int brand_id;
+  final int productId;
+  final String productCode;
+  final int productCategoryId;
+  final String productCategory;
+  final String productName;
+  final String productNameInternal;
+  final String productDescription;
+  final int brandId;
   final String brand;
-  final double min_quantity_sell;
-  final String language_code;
-  final double product_price;
-  final int tax_id;
-  final String currency_id;
-  final String unit_id;
-  final String des_unit;
-  final double weeks_warning;
-  final double quantity_min_price;
-  final double quantity_max_price;
-  final String type_day_delivery;
-  final String des_delivery_type;
-  final double min_days_delivery;
-  final double max_days_delivery;
+  final double minQuantitySell;
+  final String languageCode;
+  final double productPrice;
+  final int taxId;
+  final String currencyId;
+  final String unitId;
+  final String desUnit;
+  final double weeksWarning;
+  final double quantityMinPrice;
+  final double quantityMaxPrice;
+  final String typeDayDelivery;
+  final String desDeliveryType;
+  final double minDaysDelivery;
+  final double maxDaysDelivery;
   final String remark;
-  final String days_delivery;
-  final int product_type_id;
-  final int provider_id;
-  final String persone_name;
-  final String partner_id;
-  final String partner_name;
-  final String eff_date;
-  final String exp_date;
-  final int days_exp;
-  final String expoiled_flag;
-  final String countable_flag;
-  final String source_id;
-  final int num_images;
-  final int num_videos;
+  final String daysDelivery;
+  final int productTypeId;
+  final int providerId;
+  final String personeName;
+  final String partnerId;
+  final String partnerName;
+  final String effDate;
+  final String expDate;
+  final int daysExp;
+  final String expoiledFlag;
+  final String countableFlag;
+  final String sourceId;
+  final int numImages;
+  final int numVideos;
   
   factory Product.fromJson (Map<String, dynamic> json) {
-    print ('I am in.');
-    print (json);
-    print ('Hola');
-    print ('El PRODUCT_ID: ' + int.parse(json['PRODUCT_ID'].toString()).toString());
-    print ('PRODUCT_CODE: '+ json['PRODUCT_CODE']);
-    print ('PRODUCT_CATEGORY_ID: ' + json['PRODUCT_CATEGORY_ID'].toString());
-    print ('PRODUCT_CATEGORY: '+ json['PRODUCT_CATEGORY']);
-    print ('PRODUCT_NAME: '+ json['PRODUCT_NAME']);
-    print ('PRODUCT_NAME_INTERNAL: '+ json['PRODUCT_NAME_INTERNAL']);
-    //print ('PRODUCT_DESCRIPTION: ' + json['PRODUCT_DESCRIPTION'] == null ? '' : json['PRODUCT_DESCRIPTION']);
-    //if ()
-    //print ('PRODUCT_DESCRIPTION: ' + json['PRODUCT_DESCRIPTION'] ?? 'Venía un null');
-    print (json['PRODUCT_DESCRIPTION'] ?? '');
-    print ('BRAND_ID: ' + int.parse(json['PRODUCT_ID'].toString()).toString());
-    print('PRODUCT_TYPE_ID: ' + int.parse((json['PRODUCT_TYPE_ID'] ?? '-3').toString()).toString());
-    print('PROVIDER_ID: ' + int.parse(json['PROVIDER_ID'].toString()).toString());
-    print('PERSONE_NAME: ' + json['PERSONE_NAME']);
-    print('PARTNER_ID: ' + json['PARTNER_ID']);
-    print('PARTNER_NAME: ' + json['PARTNER_NAME']);
-    print('DAYS_EXP: ' + int.parse(json['DAYS_EXP'] ?? '-3').toString());
-    print('NUM_IMAGES: ' + int.parse(json['NUM_IMAGES'].toString()).toString());
-    print('NUM_VIDEOS: ' + int.parse(json['NUM_VIDEOS'].toString()).toString());
-    print('Adios');
     return Product (
-      product_id: int.parse(json['PRODUCT_ID'].toString()),
-      product_code: json['PRODUCT_CODE'] ?? '',
-      product_category_id: int.parse(json['PRODUCT_CATEGORY_ID'].toString()),
-      product_category: json['PRODUCT_CATEGORY'],
-      product_name: json['PRODUCT_NAME'],
-      product_name_internal: json['PRODUCT_NAME_INTERNAL'],
-      product_description: json['PRODUCT_DESCRIPTION'] ?? '',
-      brand_id: int.parse((json['BRAND_ID'] ?? '-3').toString()),
+      productId: int.parse(json['PRODUCT_ID'].toString()),
+      productCode: json['PRODUCT_CODE'] ?? '',
+      productCategoryId: int.parse(json['PRODUCT_CATEGORY_ID'].toString()),
+      productCategory: json['PRODUCT_CATEGORY'],
+      productName: json['PRODUCT_NAME'],
+      productNameInternal: json['PRODUCT_NAME_INTERNAL'],
+      productDescription: json['PRODUCT_DESCRIPTION'] ?? '',
+      brandId: int.parse((json['BRAND_ID'] ?? '-3').toString()),
       brand: json['BRAND'] ?? '',
-      min_quantity_sell: double.parse(json['MIN_QUANTITY_SELL'].toString()),
-      language_code: json['LANGUAGE_CODE'],
-      product_price: double.parse(json['PRODUCT_PRICE'].toString()),
-      tax_id: int.parse(json['TAX_ID'].toString()),
-      currency_id: json['CURRENCY_ID'],
-      unit_id: json['UNIT_ID'],
-      des_unit: json['DES_UNIT'],
-      weeks_warning: double.parse(json['WEEKS_WARNING'].toString()),
-      quantity_min_price: double.parse(json['QUANTITY_MIN_PRICE'].toString()),
-      quantity_max_price: double.parse(json['QUANTITY_MAX_PRICE'].toString()),
-      type_day_delivery: json['TYPE_DAY_DELIVERY'] ?? '',
-      des_delivery_type: json['DES_DELIVERY_TYPE'] ?? '',
-      min_days_delivery: double.parse((json['MIN_DAYS_DELIVERY'] ?? '-3').toString()),
-      max_days_delivery: double.parse((json['MAX_DAYS_DELIVERY'] ?? '-3').toString()),
+      minQuantitySell: double.parse(json['MIN_QUANTITY_SELL'].toString()),
+      languageCode: json['LANGUAGE_CODE'],
+      productPrice: double.parse(json['PRODUCT_PRICE'].toString()),
+      taxId: int.parse(json['TAX_ID'].toString()),
+      currencyId: json['CURRENCY_ID'],
+      unitId: json['UNIT_ID'],
+      desUnit: json['DES_UNIT'],
+      weeksWarning: double.parse(json['WEEKS_WARNING'].toString()),
+      quantityMinPrice: double.parse(json['QUANTITY_MIN_PRICE'].toString()),
+      quantityMaxPrice: double.parse(json['QUANTITY_MAX_PRICE'].toString()),
+      typeDayDelivery: json['TYPE_DAY_DELIVERY'] ?? '',
+      desDeliveryType: json['DES_DELIVERY_TYPE'] ?? '',
+      minDaysDelivery: double.parse((json['MIN_DAYS_DELIVERY'] ?? '-3').toString()),
+      maxDaysDelivery: double.parse((json['MAX_DAYS_DELIVERY'] ?? '-3').toString()),
       remark: json['REMARK'] ?? '',
-      days_delivery: json['DAYS_DELIVERY'] ?? '',
-      product_type_id: int.parse((json['PRODUCT_TYPE_ID'] ?? '-3').toString()),
-      provider_id: int.parse(json['PROVIDER_ID'].toString()),
-      persone_name: json['PERSONE_NAME'],
-      partner_id: json['PARTNER_ID'],
-      partner_name: json['PARTNER_NAME'],
-      eff_date: json['EFF_DATE'],
-      exp_date: json['EXP_DATE'] ?? '',
-      days_exp: int.parse((json['DAYS_EXP'] ?? '-3').toString()),
-      expoiled_flag: json['EXPOILED_FLAG'] ?? '',
-      countable_flag: json['COUNTABLE_FLAG'] ?? '',
-      source_id: json['SOURCE_ID'],
-      num_images: int.parse((json['NUM_IMAGES'] ?? '0').toString()),
-      num_videos: int.parse((json['NUM_VIDEOS'] ?? '0').toString())
+      daysDelivery: json['DAYS_DELIVERY'] ?? '',
+      productTypeId: int.parse((json['PRODUCT_TYPE_ID'] ?? '-3').toString()),
+      providerId: int.parse(json['PROVIDER_ID'].toString()),
+      personeName: json['PERSONE_NAME'],
+      partnerId: json['PARTNER_ID'],
+      partnerName: json['PARTNER_NAME'],
+      effDate: json['EFF_DATE'],
+      expDate: json['EXP_DATE'] ?? '',
+      daysExp: int.parse((json['DAYS_EXP'] ?? '-3').toString()),
+      expoiledFlag: json['EXPOILED_FLAG'] ?? '',
+      countableFlag: json['COUNTABLE_FLAG'] ?? '',
+      sourceId: json['SOURCE_ID'],
+      numImages: int.parse((json['NUM_IMAGES'] ?? '0').toString()),
+      numVideos: int.parse((json['NUM_VIDEOS'] ?? '0').toString())
     );
   }
 }
