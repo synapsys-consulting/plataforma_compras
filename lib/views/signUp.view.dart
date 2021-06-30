@@ -12,13 +12,13 @@ import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/models/address.model.dart';
-import 'package:plataforma_compras/utils/displayDialog.dart';
-import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
+import 'package:plataforma_compras/views/confirmPurchase.view.dart';
 
 class SignUpView extends StatelessWidget {
-  SignUpView(this.email);
+  SignUpView(this.email, this.reason);
   final String email;
+  final int reason;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,16 +38,17 @@ class SignUpView extends StatelessWidget {
         ],
       ),
       body: ResponsiveWidget (
-        smallScreen: _SmallScreenView (this.email),
-        largeScreen: _LargeScreenView (this.email),
+        smallScreen: _SmallScreenView (this.email, this.reason),
+        largeScreen: _LargeScreenView (this.email, this.reason),
       ),
     );
   }
 }
 
 class _SmallScreenView extends StatefulWidget {
-  _SmallScreenView (this.email);
+  _SmallScreenView (this.email, this.reason);
   final String email;
+  final int reason;
   @override
   _SmallScreenViewState createState() {
     debugPrint ('El valor de email en el ScreenView es: ' + this.email);
@@ -79,54 +80,6 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   void dispose() {
     _password.dispose();
     super.dispose();
-  }
-  badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
   }
 
   @override
@@ -167,62 +120,57 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             base64.decode(base64.normalize(token.split(".")[1]))
                         )
                     );
-                    final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
-                    final http.Response resAddress = await http.get (
-                        urlAddress,
-                        headers: <String, String>{
-                          'Content-Type': 'application/json; charset=UTF-8',
-                          //'Authorization': jwt
-                        }
-                    );
-                    if (resAddress.statusCode == 200) {
-                      // exists an address for the user
-                      final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
-                      final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-                      if (resultListAddress.length > 0) {
-                        // if exists address
-                        var widgetImage = Image.asset ('assets/images/infoMessage.png');
-                        final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-                        debugPrint('Before the displayDialogAcceptCancel');
-                        final bool responseUser = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-                        debugPrint('After the displayDialogAcceptCancel');
-                        if (responseUser) {
-                          final String message = await _processPurchase(cart);
-                          debugPrint ('the returned message is:' + message);
+                    if (widget.reason == COME_FROM_ANOTHER) {
+                      //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                      final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                      final http.Response resAddress = await http.get (
+                          urlAddress,
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            //'Authorization': jwt
+                          }
+                      );
+                      if (resAddress.statusCode == 200) {
+                        // exists an address for the user
+                        final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
+                        final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                        if (resultListAddress.length > 0) {
+                          // if exists address
                           _showPleaseWait(false);
-                          await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                          cart.clearCart();
-                          var catalog = context.read<Catalog>();
-                          catalog.clearCatalog();
-                          Navigator.pop(context);
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute (
+                                  builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                              )
+                          );
                         } else {
+                          // if not exists address
                           _showPleaseWait(false);
-                          Navigator.pop(context);
-                          Navigator.pop(context);
+                          Navigator.push (
+                              context,
+                              MaterialPageRoute (
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                              )
+                          );
                         }
-                      } else {
+                      } else if (resAddress.statusCode == 404) {
                         // if not exists address
                         _showPleaseWait(false);
                         Navigator.push (
                             context,
                             MaterialPageRoute (
-                                builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
+                                builder: (context) => (AddAddressView(payload['persone_id'].toString()))
                             )
                         );
+                      } else {
+                        // Error
+                        _showPleaseWait(false);
+                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                       }
-                    } else if (resAddress.statusCode == 404) {
-                      // if not exists address
-                      _showPleaseWait(false);
-                      Navigator.push (
-                          context,
-                          MaterialPageRoute (
-                              builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
-                          )
-                      );
                     } else {
-                      // Error
-                      _showPleaseWait(false);
-                      ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                      //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                      // The call comes from the drawer.
+                      Navigator.popUntil(context, ModalRoute.withName('/'));
                     }
                   } else {
                     // Error
@@ -419,8 +367,9 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   }
 }
 class _LargeScreenView extends StatefulWidget {
-  _LargeScreenView (this.email);
+  _LargeScreenView (this.email, this.reason);
   final String email;
+  final int reason;
   @override
   _LargeScreenViewState createState() {
     return _LargeScreenViewState();
@@ -452,54 +401,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
     _password.dispose();
     super.dispose();
   }
-  badStatusCode(http.Response response) {
-    debugPrint("Bad status code ${response.statusCode} returned from server.");
-    debugPrint("Response body ${response.body} returned from server.");
-    throw Exception(
-        'Bad status code ${response.statusCode} returned from server.');
-  }
-  Future<String> _processPurchase(Cart cartPurchased) async {
-    String message = '';
-    try {
-      final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
-      final http.Response res = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
-              return {
-                'product_id': e.productId,
-                'product_name': e.productName,
-                'product_description': e.productDescription,
-                'product_type': e.productType,
-                'brand': e.brand,
-                'num_images': e.numImages,
-                'num_videos': e.numVideos,
-                'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'persone_id': e.personeId,
-                'persone_name': e.personeName,
-                'tax_id': e.taxId,
-                'tax_apply': e.taxApply
-              };
-            }).toList()
-          })
-      ).timeout(TIMEOUT);
-      if (res.statusCode == 200) {
-        message = json.decode(res.body)['data'];
-        debugPrint('After returning.');
-        debugPrint('The message is: ' + message);
-      } else {
-        // If that response was not OK, throw an error.
-        debugPrint('There is an error.');
-        badStatusCode(res);
-      }
-      return message;
-    } catch (e) {
-      throw Exception(e);
-    }
-  }
+
   @override
   Widget build(BuildContext context) {
     final Widget tmpBuilder = Container(
@@ -538,62 +440,56 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               base64.decode(base64.normalize(token.split(".")[1]))
                           )
                       );
-                      final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
-                      final http.Response resAddress = await http.get (
-                          urlAddress,
-                          headers: <String, String>{
-                            'Content-Type': 'application/json; charset=UTF-8',
-                            //'Authorization': jwt
-                          }
-                      );
-                      if (resAddress.statusCode == 200) {
-                        // exists an address for the user
-                        final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
-                        final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-                        if (resultListAddress.length > 0) {
-                          // if exists address
-                          var widgetImage = Image.asset ('assets/images/infoMessage.png');
-                          final String messageInfo = "Vas a llevar a cabo la tramitación de tu compra.";
-                          debugPrint('Before the displayDialogAcceptCancel');
-                          final bool responseUser = await DisplayDialog.displayDialogConfirmCancel(context, widgetImage, 'Tramitar pedido', messageInfo);
-                          debugPrint('After the displayDialogAcceptCancel');
-                          if (responseUser) {
-                            final String message = await _processPurchase(cart);
-                            debugPrint ('the returned message is:' + message);
+                      if (widget.reason == COME_FROM_ANOTHER) {
+                        final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                        final http.Response resAddress = await http.get (
+                            urlAddress,
+                            headers: <String, String>{
+                              'Content-Type': 'application/json; charset=UTF-8',
+                              //'Authorization': jwt
+                            }
+                        );
+                        if (resAddress.statusCode == 200) {
+                          // exists an address for the user
+                          final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                          if (resultListAddress.length > 0) {
+                            // if exists address
                             _showPleaseWait(false);
-                            await DisplayDialog.displayDialog (context, widgetImage, 'Compra realizada', message);
-                            cart.clearCart();
-                            var catalog = context.read<Catalog>();
-                            catalog.clearCatalog();
-                            Navigator.pop(context);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                                )
+                            );
                           } else {
+                            // if not exists address
                             _showPleaseWait(false);
-                            Navigator.pop(context);
-                            Navigator.pop(context);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                                )
+                            );
                           }
-                        } else {
+                        } else if (resAddress.statusCode == 404) {
                           // if not exists address
                           _showPleaseWait(false);
                           Navigator.push (
                               context,
                               MaterialPageRoute (
-                                  builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString()))
                               )
                           );
+                        } else {
+                          // Error
+                          _showPleaseWait(false);
+                          ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                         }
-                      } else if (resAddress.statusCode == 404) {
-                        // if not exists address
-                        _showPleaseWait(false);
-                        Navigator.push (
-                            context,
-                            MaterialPageRoute (
-                                builder: (context) => (AddAddressView(personeId: payload['persone_id'].toString()))
-                            )
-                        );
                       } else {
-                        // Error
-                        _showPleaseWait(false);
-                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                        //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                        // The call comes from the drawer.
+                        Navigator.popUntil(context, ModalRoute.withName('/'));
                       }
                     } else {
                       // Error
