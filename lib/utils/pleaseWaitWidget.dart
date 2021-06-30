@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'colors.util.dart';
+
+import 'package:plataforma_compras/utils/colors.util.dart';
 
 class PleaseWaitWidget extends StatelessWidget {
   PleaseWaitWidget({
@@ -16,7 +17,7 @@ class PleaseWaitWidget extends StatelessWidget {
     //  color: tanteLadenAmber500,
     //);
     return Container(
-      child: Center(child: CircularProgressIndicator()),
+      child: Center(child: CircularProgressIndicator(color: tanteLadenOrange900,)),
     );
   }
 }
