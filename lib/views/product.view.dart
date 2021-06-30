@@ -62,11 +62,12 @@ class _SmallScreenState extends State<_SmallScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _current = 0;
   }
   @override
   Widget build(BuildContext context) {
     debugPrint('El productId es: ' + currentProduct.productId.toString());
-    debugPrint('El número de images es: ' + currentProduct.numImages.toString());
+    debugPrint('El numero de images es: ' + currentProduct.numImages.toString());
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -116,8 +117,8 @@ class _SmallScreenState extends State<_SmallScreen> {
                           height: 8.0,
                           margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _current == index
+                          shape: BoxShape.circle,
+                          color: _current == index
                               ? Color.fromRGBO(0, 0, 0, 0.9)
                               : Color.fromRGBO(0, 0, 0, 0.4)
                           ),
@@ -407,12 +408,12 @@ class _LargeScreenState extends State<_LargeScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _current = 0;
   }
 
   @override
   Widget build(BuildContext context) {
     debugPrint('El productId es: ' + currentProduct.productId.toString());
-    debugPrint('El número de images es: ' + currentProduct.numImages.toString());
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -473,10 +474,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                           height: 8.0,
                           margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
                           decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _current == index
-                                  ? Color.fromRGBO(0, 0, 0, 0.9)
-                                  : Color.fromRGBO(0, 0, 0, 0.4)
+                          shape: BoxShape.circle,
+                          color: _current == index
+                              ? Color.fromRGBO(0, 0, 0, 0.9)
+                              : Color.fromRGBO(0, 0, 0, 0.4)
                           ),
                         );
                       }).toList(),
