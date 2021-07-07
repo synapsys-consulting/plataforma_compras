@@ -16,6 +16,8 @@ import 'package:plataforma_compras/views/address.view.dart';
 import 'package:plataforma_compras/models/address.model.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
 import 'package:plataforma_compras/views/confirmPurchase.view.dart';
+import 'package:plataforma_compras/models/productAvail.model.dart';
+import 'package:plataforma_compras/models/catalog.model.dart';
 
 class SigInView extends StatelessWidget {
   SigInView (this.email, this.reason);
@@ -118,6 +120,42 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             base64.decode(base64.normalize(token.split(".")[1]))
                         )
                     );
+                    debugPrint('El valor de partner_id es: ' + payload['partner_id'].toString());
+                    // RELOAD THE PRODUCTS which THE USER CAN BUY
+                    final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+                    final http.Response resProducts = await http.get (
+                        url,
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                          //'Authorization': jwt
+                        }
+                    );
+                    debugPrint('After the http call.');
+                    if (resProducts.statusCode == 200) {
+                      debugPrint ('The Rest API has responsed.');
+                      final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      Provider.of<Catalog>(context, listen: false).clearCatalog();
+                      resultListProducts.forEach((element) {
+                        Provider.of<Catalog>(context, listen: false).add(element);
+                        //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+                      });
+                      debugPrint ('Antes de terminar de responder la API.');
+                      //if (cart.numItems > 0) {
+                        // Add the elements which are in the cart to the catalog
+                      //  debugPrint('El numero de items es:' + cart.numItems.toString());
+                      //  cart.items.forEach((element) {
+                      //    debugPrint('El valor de pruduct_name es: ' + element.productName);
+                      //    int numElementsAdded = element.purchased ~/ element.minQuantitySell;
+                      //    debugPrint('El valor de numElementsAdded es: ' + numElementsAdded.toString());
+                      //    for (int j = 0; j < numElementsAdded; j++) {
+                      //      Provider.of<Catalog>(context, listen: false).add(element);
+                      //    }
+                      //  });
+                      //}
+                    }
                     if (widget.fromWhereCalledIs == COME_FROM_ANOTHER) {
                       // COME_FROM_ANOTHER = 2
                       // COME_FROM_DRAWER = 1
@@ -426,6 +464,37 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               base64.decode(base64.normalize(token.split(".")[1]))
                           )
                       );
+                      // RELOAD THE PRODUCTS WHICH THE USER CAN BUY
+                      final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+                      final http.Response resProducts = await http.get (
+                          url,
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            //'Authorization': jwt
+                          }
+                      );
+                      debugPrint('After the http call.');
+                      if (resProducts.statusCode == 200) {
+                        debugPrint ('The Rest API has responsed.');
+                        final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                        Provider.of<Catalog>(context, listen: false).clearCatalog();
+                        resultListProducts.forEach((element) {
+                          Provider.of<Catalog>(context, listen: false).add(element);
+                          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+                        });
+                        debugPrint ('Antes de terminar de responder la API.');
+                        if (cart.numItems > 0) {
+                          // Add the elements which are in the cart to the catalog
+                          cart.items.forEach((element) {
+                            int numElementsAdded = element.purchased ~/ element.minQuantitySell;
+                            for (int j = 0; j < numElementsAdded; j++) {
+                              Provider.of<Catalog>(context, listen: false).add(element);
+                            }
+                          });
+                        }
+                      }
                       if (widget.fromWhereCalledIs == COME_FROM_ANOTHER) {
                         // COME_FROM_ANOTHER = 2
                         // COME_FROM_DRAWER = 1
