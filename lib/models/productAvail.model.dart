@@ -5,6 +5,7 @@ class ProductAvail {
   ProductAvail({
     @required this.productId,
     @required this.productName,
+    @required this.productNameLong,
     @required this.productDescription,
     @required this.productType,
     @required this.brand,
@@ -25,11 +26,14 @@ class ProductAvail {
     @required this.discountAmount,
     @required this.idUnit,
     @required this.remark,
-    @required this.minQuantitySell
+    @required this.minQuantitySell,
+    @required this.partnerId,
+    @required this.partnerName
   }
   );
   final int productId;
   final String productName;
+  final String productNameLong;
   final String productDescription;
   final String productType;
   final String brand;
@@ -45,17 +49,21 @@ class ProductAvail {
   final String email;
   final int taxId;
   final double taxApply;
-  final double productPriceDiscounted;   // FINAL PRICE WITH DISCOUNT INCLUDED
-  final double totalAmount;              // FINAL PRICE WITH DISCOUNT INCLUDED AND TAXES
+  final double productPriceDiscounted;   // FINAL PRICE DISCOUNT INCLUDED
+  final double totalAmount;              // FINAL PRICE DISCOUNT AND TAXES INCLUDED
   final int discountAmount;           // PRODUCT_PRICE - PRODUCT_PRICE_DISCOUNTED
-  final  String idUnit;
+  final String idUnit;
   final String remark;
-  int minQuantitySell;
+  final int minQuantitySell;
+  final int partnerId;
+  final String partnerName;
+
 
   factory ProductAvail.fromJson (Map<String, dynamic> json) {
     return ProductAvail (
       productId: int.parse(json['PRODUCT_ID'].toString()),
       productName: json['PRODUCT_NAME'],
+      productNameLong: json['PRODUCT_NAME_LONG'],
       productDescription: json['PRODUCT_DESCRIPTION'] ?? '',
       productType: json['PRODUCT_TYPE'] ?? '',
       brand: json['BRAND'] ?? '',
@@ -76,7 +84,9 @@ class ProductAvail {
       discountAmount: int.parse(json['DISCOUNT_AMOUNT'].toString()),
       idUnit: json['ID_UNIT'] ?? '',
       remark: json['REMARK'] ?? '',
-      minQuantitySell: int.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString())
+      minQuantitySell: int.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString()),
+      partnerId: int.parse((json['PARTNER_ID'] ?? '1').toString()),
+      partnerName: json['PARTNER_NAME'] ?? ''
     );
   }
 }

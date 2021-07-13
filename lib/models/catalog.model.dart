@@ -21,6 +21,7 @@ class Catalog with ChangeNotifier {
       final itemCatalog = new ProductAvail(
         productId: item.productId,
         productName: item.productName,
+        productNameLong: item.productNameLong,
         productDescription: item.productDescription,
         productType: item.productType,
         brand: item.brand,
@@ -41,7 +42,9 @@ class Catalog with ChangeNotifier {
         discountAmount: item.discountAmount,
         idUnit: item.idUnit,
         remark: item.remark,
-        minQuantitySell: item.minQuantitySell
+        minQuantitySell: item.minQuantitySell,
+        partnerId: item.partnerId,
+        partnerName: item.partnerName
       );
       _items.add(itemCatalog);
     }
@@ -71,6 +74,10 @@ class Catalog with ChangeNotifier {
       element.purchased = 0;
       notifyListeners();
     });
+  }
+  void removeCatalog () {
+    this._items.clear();
+    notifyListeners();
   }
   int get numItems => this._items.length;
 

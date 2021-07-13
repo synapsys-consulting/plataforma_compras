@@ -23,12 +23,13 @@ class Cart with ChangeNotifier {
       final itemCart = new ProductAvail (
         productId: item.productId,
         productName: item.productName,
+        productNameLong: item.productNameLong,
         productDescription: item.productDescription,
         productType: item.productType,
         brand: item.brand,
         numImages: item.numImages,
         numVideos: item.numVideos,
-        purchased: item.minQuantitySell,  // Always purchase the minimun queantity sell
+        purchased: item.minQuantitySell,  // Always purchase the minimun quantity sell
         productPrice: item.productPrice,
         totalBeforeDiscount: item.totalBeforeDiscount,
         taxAmount: item.taxAmount,
@@ -43,12 +44,14 @@ class Cart with ChangeNotifier {
         discountAmount: item.discountAmount,
         idUnit: item.idUnit,
         remark: item.remark,
-        minQuantitySell: item.minQuantitySell
+        minQuantitySell: item.minQuantitySell,
+        partnerId: item.partnerId,
+        partnerName: item.partnerName
       );
       _items.add(itemCart);
     }
-    totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
   void remove (ProductAvail item) {
@@ -69,20 +72,20 @@ class Cart with ChangeNotifier {
     if (founded) {
       this._items.remove(tmpElement);
     }
-    totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
   void incrementAvail (ProductAvail item) {
     this.items.forEach((element) { if (element.productId == item.productId) element.purchased += element.minQuantitySell;});  // Always purchase the minimun queantity sell
-    totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
   void decrementAvail (ProductAvail item) {
     this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= element.minQuantitySell;});  // Always purchase the minimun queantity sell
-    totalPrice = _items.fold(0, (total, current) => total + (current.productPrice * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPrice * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
 
