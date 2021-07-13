@@ -87,6 +87,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               return {
                 'product_id': e.productId,
                 'product_name': e.productName,
+                'product_name_long': e.productNameLong,
                 'product_description': e.productDescription,
                 'product_type': e.productType,
                 'brand': e.brand,
@@ -94,11 +95,17 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 'num_videos': e.numVideos,
                 'purchased': e.purchased,
                 'product_price': e.productPrice,
+                'total_before_discount': e.totalBeforeDiscount,
+                'total_amount': e.totalAmount,
+                'discount_amount': e.discountAmount,
+                'tax_amount': e.taxAmount,
                 'persone_id': e.personeId,
                 'persone_name': e.personeName,
                 'email': e.email,
                 'tax_id': e.taxId,
-                'tax_apply': e.taxApply
+                'tax_apply': e.taxApply,
+                'partner_id': e.partnerId,
+                'partner_name': e.partnerName
               };
             }).toList()
           })
@@ -402,7 +409,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalPrice),
+                  new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.totalPrice/MULTIPLYING_FACTOR)),
                   style: TextStyle (
                     fontWeight: FontWeight.bold,
                     fontSize: 20.0,
@@ -438,7 +445,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalTax),
+                  new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.totalTax/MULTIPLYING_FACTOR)),
                   style: TextStyle (
                     fontWeight: FontWeight.bold,
                     fontSize: 20.0,
@@ -502,6 +509,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
               return {
                 'product_id': e.productId,
                 'product_name': e.productName,
+                'product_name_long': e.productNameLong,
                 'product_description': e.productDescription,
                 'product_type': e.productType,
                 'brand': e.brand,
@@ -509,11 +517,17 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                 'num_videos': e.numVideos,
                 'purchased': e.purchased,
                 'product_price': e.productPrice,
+                'total_before_discount': e.totalBeforeDiscount,
+                'total_amount': e.totalAmount,
+                'discount_amount': e.discountAmount,
+                'tax_amount': e.taxAmount,
                 'persone_id': e.personeId,
                 'persone_name': e.personeName,
                 'email': e.email,
                 'tax_id': e.taxId,
-                'tax_apply': e.taxApply
+                'tax_apply': e.taxApply,
+                'partner_id': e.partnerId,
+                'partner_name': e.partnerName
               };
             }).toList()
           })
@@ -825,7 +839,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                     Expanded(
                         flex: 1,
                         child: Text(
-                          new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalPrice),
+                          new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.totalPrice/MULTIPLYING_FACTOR)),
                           style: TextStyle (
                             fontWeight: FontWeight.bold,
                             fontSize: 20.0,
@@ -861,7 +875,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                     Expanded(
                         flex: 1,
                         child: Text(
-                          new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalTax),
+                          new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.totalTax/MULTIPLYING_FACTOR)),
                           style: TextStyle (
                             fontWeight: FontWeight.bold,
                             fontSize: 20.0,

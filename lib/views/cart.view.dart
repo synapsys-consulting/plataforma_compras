@@ -149,7 +149,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     child: Row (
                                       children: [
                                         Text(
-                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).productPrice),
+                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmount/MULTIPLYING_FACTOR)),
                                           style: TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 16.0,
@@ -442,7 +442,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       child: Row (
                                         children: [
                                           Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.getItem(index).productPrice),
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmount/MULTIPLYING_FACTOR)),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w900,
                                               fontSize: 16.0,
@@ -714,7 +714,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                 builder: (context, cart, child) => Container(
                                   padding: EdgeInsets.only(top: 5.0),
                                   child: Text(
-                                    new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(cart.totalPrice),
+                                    new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.totalPrice/MULTIPLYING_FACTOR)),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 24.0,

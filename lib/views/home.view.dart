@@ -70,35 +70,72 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   // Private method which get the available products from the database
   Future<List<ProductAvail>> _getProductsAvailable () async {
-    //final String url = "$SERVER_IP/getProducts";
-    final Uri url = Uri.parse('$SERVER_IP/getProductsAvail');
+    final SharedPreferences prefs = await _prefs;
+    final String token = prefs.get ('token') ?? '';
+    if (token == '') {
+      final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
 
-    final http.Response res = await http.get (
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          //'Authorization': jwt
-        }
-    );
-    debugPrint('After the http call.');
-    if (res.statusCode == 200) {
-      debugPrint ('The Rest API has responsed.');
-      final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
-      debugPrint ('Entre medias de la api RESPONSE.');
-      final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-      resultListProducts.forEach((element) {
-        Provider.of<Catalog>(context, listen: false).add(element);
-        //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
-      });
-      debugPrint ('Antes de terminar de responder la API.');
-      return resultListProducts;
+      final http.Response res = await http.get (
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            //'Authorization': jwt
+          }
+      );
+      debugPrint('After the http call.');
+      if (res.statusCode == 200) {
+        debugPrint ('The Rest API has responsed.');
+        final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
+        debugPrint ('Entre medias de la api RESPONSE.');
+        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+        resultListProducts.forEach((element) {
+          Provider.of<Catalog>(context, listen: false).add(element);
+          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+        });
+        debugPrint ('Antes de terminar de responder la API.');
+        return resultListProducts;
+      } else {
+        final List<ProductAvail> resultListProducts = [];
+        return resultListProducts;
+      }
     } else {
-      final List<ProductAvail> resultListProducts = [];
-      return resultListProducts;
+      Map<String, dynamic> payload;
+      payload = json.decode(
+          utf8.decode(
+              base64.decode (base64.normalize(token.split(".")[1]))
+          )
+      );
+      debugPrint('El partner_id es: ' + payload['partner_id'].toString());
+      final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+
+      final http.Response res = await http.get (
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            //'Authorization': jwt
+          }
+      );
+      debugPrint('After the http call.');
+      if (res.statusCode == 200) {
+        debugPrint ('The Rest API has responsed.');
+        final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
+        debugPrint ('Entre medias de la api RESPONSE.');
+        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+        resultListProducts.forEach((element) {
+          Provider.of<Catalog>(context, listen: false).add(element);
+          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+        });
+        debugPrint ('Antes de terminar de responder la API.');
+        return resultListProducts;
+      } else {
+        final List<ProductAvail> resultListProducts = [];
+        return resultListProducts;
+      }
     }
   }
-  Drawer _createEndDrawer(bool isUserLogged, String name) {
-
+  Drawer _createEndDrawer(BuildContext context, bool isUserLogged, String name) {
+    var catalog = context.watch<Catalog>();
+    var cart = context.read<Cart>();
     if (isUserLogged) {
       return new Drawer (
         child: ListView (
@@ -238,8 +275,43 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               onTap: () async {
+                debugPrint('Estoy en el salir.');
+                //debugPrint('Después de watch y read.');
                 final SharedPreferences prefs = await _prefs;
                 prefs.setString ('token', '');
+                final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
+                final http.Response resProducts = await http.get (
+                    url,
+                    headers: <String, String>{
+                      'Content-Type': 'application/json; charset=UTF-8',
+                      //'Authorization': jwt
+                    }
+                );
+                debugPrint('After the http call.');
+                if (resProducts.statusCode == 200) {
+                  debugPrint ('The Rest API has responsed.');
+                  final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                  debugPrint ('Entre medias de la api RESPONSE.');
+                  final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                  debugPrint ('Entre medias de la api RESPONSE.');
+                  //Provider.of<Catalog>(context, listen: false).clearCatalog();
+                  catalog.removeCatalog();
+                  resultListProducts.forEach((element) {
+                    //Provider.of<Catalog>(context, listen: false).add(element);
+                    catalog.add(element);
+                  });
+                  debugPrint ('Antes de terminar de responder la API.');
+                  if (cart.numItems > 0) {
+                    //Add the elements which are in the cart to the catalog
+                    debugPrint('El numero de items es:' + cart.numItems.toString());
+                    cart.items.forEach((element) {
+                      debugPrint('El valor de product_name es: ' + element.productName);
+                      if (element.partnerId != DEFAULT_PARTNER_ID) {
+                        cart.remove(element);
+                      }
+                    });
+                  }
+                }
                 Navigator.pop(context);
               },
             ),
@@ -482,7 +554,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         elevation: 0.0,
       ),
-      endDrawer: _createEndDrawer (_isUserLogged,_name),
+      endDrawer: _createEndDrawer (context, _isUserLogged,_name),
       body: FutureBuilder <List<ProductAvail>>(
           future: itemsProductsAvailable,
           builder: (context, snapshot) {
@@ -493,7 +565,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 smallScreen: _SmallScreen(),
               );
             } else if (snapshot.hasError) {
-              return Center(
+              return Center (
                 child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -597,7 +669,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 3.0),
                                   child: Text(
-                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(catalog.items[index].productPrice.toString())),
+                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,
@@ -951,7 +1023,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 3.0),
                                   child: Text(
-                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(catalog.items[index].productPrice.toString())),
+                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,

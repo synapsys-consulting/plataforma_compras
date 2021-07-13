@@ -456,11 +456,11 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               ),
                               SizedBox(height: 40.0,),
                               _pleaseWait
-                                  ? Stack (
-                                key:  ObjectKey("stack"),
-                                alignment: AlignmentDirectional.center,
-                                children: [tmpBuilder, _pleaseWaitWidget],
-                              )
+                                  ? Stack(
+                                    key:  ObjectKey("stack"),
+                                    alignment: AlignmentDirectional.center,
+                                    children: [tmpBuilder, _pleaseWaitWidget],
+                                  )
                                   : Stack (key:  ObjectKey("stack"), children: [tmpBuilder],)
                             ],
                           ),

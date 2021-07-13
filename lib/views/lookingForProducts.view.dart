@@ -126,7 +126,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                       Padding(
                                         padding: const EdgeInsets.only(right: 3.0),
                                         child: Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse(_productList[index].productPrice.toString())),
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].productPrice/MULTIPLYING_FACTOR).toString())),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w500,
                                               fontSize: 24.0,
@@ -417,26 +417,33 @@ class _LookingForProductsState extends State<LookingForProducts> {
     for (var i = 0; i < catalog.numItems; i++) {
       if (exp.hasMatch(catalog.getItem(i).productName)) {
         // Add the catalog element to the temporal list
-        final itemCatalog = new ProductAvail(
+        final itemCatalog = new ProductAvail (
           productId: catalog.getItem(i).productId,
           productName: catalog.getItem(i).productName,
+          productNameLong: catalog.getItem(i).productNameLong,
           productDescription: catalog.getItem(i).productDescription,
           productType: catalog.getItem(i).productType,
           brand: catalog.getItem(i).brand,
           numImages: catalog.getItem(i).numImages,
           numVideos: catalog.getItem(i).numVideos,
-          avail: catalog.getItem(i).avail,
           purchased: catalog.getItem(i).purchased,
           productPrice: catalog.getItem(i).productPrice,
+          totalBeforeDiscount: catalog.getItem(i).totalBeforeDiscount,
+          taxAmount: catalog.getItem(i).taxAmount,
           personeId: catalog.getItem(i).personeId,
           personeName: catalog.getItem(i).personeName,
           businessName: catalog.getItem(i).businessName,
           email: catalog.getItem(i).email,
           taxId: catalog.getItem(i).taxId,
           taxApply: catalog.getItem(i).taxApply,
+          productPriceDiscounted: catalog.getItem(i).productPriceDiscounted,
+          totalAmount: catalog.getItem(i).totalAmount,
+          discountAmount: catalog.getItem(i).discountAmount,
           idUnit: catalog.getItem(i).idUnit,
           remark: catalog.getItem(i).remark,
-          minQuantitySell: catalog.getItem(i).minQuantitySell
+          minQuantitySell: catalog.getItem(i).minQuantitySell,
+          partnerId: catalog.getItem(i).partnerId,
+          partnerName: catalog.getItem(i).partnerName
         );
         tempProductList.add(itemCatalog);
       }
