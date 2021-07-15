@@ -23,6 +23,7 @@ import 'package:plataforma_compras/views/login.view.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/views/personalData.view.dart';
 import 'package:plataforma_compras/views/manageAddresses.view.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -87,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
         debugPrint ('The Rest API has responsed.');
         final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
         debugPrint ('Entre medias de la api RESPONSE.');
-        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+        final List<MultiPricesProductAvail> resultListProducts = resultListJson.map<MultiPricesProductAvail>((json) => MultiPricesProductAvail.fromJson(json)).toList();
         resultListProducts.forEach((element) {
           Provider.of<Catalog>(context, listen: false).add(element);
           //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
