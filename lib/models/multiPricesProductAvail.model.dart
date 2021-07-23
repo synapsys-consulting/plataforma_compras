@@ -35,7 +35,40 @@ class MultiPricesProductAvail extends ProductAvail {
     @required quantityMaxPrice,
     @required productCategoryId,
     @required rn
-  });
+  }): super (
+    productId: productId,
+    productName: productName,
+    productNameLong: productNameLong,
+    productDescription: productDescription,
+    productType: productType,
+    brand: brand,
+    numImages: numImages,
+    numVideos: numVideos,
+    purchased: purchased,
+    productPrice: productPrice,
+    totalBeforeDiscount: totalBeforeDiscount,
+    taxAmount: taxAmount,
+    personeId: personeId,
+    personeName: personeName,
+    businessName: businessName,
+    email: email,
+    taxId: taxId,
+    taxApply: taxApply,
+    productPriceDiscounted: productPriceDiscounted,
+    totalAmount: totalAmount,
+    discountAmount: discountAmount,
+    idUnit: idUnit,
+    remark: remark,
+    minQuantitySell: minQuantitySell,
+    partnerId: partnerId,
+    partnerName: partnerName,
+    quantityMinPrice: quantityMinPrice,
+    quantityMaxPrice: quantityMaxPrice,
+    productCategoryId: productCategoryId,
+    rn: rn
+  ){
+    this.totalAmountAccordingQuantity = totalAmount;
+  }
 
   factory MultiPricesProductAvail.fromJson (Map<String, dynamic> json) {
     return MultiPricesProductAvail (
@@ -71,9 +104,12 @@ class MultiPricesProductAvail extends ProductAvail {
         rn: int.parse((json['RN'] ?? '1').toString()),
     );
   }
-  final List<ProductAvail> _items = [];   // Save the registers which have the different prices depending the amount
 
-  List<ProductAvail> get items => _items;
+  final List<ProductAvail> _items = [];   // Save the registers which have the different prices depending the amount
+  int _indexElementAmongQuantity = -1;    // Save the element according quantity. Default = -1. It is the father element
+  double totalAmountAccordingQuantity;    // Save the field totalAmount according the quantity of the product purchased
+
+  List<ProductAvail> get items => this._items;
 
   void add (ProductAvail item) {
     bool founded = false;
@@ -117,14 +153,69 @@ class MultiPricesProductAvail extends ProductAvail {
         productCategoryId: item.productCategoryId,
         rn: item.rn
       );
-      _items.add(itemCatalog);
+      this._items.add(itemCatalog);
     }
   }
   ProductAvail getItem (int index) {
-    return _items[index];
+    return this._items[index];
   }
   void clear () {
     this._items.clear();
   }
   int get numItems => this._items.length;
+
+  int getIndexElementAmongQuantity () {
+    return this._indexElementAmongQuantity;
+  }
+  double getTotalAmountAccordingQuantity () {
+    double totalAmountAccordingQuantity;
+    if (this._items.length > 0) {
+      // The product hast multi-prices according quantity
+      //debugPrint ('Estoy en el totalAmountAccordingQuantity. Dentro de _items > 0');
+      if (this.purchased <= this.quantityMaxPrice) {
+        // See the first element, the father element
+        totalAmountAccordingQuantity = this.totalAmount;
+        this._indexElementAmongQuantity = -1;  // Save the element according quantity
+        //debugPrint ('Estoy en el totalAmountAccordingQuantity. Father element.');
+      } else {
+        // See the rest of the elements, children elements
+        for (var j = 0; j < this._items.length; j++) {
+          //debugPrint ('Estoy en el totalAmountAccordingQuantity. Children element.');
+          if (this.purchased <= this._items[j].quantityMaxPrice) {
+            totalAmountAccordingQuantity = this._items[j].totalAmount;
+            this._indexElementAmongQuantity = j;  // Save the element according quantity
+            //debugPrint ('Estoy en el totalAmountAccordingQuantity. El indice que marca el totalAmountAccordingQuantity es: ' + this._indexElementAmongQuantity.toString());
+            break;
+          }
+        }
+      }
+    } else {
+      //debugPrint ('Estoy en el totalAmountAccordingQuantity. Dentro de _items = 0');
+      totalAmountAccordingQuantity = this.totalAmount;
+      this._indexElementAmongQuantity = -1;  // Save the element according quantity
+    }
+    //debugPrint ('Estoy en el totalAmountAccordingQuantity. Retorno: ' + totalAmountAccordingQuantity.toString());
+    return totalAmountAccordingQuantity;
+  }
+  double productPriceDiscountedAccordingQuantity () {
+    double productPriceDiscountedAccordingQuantity;
+    if (this._items.length > 0) {
+      // The product hast multi-prices according quantity
+      if (this.purchased < this.quantityMaxPrice) {
+        // See the first element, the father element
+        productPriceDiscountedAccordingQuantity = this.productPriceDiscounted;
+      } else {
+        // See the rest the elements
+        for (var j = 0; j < this._items.length; j++) {
+          if (this.purchased < this._items[j].quantityMaxPrice) {
+            productPriceDiscountedAccordingQuantity = this._items[j].productPriceDiscounted;
+            break;
+          }
+        }
+      }
+    } else {
+      productPriceDiscountedAccordingQuantity = this.productPriceDiscounted;
+    }
+    return productPriceDiscountedAccordingQuantity;
+  }
 }

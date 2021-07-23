@@ -28,9 +28,12 @@ class ProductAvail {
     @required this.remark,
     @required this.minQuantitySell,
     @required this.partnerId,
-    @required this.partnerName
-  }
-  );
+    @required this.partnerName,
+    @required this.quantityMinPrice,
+    @required this.quantityMaxPrice,
+    @required this.productCategoryId,
+    @required this.rn
+  });
   final int productId;
   final String productName;
   final String productNameLong;
@@ -57,6 +60,10 @@ class ProductAvail {
   final int minQuantitySell;
   final int partnerId;
   final String partnerName;
+  final int quantityMinPrice;
+  final int quantityMaxPrice;
+  final int productCategoryId;
+  final int rn;
 
 
   factory ProductAvail.fromJson (Map<String, dynamic> json) {
@@ -86,7 +93,11 @@ class ProductAvail {
       remark: json['REMARK'] ?? '',
       minQuantitySell: int.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString()),
       partnerId: int.parse((json['PARTNER_ID'] ?? '1').toString()),
-      partnerName: json['PARTNER_NAME'] ?? ''
+      partnerName: json['PARTNER_NAME'] ?? '',
+      quantityMinPrice: int.parse((json['QUANTITY_MIN_PRICE'] ?? '0').toString()),
+      quantityMaxPrice: int.parse((json['QUANTITY_MAX_PRICE'] ?? '99999').toString()),
+      productCategoryId: int.parse((json['PRODUCT_CATEGORY_ID'] ?? '0').toString()),
+      rn: int.parse((json['RN'] ?? '1').toString()),
     );
   }
 }

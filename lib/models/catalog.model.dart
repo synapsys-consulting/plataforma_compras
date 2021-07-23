@@ -1,24 +1,25 @@
 import 'package:flutter/foundation.dart';
-import 'package:plataforma_compras/models/productAvail.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 
 class Catalog with ChangeNotifier {
   /// Internal, private state of the Warehouse. Stores the ids of each item.
-  final List<ProductAvail> _items = [];
+  final List<MultiPricesProductAvail> _items = [];
 
-  List<ProductAvail> get items => _items;
+  List<MultiPricesProductAvail> get items => _items;
 
-  void add (ProductAvail item) {
+  void add (MultiPricesProductAvail item) {
     bool founded = false;
     if (this._items.length > 0) {
       this.items.forEach((element) {
         if (element.productId == item.productId) {
-          element.purchased += element.minQuantitySell;   // Always purchase the minimun queantity sell
+          element.purchased += element.minQuantitySell;   // Always purchase the minimum quantity sell
+          element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity(); // Update the price according the quantity purchased
           founded = true;
         }
       });
     }
     if (!founded) {
-      final itemCatalog = new ProductAvail(
+      final itemCatalog = new MultiPricesProductAvail(
         productId: item.productId,
         productName: item.productName,
         productNameLong: item.productNameLong,
@@ -44,34 +45,65 @@ class Catalog with ChangeNotifier {
         remark: item.remark,
         minQuantitySell: item.minQuantitySell,
         partnerId: item.partnerId,
-        partnerName: item.partnerName
+        partnerName: item.partnerName,
+        quantityMinPrice: item.quantityMinPrice,
+        quantityMaxPrice: item.quantityMaxPrice,
+        productCategoryId: item.productCategoryId,
+        rn: item.rn
       );
+      item.items.forEach((element) {
+        itemCatalog.items.add(element);
+      });
       _items.add(itemCatalog);
     }
     notifyListeners();
   }
-  void remove (ProductAvail item) {
+  void addChildrenToFatherElement (int productIdFather, MultiPricesProductAvail children) {
     if (this._items.length > 0) {
       this.items.forEach((element) {
-        if (element.productId == item.productId) (element.purchased == element.minQuantitySell) ? element.purchased = 0 : element.purchased -= element.minQuantitySell; // Always purchase the minimun queantity sell
+        if (element.productId == productIdFather) {
+          element.items.add(children);
+        }
+      });
+    }
+  }
+  void remove (MultiPricesProductAvail item) {
+    if (this._items.length > 0) {
+      this.items.forEach((element) {
+        //if (element.productId == item.productId) (element.purchased == element.minQuantitySell) ? element.purchased = 0 : element.purchased -= element.minQuantitySell; // Always purchase the minimum quantity sell
+        if (element.productId == item.productId) {
+          (element.purchased == element.minQuantitySell) ? element.purchased = 0 : element.purchased -= element.minQuantitySell;  // Always purchase the minimum quantity sell
+          element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
+        }
       });
     }
     notifyListeners();
   }
-  void incrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += element.minQuantitySell;});  // Always purchase the minimun queantity sell
+  void incrementAvail (MultiPricesProductAvail item) {
+    this.items.forEach((element) {
+      if (element.productId == item.productId) {
+        element.purchased += element.minQuantitySell;
+        element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
+      }
+    });  // Always purchase the minimum quantity sell
     notifyListeners();
   }
-  void decrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= element.minQuantitySell;});  // Always purchase the minimun queantity sell
+  void decrementAvail (MultiPricesProductAvail item) {
+    this.items.forEach((element) {
+      if (element.productId == item.productId) {
+        element.purchased -= element.minQuantitySell;
+        element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
+      }
+    });  // Always purchase the minimum quantity sell
     notifyListeners();
   }
-  ProductAvail  getItem (int index) {
+  MultiPricesProductAvail  getItem (int index) {
     return _items[index];
   }
   void clearCatalog () {
     this._items.forEach((element) {
       element.purchased = 0;
+      element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();
       notifyListeners();
     });
   }

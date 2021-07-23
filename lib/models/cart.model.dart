@@ -1,26 +1,27 @@
 import 'package:flutter/foundation.dart';
-import 'package:plataforma_compras/models/productAvail.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 
 class Cart with ChangeNotifier {
   /// Internal, private state of the cart. Stores the ids of each item.
-  final List<ProductAvail> _items = [];
+  final List<MultiPricesProductAvail> _items = [];
   double totalPrice= 0.0;
   double totalTax = 0.0;
 
-  List<ProductAvail> get items => _items;
+  List<MultiPricesProductAvail> get items => _items;
 
-  void add (ProductAvail item) {
+  void add (MultiPricesProductAvail item) {
     bool founded = false;
     if (this._items.length > 0) {
       this.items.forEach((element) {
         if (element.productId == item.productId) {
-          element.purchased += element.minQuantitySell; // Always purchase the minimun queantity sell
+          element.purchased += element.minQuantitySell;   // Always purchase the minimum quantity sell
+          element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
           founded = true;
         }
       });
     }
     if (!founded) {
-      final itemCart = new ProductAvail (
+      final itemCart = new MultiPricesProductAvail (
         productId: item.productId,
         productName: item.productName,
         productNameLong: item.productNameLong,
@@ -46,17 +47,25 @@ class Cart with ChangeNotifier {
         remark: item.remark,
         minQuantitySell: item.minQuantitySell,
         partnerId: item.partnerId,
-        partnerName: item.partnerName
+        partnerName: item.partnerName,
+        quantityMinPrice: item.quantityMinPrice,
+        quantityMaxPrice: item.quantityMaxPrice,
+        productCategoryId: item.productCategoryId,
+        rn: item.rn
       );
+      item.items.forEach((element) {
+        itemCart.items.add(element);
+      });
+      itemCart.totalAmountAccordingQuantity = itemCart.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
       _items.add(itemCart);
     }
-    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.getTotalAmountAccordingQuantity() * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscountedAccordingQuantity() * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
-  void remove (ProductAvail item) {
+  void remove (MultiPricesProductAvail item) {
     bool founded = false;
-    ProductAvail tmpElement;
+    MultiPricesProductAvail tmpElement;
     if (this._items.length > 0) {
       this._items.forEach((element) {
         if (element.productId == item.productId) {
@@ -64,7 +73,8 @@ class Cart with ChangeNotifier {
             founded = true;
             tmpElement = element;
           } else {
-            element.purchased -= element.minQuantitySell; // Always purchase the minimun queantity sell
+            element.purchased -= element.minQuantitySell; // Always purchase the minimum quantity sell
+            element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity(); // Update the price according the quantity purchased
           }
         }
       });
@@ -72,28 +82,38 @@ class Cart with ChangeNotifier {
     if (founded) {
       this._items.remove(tmpElement);
     }
-    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
+    totalPrice = _items.fold(0, (total, current) => total + (current.getTotalAmountAccordingQuantity() * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscountedAccordingQuantity() * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
-  void incrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased += element.minQuantitySell;});  // Always purchase the minimun queantity sell
-    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
+  void incrementAvail (MultiPricesProductAvail item) {
+    this.items.forEach((element) {
+      if (element.productId == item.productId) {
+        element.purchased += element.minQuantitySell;
+        element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
+      }
+    });  // Always purchase the minimum quantity sell
+    totalPrice = _items.fold(0, (total, current) => total + (current.getTotalAmountAccordingQuantity() * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscountedAccordingQuantity() * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
-  void decrementAvail (ProductAvail item) {
-    this.items.forEach((element) { if (element.productId == item.productId) element.purchased -= element.minQuantitySell;});  // Always purchase the minimun queantity sell
-    totalPrice = _items.fold(0, (total, current) => total + (current.totalAmount * current.purchased));
-    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscounted * current.taxApply)/100) * current.purchased));
+  void decrementAvail (MultiPricesProductAvail item) {
+    this.items.forEach((element) {
+      if (element.productId == item.productId) {
+        element.purchased -= element.minQuantitySell;
+        element.totalAmountAccordingQuantity = element.getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
+      }
+    });  // Always purchase the minimum quantity sell
+    totalPrice = _items.fold(0, (total, current) => total + (current.getTotalAmountAccordingQuantity() * current.purchased));
+    totalTax = _items.fold(0, (total, current) => total + (((current.productPriceDiscountedAccordingQuantity() * current.taxApply)/100) * current.purchased));
     notifyListeners();
   }
 
-  ProductAvail getItem (int index) {
+  MultiPricesProductAvail getItem (int index) {
     return _items[index];
   }
 
-  void clearCart () {
+  void removeCart () {
     this._items.clear();
     this.totalPrice = 0.0;
     this.totalTax = 0.0;
@@ -101,4 +121,5 @@ class Cart with ChangeNotifier {
   }
 
   int get numItems => this._items.length;
+
 }
