@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 
 import 'package:plataforma_compras/utils/colors.util.dart';
+import 'package:plataforma_compras/utils/multiPriceListElement.dart';
+import 'package:plataforma_compras/utils/configuration.util.dart';
 
 class DisplayDialog {
-
   static Future<void> displayDialog (BuildContext context, Widget image, String title, String message) async{
     var heightScreen = MediaQuery.of(context).size.height;
     return await showDialog<void>(
@@ -13,9 +15,9 @@ class DisplayDialog {
           children: <Widget>[
             SimpleDialog (
               titlePadding: EdgeInsets.zero,
-              title: Container(
+              title: Container (
                 padding: EdgeInsets.zero,
-                child: Column(
+                child: Column (
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -308,6 +310,214 @@ class DisplayDialog {
             ],
           );
         }
+    );
+  }
+  static Future<void> displayInformationAsATable (BuildContext context, String title, List<MultiPriceListElement> itemsToShow) async {
+    var heightScreen = MediaQuery.of(context).size.height;
+    return await showDialog<void> (
+      context: context,
+      builder: (context) {
+        return ListView(
+          children: <Widget>[
+            SimpleDialog (
+              titlePadding: EdgeInsets.zero,
+              title: Container (
+                padding: EdgeInsets.zero,
+                child: Column (
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(0.0),
+                      //width: 96.0,
+                      //height: 96.0,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                          ),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFE0E4EE),
+                              offset: Offset(4.0,4.0),
+                              spreadRadius: 1.0,
+                              blurRadius: 15.0,
+                            ),
+                            BoxShadow(
+                              color: Colors.white,
+                              offset: Offset(-4.0, -4.0),
+                              spreadRadius: 1.0,
+                              blurRadius: 15.0,
+                            ),
+                          ]
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.all(12.0),
+                        width: 96.0,
+                        height: 96.0,
+                        child: Image.asset(
+                            'assets/images/imageDialogBox.png'
+                          //'assets/Group8.png'
+                        ),
+                      ),
+                    ),
+                    (heightScreen <= 760) ? SizedBox(height: 5.0,) : SizedBox(height: 40.0,),
+                    Row (
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text (
+                          title,
+                          style: TextStyle (
+                            fontFamily: 'Avenir',
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                    (heightScreen <= 760) ? SizedBox(height: 5.0) : SizedBox(height: 24.0),
+                    Padding (
+                      padding: const EdgeInsets.only (left: 16.0, right: 16.0),
+                      child: Center(
+                        child: DataTable (
+                          horizontalMargin: 2.0,
+                          columnSpacing: 14.0,
+                          columns: const <DataColumn>[
+                            DataColumn(
+                                label: Text(
+                                  'Unds. desde',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 12.0,
+                                    fontFamily: 'SF Pro Display',
+                                    fontStyle: FontStyle.normal,
+                                    color: Color(0xFF6C6D77),
+                                  ),
+                                )
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Unds. hasta',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Color(0xFF6C6D77),
+                                ),
+                              )
+                            ),
+                            DataColumn(
+                              label: Text(
+                                'Precio',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 12.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Color(0xFF6C6D77),
+                                ),
+                              )
+                            ),
+                          ],
+                          rows: List<DataRow>.generate(itemsToShow.length,(int index) => DataRow(
+                              cells: <DataCell>[
+                                DataCell(
+                                  Text(
+                                    itemsToShow[index].unitsFrom.toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                                ),
+                                DataCell(
+                                  Text(
+                                    itemsToShow[index].unitsTo.toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                                ),
+                                DataCell(
+                                  Text(
+                                    new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse((itemsToShow[index].price/MULTIPLYING_FACTOR).toString())),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                                )
+                              ]
+                          )),
+                        )
+                      ),
+                    ),
+                    (heightScreen <= 760) ? SizedBox(height: 10.0,) : SizedBox(height: 40.0,),
+                  ],
+                ),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                side: BorderSide(
+
+                ),
+              ),
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                  child: GestureDetector (
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration (
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.circular(8.0),
+                          gradient: LinearGradient(
+                            colors: <Color>[
+                              Color (0xFF833C26),
+                              Color (0xFF9A541F),
+                              Color (0xFFF9B806),
+                              Color (0XFFFFC107),
+                            ],
+                          )
+                      ),
+                      //padding: const EdgeInsets.fromLTRB(145.0, 20.0, 145.0, 20.0),
+                      child: const Text(
+                          'Entendido',
+                          style: TextStyle(
+                              fontSize: 24,
+                              color: tanteLadenBackgroundWhite
+                          )
+                      ),
+                      height: 64,
+                    ),
+                    //elevation: 8.0, // New
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+                (heightScreen <= 760) ? SizedBox(height: 20.0) : SizedBox(height: 24.0),
+              ],
+              elevation: 24.0,
+            ),
+          ],
+        );
+      }
     );
   }
 }
