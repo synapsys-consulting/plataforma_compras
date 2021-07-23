@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:plataforma_compras/models/catalog.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -23,7 +24,8 @@ import 'package:plataforma_compras/views/login.view.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/views/personalData.view.dart';
 import 'package:plataforma_compras/views/manageAddresses.view.dart';
-import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
+import 'package:plataforma_compras/utils/displayDialog.dart';
+import 'package:plataforma_compras/utils/multiPriceListElement.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -45,7 +47,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  Future<List<ProductAvail>> itemsProductsAvailable;
+  Future<List<MultiPricesProductAvail>> itemsProductsAvailable;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -70,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
     itemsProductsAvailable = _getProductsAvailable();
   }
   // Private method which get the available products from the database
-  Future<List<ProductAvail>> _getProductsAvailable () async {
+  Future<List<MultiPricesProductAvail>> _getProductsAvailable () async {
     final SharedPreferences prefs = await _prefs;
     final String token = prefs.get ('token') ?? '';
     if (token == '') {
@@ -88,15 +90,114 @@ class _MyHomePageState extends State<MyHomePage> {
         debugPrint ('The Rest API has responsed.');
         final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
         debugPrint ('Entre medias de la api RESPONSE.');
-        final List<MultiPricesProductAvail> resultListProducts = resultListJson.map<MultiPricesProductAvail>((json) => MultiPricesProductAvail.fromJson(json)).toList();
+        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+        final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+        int tmpProductCategoryIdPrevious;
+        String tmpPersonNamePrevious;
         resultListProducts.forEach((element) {
+          if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+            // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento principal');
+            debugPrint ('El product_description retornado desde el API es: ' + element.productName);
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            final item = new MultiPricesProductAvail(
+                productId: element.productId,
+                productName: element.productName,
+                productNameLong: element.productNameLong,
+                productDescription: element.productDescription,
+                productType: element.productType,
+                brand: element.brand,
+                numImages: element.numImages,
+                numVideos: element.numVideos,
+                purchased: element.purchased,
+                productPrice: element.productPrice,
+                totalBeforeDiscount: element.totalBeforeDiscount,
+                taxAmount: element.taxAmount,
+                personeId: element.personeId,
+                personeName: element.personeName,
+                businessName: element.businessName,
+                email: element.email,
+                taxId: element.taxId,
+                taxApply: element.taxApply,
+                productPriceDiscounted: element.productPriceDiscounted,
+                totalAmount: element.totalAmount,
+                discountAmount: element.discountAmount,
+                idUnit: element.idUnit,
+                remark: element.remark,
+                minQuantitySell: element.minQuantitySell,
+                partnerId: element.partnerId,
+                partnerName: element.partnerName,
+                quantityMinPrice: element.quantityMinPrice,
+                quantityMaxPrice: element.quantityMaxPrice,
+                productCategoryId: element.productCategoryId,
+                rn: element.rn
+            );
+            resultListMultiPriceProducts.add(item);
+            //Provider.of<Catalog>(context, listen: false).add(element);
+          } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+            // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento secundario');
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            debugPrint('Antes de añadir al elemento secundario.');
+            resultListMultiPriceProducts.last.add(element);
+            debugPrint('He añadido el elemento secundario a: ' + resultListMultiPriceProducts.last.productId.toString());
+            //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
+          } else {
+            // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento terciario');
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            final item = new MultiPricesProductAvail(
+                productId: element.productId,
+                productName: element.productName,
+                productNameLong: element.productNameLong,
+                productDescription: element.productDescription,
+                productType: element.productType,
+                brand: element.brand,
+                numImages: element.numImages,
+                numVideos: element.numVideos,
+                purchased: element.purchased,
+                productPrice: element.productPrice,
+                totalBeforeDiscount: element.totalBeforeDiscount,
+                taxAmount: element.taxAmount,
+                personeId: element.personeId,
+                personeName: element.personeName,
+                businessName: element.businessName,
+                email: element.email,
+                taxId: element.taxId,
+                taxApply: element.taxApply,
+                productPriceDiscounted: element.productPriceDiscounted,
+                totalAmount: element.totalAmount,
+                discountAmount: element.discountAmount,
+                idUnit: element.idUnit,
+                remark: element.remark,
+                minQuantitySell: element.minQuantitySell,
+                partnerId: element.partnerId,
+                partnerName: element.partnerName,
+                quantityMinPrice: element.quantityMinPrice,
+                quantityMaxPrice: element.quantityMaxPrice,
+                productCategoryId: element.productCategoryId,
+                rn: element.rn
+            );
+            resultListMultiPriceProducts.add(item);
+            //Provider.of<Catalog>(context, listen: false).add(element);
+          }
+        });
+        resultListMultiPriceProducts.forEach((element) {
+          debugPrint('Estoy en el bucle que se recorre la lista resultListMultiPriceProducts');
+          debugPrint ('El valor de Product_id es: ' + element.productId.toString());
+          debugPrint ('El valor de Product_id es: ' + element.totalAmount.toString());
+          element.items.forEach((element) {
+            debugPrint ('El valor de Product_id del producto hijo es: ' + element.productId.toString());
+          });
           Provider.of<Catalog>(context, listen: false).add(element);
-          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
         });
         debugPrint ('Antes de terminar de responder la API.');
-        return resultListProducts;
+        return resultListMultiPriceProducts;
       } else {
-        final List<ProductAvail> resultListProducts = [];
+        final List<MultiPricesProductAvail> resultListProducts = [];
         return resultListProducts;
       }
     } else {
@@ -122,14 +223,113 @@ class _MyHomePageState extends State<MyHomePage> {
         final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
         debugPrint ('Entre medias de la api RESPONSE.');
         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+        final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+        int tmpProductCategoryIdPrevious;
+        String tmpPersonNamePrevious;
         resultListProducts.forEach((element) {
+          if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+            // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento principal');
+            debugPrint ('El product_description retornado desde el API es: ' + element.productId.toString());
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            final item = new MultiPricesProductAvail(
+              productId: element.productId,
+              productName: element.productName,
+              productNameLong: element.productNameLong,
+              productDescription: element.productDescription,
+              productType: element.productType,
+              brand: element.brand,
+              numImages: element.numImages,
+              numVideos: element.numVideos,
+              purchased: element.purchased,
+              productPrice: element.productPrice,
+              totalBeforeDiscount: element.totalBeforeDiscount,
+              taxAmount: element.taxAmount,
+              personeId: element.personeId,
+              personeName: element.personeName,
+              businessName: element.businessName,
+              email: element.email,
+              taxId: element.taxId,
+              taxApply: element.taxApply,
+              productPriceDiscounted: element.productPriceDiscounted,
+              totalAmount: element.totalAmount,
+              discountAmount: element.discountAmount,
+              idUnit: element.idUnit,
+              remark: element.remark,
+              minQuantitySell: element.minQuantitySell,
+              partnerId: element.partnerId,
+              partnerName: element.partnerName,
+              quantityMinPrice: element.quantityMinPrice,
+              quantityMaxPrice: element.quantityMaxPrice,
+              productCategoryId: element.productCategoryId,
+              rn: element.rn
+            );
+            resultListMultiPriceProducts.add(item);
+          } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+            // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento secundario');
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            debugPrint('Antes de añadir al elemento secundario.');
+            resultListMultiPriceProducts.last.add(element);
+            debugPrint('El elemento secundario es: ' + element.productId.toString());
+            debugPrint('He añadido el elemento secundario a: ' + resultListMultiPriceProducts.last.productId.toString());
+          } else {
+            // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+            debugPrint ('He pasado por el elemento terciario');
+            tmpProductCategoryIdPrevious = element.productCategoryId;
+            tmpPersonNamePrevious = element.personeName;
+            debugPrint('Antes de añadir al elemento primario.');
+            final item = new MultiPricesProductAvail(
+                productId: element.productId,
+                productName: element.productName,
+                productNameLong: element.productNameLong,
+                productDescription: element.productDescription,
+                productType: element.productType,
+                brand: element.brand,
+                numImages: element.numImages,
+                numVideos: element.numVideos,
+                purchased: element.purchased,
+                productPrice: element.productPrice,
+                totalBeforeDiscount: element.totalBeforeDiscount,
+                taxAmount: element.taxAmount,
+                personeId: element.personeId,
+                personeName: element.personeName,
+                businessName: element.businessName,
+                email: element.email,
+                taxId: element.taxId,
+                taxApply: element.taxApply,
+                productPriceDiscounted: element.productPriceDiscounted,
+                totalAmount: element.totalAmount,
+                discountAmount: element.discountAmount,
+                idUnit: element.idUnit,
+                remark: element.remark,
+                minQuantitySell: element.minQuantitySell,
+                partnerId: element.partnerId,
+                partnerName: element.partnerName,
+                quantityMinPrice: element.quantityMinPrice,
+                quantityMaxPrice: element.quantityMaxPrice,
+                productCategoryId: element.productCategoryId,
+                rn: element.rn
+            );
+            resultListMultiPriceProducts.add(item);
+          }
+        });
+        resultListMultiPriceProducts.forEach((element) {
+          debugPrint('Estoy en el bucle que se recorre la lista resultListMultiPriceProducts');
+          debugPrint ('El valor de Product_id es: ' + element.productId.toString());
+          debugPrint ('El valor de totalAmount es: ' + element.totalAmount.toString());
+          element.items.forEach((element) {
+            debugPrint ('El valor de Product_id HIJO es: ' + element.productId.toString());
+          });
           Provider.of<Catalog>(context, listen: false).add(element);
-          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
         });
         debugPrint ('Antes de terminar de responder la API.');
-        return resultListProducts;
+        //return resultListProducts;
+        return resultListMultiPriceProducts;
       } else {
-        final List<ProductAvail> resultListProducts = [];
+        final List<MultiPricesProductAvail> resultListProducts = [];
         return resultListProducts;
       }
     }
@@ -556,7 +756,7 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 0.0,
       ),
       endDrawer: _createEndDrawer (context, _isUserLogged,_name),
-      body: FutureBuilder <List<ProductAvail>>(
+      body: FutureBuilder <List<MultiPricesProductAvail>>(
           future: itemsProductsAvailable,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -624,7 +824,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                   child: LayoutBuilder (
                     builder: (context, constraints) {
                       return Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -657,8 +857,8 @@ class _SmallScreenState extends State<_SmallScreen> {
                               )
                             ],
                           ),
-                          Padding (
-                            padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
+                          Container (
+                            padding: const EdgeInsets.fromLTRB (15.0, 0.0, 0.0, 0.0),
                             child: Row (
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -667,10 +867,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   child: Image.asset('assets/images/00001.png'),
                                   padding: EdgeInsets.only(right: 8.0),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 3.0),
+                                Container(
+                                  padding: const EdgeInsets.only(right: 8.0),
                                   child: Text(
-                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())),
+                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,
@@ -679,11 +879,41 @@ class _SmallScreenState extends State<_SmallScreen> {
                                       textAlign: TextAlign.start
                                   ),
                                 ),
+                                catalog.items[index].quantityMaxPrice != 999999 ? Container(
+                                  padding: EdgeInsets.zero,
+                                  width: 20.0,
+                                  height: 20.0,
+                                  child: IconButton (
+                                    alignment: Alignment.centerRight,
+                                    padding: EdgeInsets.zero,
+                                    icon: Image.asset (
+                                      'assets/images/logoInfo.png',
+                                      //fit: BoxFit.fill,
+                                      width: 20.0,
+                                      height: 20.0,
+                                    ),
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                      if (catalog.items[index].quantityMaxPrice != 999999) {
+                                        // There is multiprice for this product
+                                        final item = new MultiPriceListElement(catalog.items[index].quantityMinPrice, catalog.items[index].quantityMaxPrice, catalog.items[index].totalAmount);
+                                        listMultiPriceListElement.add(item);
+                                        catalog.items[index].items.where((element) => element.partnerId != 1)
+                                            .forEach((element) {
+                                          final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                          listMultiPriceListElement.add(item);
+                                        });
+                                      }
+                                      DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                    },
+                                  ),
+                                ) : Container()
                               ],
                             ),
                           ),
                           Row (
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container (
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
@@ -692,7 +922,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   catalog.items[index].productName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 16.0,
+                                    fontSize: 14.0,
                                     fontFamily: 'SF Pro Display',
                                     fontStyle: FontStyle.normal,
                                     color: Colors.black,
@@ -706,7 +936,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                             ],
                           ),
                           Row (
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container (
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
@@ -751,7 +981,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                       )
                                     ],
                                   ),
-                                  TextButton(
+                                  TextButton (
                                       onPressed: () {
                                         setState(() {
                                           catalog.add(catalog.getItem(index));
@@ -759,7 +989,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                         });
                                       },
                                       child: Container(
-                                        alignment: Alignment.center,
+                                        alignment: Alignment.centerLeft,
                                         padding: EdgeInsets.all(2.0),
                                         decoration: BoxDecoration (
                                             shape: BoxShape.rectangle,
@@ -1011,8 +1241,8 @@ class _LargeScreenState extends State<_LargeScreen> {
                               )
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 0.0, 0.0),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -1021,10 +1251,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   child: Image.asset('assets/images/00001.png'),
                                   padding: EdgeInsets.only(right: 8.0),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 3.0),
+                                Container(
+                                  padding: const EdgeInsets.only(right: 8.0),
                                   child: Text(
-                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())),
+                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
                                       style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontSize: 24.0,
@@ -1033,6 +1263,36 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       textAlign: TextAlign.start
                                   ),
                                 ),
+                                catalog.items[index].quantityMaxPrice != 999999 ? Container(
+                                  padding: EdgeInsets.zero,
+                                  width: 20.0,
+                                  height: 20.0,
+                                  child: IconButton (
+                                    alignment: Alignment.centerRight,
+                                    padding: EdgeInsets.zero,
+                                    icon: Image.asset (
+                                      'assets/images/logoInfo.png',
+                                      //fit: BoxFit.fill,
+                                      width: 20.0,
+                                      height: 20.0,
+                                    ),
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                      if (catalog.items[index].quantityMaxPrice != 999999) {
+                                        // There is multiprice for this product
+                                        final item = new MultiPriceListElement(catalog.items[index].quantityMinPrice, catalog.items[index].quantityMaxPrice, catalog.items[index].totalAmount);
+                                        listMultiPriceListElement.add(item);
+                                        catalog.items[index].items.where((element) => element.partnerId != 1)
+                                            .forEach((element) {
+                                          final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                          listMultiPriceListElement.add(item);
+                                        });
+                                      }
+                                      DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                    },
+                                  ),
+                                ) : Container()
                               ],
                             ),
                           ),

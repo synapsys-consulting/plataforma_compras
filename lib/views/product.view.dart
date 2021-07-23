@@ -6,19 +6,20 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:carousel_slider/carousel_slider.dart';
 
-import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/sizes.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 
 class ProductView extends StatelessWidget {
-  final ProductAvail currentProduct;
-  ProductView(this.currentProduct);
+  final MultiPricesProductAvail currentProduct;
+  ProductView (this.currentProduct);
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0.0,
@@ -46,13 +47,13 @@ class ProductView extends StatelessWidget {
   }
 }
 class _SmallScreen extends StatefulWidget {
-  final ProductAvail currentProduct;
+  final MultiPricesProductAvail currentProduct;
   _SmallScreen(this.currentProduct);
   _SmallScreenState createState() => _SmallScreenState(this.currentProduct);
 }
 
 class _SmallScreenState extends State<_SmallScreen> {
-  final ProductAvail currentProduct;
+  final MultiPricesProductAvail currentProduct;
   _SmallScreenState(this.currentProduct);
 
   // private variables
@@ -68,6 +69,18 @@ class _SmallScreenState extends State<_SmallScreen> {
   Widget build(BuildContext context) {
     debugPrint('El productId es: ' + currentProduct.productId.toString());
     debugPrint('El numero de images es: ' + currentProduct.numImages.toString());
+    // Process if the product has multiprice
+    final List<_MultiPriceListElement> listMultiPriceListElement = [];
+    if (currentProduct.quantityMaxPrice != 999999) {
+      // There is multiprice for this product
+      final item = new _MultiPriceListElement(currentProduct.quantityMinPrice, currentProduct.quantityMaxPrice, currentProduct.totalAmount);
+      listMultiPriceListElement.add(item);
+      currentProduct.items.where((element) => element.partnerId != 1)
+          .forEach((element) {
+        final item = new _MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+        listMultiPriceListElement.add(item);
+      });
+    }
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -141,21 +154,21 @@ class _SmallScreenState extends State<_SmallScreen> {
                   ),
                 ),
                 //SizedBox(height: 20.0),
-                SizedBox (height: constraints.maxHeight * HeightInDpis_20),
+                SizedBox (height: constraints.maxHeight * HeightInDpis_2),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                  child: Row(
+                  padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
+                  child: Row (
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Container(
-                        child: Image.asset('assets/images/00002.png'),
+                        child: Image.asset ('assets/images/00002.png'),
                         padding: EdgeInsets.only(left: 8.0, right: 8.0),
                       ),
-                      Padding(
+                      Padding (
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.productPrice.toString())),
+                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse((currentProduct.totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 40.0,
@@ -164,18 +177,6 @@ class _SmallScreenState extends State<_SmallScreen> {
                             textAlign: TextAlign.start
                         ),
                       ),
-                      Text(
-                          currentProduct.brand,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 32.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.italic,
-                            color: Color(0xFF36B0F8),
-                          ),
-                          textAlign: TextAlign.start
-
-                      )
                     ],
                   ),
                 ),
@@ -206,29 +207,6 @@ class _SmallScreenState extends State<_SmallScreen> {
                 ),
                 //SizedBox(height: 2.0),
                 SizedBox(height: constraints.maxHeight * HeightInDpis_2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 24.0),
-                      width: constraints.maxWidth,
-                      child: Text(
-                        currentProduct.productDescription,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Color(0xFF36B0F8),
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                    )
-                  ],
-                ),
                 //SizedBox(height: 2.0),
                 SizedBox(height: constraints.maxHeight * HeightInDpis_2),
                 //SizedBox(height: 2.0),
@@ -240,7 +218,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.brand,
+                        currentProduct.businessName,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 24.0,
@@ -255,13 +233,13 @@ class _SmallScreenState extends State<_SmallScreen> {
                     )
                   ],
                 ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 24, right: 17),
-                  child: Center(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container (
+                      padding: const EdgeInsets.only(left: 24),
                       child: Text(
-                        currentProduct.remark,
+                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 12.0,
@@ -272,11 +250,116 @@ class _SmallScreenState extends State<_SmallScreen> {
                         textAlign: TextAlign.start,
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
-                      )
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
+                SizedBox(height: constraints.maxHeight * HeightInDpis_24),
+                currentProduct.quantityMaxPrice != 999999 ? Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(left: 24),
+                      child: Text(
+                        'Descuentos por cantidad comprada:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12.0,
+                          fontFamily: 'SF Pro Display',
+                          fontStyle: FontStyle.normal,
+                          color: Color(0xFF6C6D77),
+                        ),
+                      ),
+                    )
+                  ],
+                ): Container(),
+                currentProduct.quantityMaxPrice != 999999 ? Row (
+                  children: <Widget>[
+                    Container (
+                      padding: const EdgeInsets.only(left: 24),
+                      child: DataTable (
+                        columns: const <DataColumn>[
+                          DataColumn (
+                            label: Text(
+                              'Unds. desde',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12.0,
+                                fontFamily: 'SF Pro Display',
+                                fontStyle: FontStyle.normal,
+                                color: Color(0xFF6C6D77),
+                              ),
+                            )
+                          ),
+                          DataColumn (
+                            label: Text(
+                              'Unds. hasta',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12.0,
+                                fontFamily: 'SF Pro Display',
+                                fontStyle: FontStyle.normal,
+                                color: Color(0xFF6C6D77),
+                              ),
+                            )
+                          ),
+                          DataColumn (
+                            label: Text(
+                              'Precio',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 12.0,
+                                fontFamily: 'SF Pro Display',
+                                fontStyle: FontStyle.normal,
+                                color: Color(0xFF6C6D77),
+                              ),
+                            )
+                          ),
+                        ],
+                        rows: List<DataRow>.generate(listMultiPriceListElement.length, (int index) => DataRow(
+                            cells: [
+                               DataCell (
+                                 Text (
+                                   listMultiPriceListElement[index].unitsFrom.toString(),
+                                   style: TextStyle(
+                                     fontWeight: FontWeight.w400,
+                                     fontSize: 12.0,
+                                     fontFamily: 'SF Pro Display',
+                                     fontStyle: FontStyle.normal,
+                                     color: Color(0xFF6C6D77),
+                                   ),
+                                 )
+                               ),
+                              DataCell (
+                                  Text (
+                                    listMultiPriceListElement[index].unitsTo.toString(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                              ),
+                              DataCell (
+                                  Text (
+                                    new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse((listMultiPriceListElement[index].price/MULTIPLYING_FACTOR).toString())),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                              )
+                            ]
+                        ))
+                      )
+                    ),
+                  ],
+                ) : Container(),
+                SizedBox(height: constraints.maxHeight * HeightInDpis_35),
                 Center(
                   child: Text(
                     'Cantidad',
@@ -382,9 +465,6 @@ class _SmallScreenState extends State<_SmallScreen> {
                   ],
                 ),
                 //SizedBox(height: 35.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_35),
-                //SizedBox(height: 60.0,)
-                SizedBox(height: constraints.maxHeight * HeightInDpis_60,)
               ],
             );
           },
@@ -393,12 +473,12 @@ class _SmallScreenState extends State<_SmallScreen> {
   }
 }
 class _LargeScreen extends StatefulWidget {
-  final ProductAvail currentProduct;
+  final MultiPricesProductAvail currentProduct;
   _LargeScreen(this.currentProduct);
   _LargeScreenState createState() => _LargeScreenState (this.currentProduct);
 }
 class _LargeScreenState extends State<_LargeScreen> {
-  final ProductAvail currentProduct;
+  final MultiPricesProductAvail currentProduct;
   _LargeScreenState(this.currentProduct);
 
   // private variables
@@ -414,6 +494,19 @@ class _LargeScreenState extends State<_LargeScreen> {
   @override
   Widget build(BuildContext context) {
     debugPrint('El productId es: ' + currentProduct.productId.toString());
+    debugPrint('El numero de images es: ' + currentProduct.numImages.toString());
+    // Process if the product has multiprice
+    final List<_MultiPriceListElement> listMultiPriceListElement = [];
+    if (currentProduct.quantityMaxPrice != 999999) {
+      // There is multiprice for this product
+      final item = new _MultiPriceListElement(currentProduct.quantityMinPrice, currentProduct.quantityMaxPrice, currentProduct.totalAmount);
+      listMultiPriceListElement.add(item);
+      currentProduct.items.where((element) => element.partnerId != 1)
+          .forEach((element) {
+        final item = new _MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+        listMultiPriceListElement.add(item);
+      });
+    }
     return SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -426,46 +519,35 @@ class _LargeScreenState extends State<_LargeScreen> {
             return ListView(
               children: [
                 currentProduct.numImages > 1
-                ? Column(
+                    ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row (
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Spacer(flex: 1),
-                        Flexible(
-                          flex: 2,
-                          child: CarouselSlider (
-                            items: listImagesProduct.map((url) => Container (
-                              alignment: Alignment.center,
-                              width: constraints.maxWidth,
-                              padding: EdgeInsets.only(top: 10.0),
-                              child: AspectRatio (
-                                aspectRatio: 3.0 / 2.0,
-                                child: CachedNetworkImage(
-                                  placeholder: (context, url) => CircularProgressIndicator(),
-                                  imageUrl: url,
-                                  fit: BoxFit.scaleDown,
-                                  errorWidget: (context, url, error) => Icon(Icons.error),
-                                ),
-                              ) ,
-                            )).toList(),
-                            options: CarouselOptions(
-                                autoPlay: true,
-                                enlargeCenterPage: true,
-                                aspectRatio: 3.0 / 2.0,
-                                onPageChanged: (index, reason) {
-                                  setState(() {
-                                    _current = index;
-                                  });
-                                }
-                            ),
+                    CarouselSlider (
+                      items: listImagesProduct.map((url) => Container(
+                        child: AspectRatio (
+                          aspectRatio: 3.0 / 2.0,
+                          child: CachedNetworkImage(
+                            placeholder: (context, url) => CircularProgressIndicator(),
+                            imageUrl: url,
+                            fit: BoxFit.scaleDown,
+                            errorWidget: (context, url, error) => Icon(Icons.error),
                           ),
                         ),
-                        Spacer(flex: 1)
-                      ],
+                      )
+                      ).toList(),
+                      options: CarouselOptions(
+                          autoPlay: true,
+                          enlargeCenterPage: true,
+                          aspectRatio: 2.0,
+                          onPageChanged: (index, reason) {
+                            setState(() {
+                              _current = index;
+                            });
+                          }
+                      ),
                     ),
-                    Row(
+                    Row (
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: listImagesProduct.map((url) {
                         int index = listImagesProduct.indexOf(url);
@@ -474,55 +556,45 @@ class _LargeScreenState extends State<_LargeScreen> {
                           height: 8.0,
                           margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
                           decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _current == index
-                              ? Color.fromRGBO(0, 0, 0, 0.9)
-                              : Color.fromRGBO(0, 0, 0, 0.4)
+                              shape: BoxShape.circle,
+                              color: _current == index
+                                  ? Color.fromRGBO(0, 0, 0, 0.9)
+                                  : Color.fromRGBO(0, 0, 0, 0.4)
                           ),
                         );
                       }).toList(),
                     )
                   ],
                 )
-                : Row (
-                  children: [
-                    Spacer(flex: 1),
-                    Flexible(
-                      flex: 2,
-                      child: Container(
-                        alignment: Alignment.center,
-                        width: constraints.maxWidth,
-                        child: AspectRatio(
-                          aspectRatio: 3.0 / 2.0,
-                          child: CachedNetworkImage(
-                            placeholder: (context, url) => CircularProgressIndicator(),
-                            //imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                            imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
-                            fit: BoxFit.scaleDown,
-                            errorWidget: (context, url, error) => Icon(Icons.error),
-                          ),
-                        ),
-                      ),
+                    : Container(
+                  alignment: Alignment.center,
+                  width: constraints.maxWidth,
+                  child: AspectRatio(
+                    aspectRatio: 3.0 / 2.0,
+                    child: CachedNetworkImage(
+                      placeholder: (context, url) => CircularProgressIndicator(),
+                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
+                      fit: BoxFit.scaleDown,
+                      errorWidget: (context, url, error) => Icon(Icons.error),
                     ),
-                    Spacer(flex: 1,)
-                  ],
+                  ),
                 ),
                 //SizedBox(height: 20.0),
-                SizedBox (height: constraints.maxHeight * HeightInDpis_20),
+                SizedBox (height: constraints.maxHeight * HeightInDpis_2),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                  child: Row(
+                  padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
+                  child: Row (
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Container(
-                        child: Image.asset('assets/images/00002.png'),
+                        child: Image.asset ('assets/images/00002.png'),
                         padding: EdgeInsets.only(left: 8.0, right: 8.0),
                       ),
-                      Padding(
+                      Padding (
                         padding: const EdgeInsets.only(right: 15.0),
                         child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(currentProduct.productPrice.toString())),
+                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse((currentProduct.totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 40.0,
@@ -531,18 +603,6 @@ class _LargeScreenState extends State<_LargeScreen> {
                             textAlign: TextAlign.start
                         ),
                       ),
-                      Text(
-                          currentProduct.brand,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 32.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.italic,
-                            color: Color(0xFF36B0F8),
-                          ),
-                          textAlign: TextAlign.start
-
-                      )
                     ],
                   ),
                 ),
@@ -573,29 +633,6 @@ class _LargeScreenState extends State<_LargeScreen> {
                 ),
                 //SizedBox(height: 2.0),
                 SizedBox(height: constraints.maxHeight * HeightInDpis_2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 24.0),
-                      width: constraints.maxWidth,
-                      child: Text(
-                        currentProduct.productDescription,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Color(0xFF36B0F8),
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                    )
-                  ],
-                ),
                 //SizedBox(height: 2.0),
                 SizedBox(height: constraints.maxHeight * HeightInDpis_2),
                 //SizedBox(height: 2.0),
@@ -607,7 +644,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       padding: EdgeInsets.only(left: 24.0),
                       width: constraints.maxWidth,
                       child: Text(
-                        currentProduct.brand,
+                        currentProduct.businessName,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 24.0,
@@ -622,13 +659,13 @@ class _LargeScreenState extends State<_LargeScreen> {
                     )
                   ],
                 ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 24, right: 17),
-                  child: Center(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container (
+                      padding: const EdgeInsets.only(left: 24),
                       child: Text(
-                        currentProduct.remark,
+                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 12.0,
@@ -639,11 +676,116 @@ class _LargeScreenState extends State<_LargeScreen> {
                         textAlign: TextAlign.start,
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
-                      )
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
+                SizedBox(height: constraints.maxHeight * HeightInDpis_24),
+                currentProduct.quantityMaxPrice != 999999 ? Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(left: 24),
+                      child: Text(
+                        'Descuentos por cantidad comprada:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12.0,
+                          fontFamily: 'SF Pro Display',
+                          fontStyle: FontStyle.normal,
+                          color: Color(0xFF6C6D77),
+                        ),
+                      ),
+                    )
+                  ],
+                ): Container(),
+                currentProduct.quantityMaxPrice != 999999 ? Row (
+                  children: <Widget>[
+                    Container (
+                        padding: const EdgeInsets.only(left: 24),
+                        child: DataTable (
+                            columns: const <DataColumn>[
+                              DataColumn (
+                                  label: Text(
+                                    'Unds. desde',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                              ),
+                              DataColumn (
+                                  label: Text(
+                                    'Unds. hasta',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                              ),
+                              DataColumn (
+                                  label: Text(
+                                    'Precio',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12.0,
+                                      fontFamily: 'SF Pro Display',
+                                      fontStyle: FontStyle.normal,
+                                      color: Color(0xFF6C6D77),
+                                    ),
+                                  )
+                              ),
+                            ],
+                            rows: List<DataRow>.generate(listMultiPriceListElement.length, (int index) => DataRow(
+                                cells: [
+                                  DataCell (
+                                      Text (
+                                        listMultiPriceListElement[index].unitsFrom.toString(),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 12.0,
+                                          fontFamily: 'SF Pro Display',
+                                          fontStyle: FontStyle.normal,
+                                          color: Color(0xFF6C6D77),
+                                        ),
+                                      )
+                                  ),
+                                  DataCell (
+                                      Text (
+                                        listMultiPriceListElement[index].unitsTo.toString(),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 12.0,
+                                          fontFamily: 'SF Pro Display',
+                                          fontStyle: FontStyle.normal,
+                                          color: Color(0xFF6C6D77),
+                                        ),
+                                      )
+                                  ),
+                                  DataCell (
+                                      Text (
+                                        new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse((listMultiPriceListElement[index].price/MULTIPLYING_FACTOR).toString())),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 12.0,
+                                          fontFamily: 'SF Pro Display',
+                                          fontStyle: FontStyle.normal,
+                                          color: Color(0xFF6C6D77),
+                                        ),
+                                      )
+                                  )
+                                ]
+                            ))
+                        )
+                    ),
+                  ],
+                ) : Container(),
+                SizedBox(height: constraints.maxHeight * HeightInDpis_35),
                 Center(
                   child: Text(
                     'Cantidad',
@@ -669,7 +811,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                             });
                           }
                         },
-                        child: Container(
+                        child: Container (
                           alignment: Alignment.center,
                           padding: EdgeInsets.all(2.0),
                           decoration: BoxDecoration (
@@ -749,314 +891,17 @@ class _LargeScreenState extends State<_LargeScreen> {
                   ],
                 ),
                 //SizedBox(height: 35.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_35),
-                //SizedBox(height: 60.0,)
-                SizedBox(height: constraints.maxHeight * HeightInDpis_60,)
-              ],
-            );
-          },
-        )
-    );
-
-  }
-}
-class DetailWidget extends StatefulWidget {
-  final ProductAvail currentProduct;
-  DetailWidget(this.currentProduct);
-
-  //DetailWidgetState createState() => DetailWidgetState(this.currentProduct);
-  DetailWidgetState createState() => DetailWidgetState();
-}
-class DetailWidgetState extends State<DetailWidget> {
-  //final ProductAvail currentProduct;
-  //DetailWidgetState(this.currentProduct);
-  DetailWidgetState();
-
-  // private variables
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-        child : LayoutBuilder(
-          builder: (context, constraints) {
-            var cart = context.read<Cart>();
-            var catalog = context.read<Catalog>();
-            return ListView(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      alignment: Alignment.center,
-                      width: constraints.maxWidth,
-                      child: AspectRatio(
-                        aspectRatio: 3.0 / 2.0,
-                        child: CachedNetworkImage(
-                            placeholder: (context, url) => CircularProgressIndicator(),
-                            imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                            fit: BoxFit.fitWidth
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-                SizedBox (height: constraints.maxHeight * HeightInDpis_20),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Container(
-                        child: Image.asset('assets/images/00002.png'),
-                        padding: EdgeInsets.only(left: 8.0, right: 8.0),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 15.0),
-                        child: Text(
-                            new NumberFormat.currency(locale:'en_US', symbol: '€', decimalDigits:2).format(double.parse(widget.currentProduct.productPrice.toString())),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 40.0,
-                              fontFamily: 'SF Pro Display',
-                            ),
-                            textAlign: TextAlign.start
-                        ),
-                      ),
-                      Text(
-                          widget.currentProduct.brand,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 32.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.italic,
-                            color: Color(0xFF36B0F8),
-                          ),
-                          textAlign: TextAlign.start
-
-                      )
-                    ],
-                  ),
-                ),
-                //SizedBox(height: 4.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 24.0),
-                      width: constraints.maxWidth,
-                      child: Text(
-                        widget.currentProduct.productName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Colors.black,
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                    )
-                  ],
-                ),
-                //SizedBox(height: 2.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 24.0),
-                      width: constraints.maxWidth,
-                      child: Text(
-                        widget.currentProduct.productDescription,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Color(0xFF36B0F8),
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                    )
-                  ],
-                ),
-                //SizedBox(height: 2.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_2),
-                //SizedBox(height: 2.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 24.0),
-                      width: constraints.maxWidth,
-                      child: Text(
-                        widget.currentProduct.brand,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Color(0xFF6C6D77),
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                      ),
-                    )
-                  ],
-                ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
-                //SizedBox(height: 20.0),
-                Padding(
-                  padding: const EdgeInsets.only(left: 24, right: 17),
-                  child: Center(
-                      child: Text(
-                        widget.currentProduct.remark,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 12.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Color(0xFF6C6D77),
-                        ),
-                        textAlign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: false,
-                      )
-                  ),
-                ),
-                //SizedBox(height: 16.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_16),
-                Center(
-                  child: Text(
-                    'Cantidad',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 24.0,
-                      fontFamily: 'SF Pro Display',
-                      fontStyle: FontStyle.normal,
-                      color: Color(0xFF6C6D77),
-                    ),
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                        onPressed: () {
-                          if (widget.currentProduct.purchased > 0) {
-                            setState(() {
-                              cart.remove (widget.currentProduct);
-                              catalog.remove(widget.currentProduct);
-                            });
-                          }
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.all(2.0),
-                          decoration: BoxDecoration (
-                              color: tanteLadenBackgroundWhite,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: tanteLadenButtonBorderGray,
-                                  width: 1
-                              )
-                          ),
-                          child: Container(
-                            width: 40.0,
-                            height: 40.0,
-                            alignment: Alignment.center,
-                            child: Text(
-                              '-',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 24.0,
-                                  fontFamily: 'SF Pro Display',
-                                  fontStyle: FontStyle.normal,
-                                  color: tanteLadenButtonBorderGray
-                              ),
-                            ),
-                          ),
-                        )
-                    ),
-                    Padding(
-                      //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
-                      child: Text(
-                        widget.currentProduct.purchased.toString(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 24.0,
-                          fontFamily: 'SF Pro Display',
-                          fontStyle: FontStyle.normal,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            cart.add(widget.currentProduct);
-                            catalog.add(widget.currentProduct);
-                          });
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.all(2.0),
-                          decoration: BoxDecoration(
-                            color: tanteLadenBackgroundWhite,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Color(0xFF6C6D77),
-                              width: 1,
-                            ),
-                          ),
-                          child: Container(
-                            width: 40.0,
-                            height: 40.0,
-                            alignment: Alignment.center,
-                            child: Text(
-                              '+',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w300,
-                                fontSize: 24.0,
-                                fontFamily: 'SF Pro Display',
-                                fontStyle: FontStyle.normal,
-                                color: tanteLadenButtonBorderGray,
-                              ),
-                            ),
-                          ),
-                        )
-                    )
-                  ],
-                ),
-                //SizedBox(height: 35.0),
-                SizedBox(height: constraints.maxHeight * HeightInDpis_35),
-                //SizedBox(height: 60.0,)
-                SizedBox(height: constraints.maxHeight * HeightInDpis_60,),
               ],
             );
           },
         )
     );
   }
+}
 
+class _MultiPriceListElement {
+  final int unitsFrom;
+  final int unitsTo;
+  final double price;
+  _MultiPriceListElement(this.unitsFrom, this.unitsTo, this.price);
 }

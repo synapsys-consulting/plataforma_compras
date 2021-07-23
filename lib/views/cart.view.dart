@@ -20,6 +20,7 @@ import 'package:plataforma_compras/models/address.model.dart';
 import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:plataforma_compras/views/addAddress.view.dart';
 import 'package:plataforma_compras/views/confirmPurchase.view.dart';
+import 'package:plataforma_compras/utils/multiPriceListElement.dart';
 
 
 
@@ -63,13 +64,13 @@ class _SmallScreenState extends State<_SmallScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
                     decoration: BoxDecoration(
-                        border: Border(
-                            bottom: BorderSide(
-                              color: tanteLadenBrown500,
-                              width: 1.0,
-                              style: BorderStyle.solid,
-                            )
-                        )
+                      border: Border (
+                          bottom: BorderSide(
+                            color: tanteLadenBrown500,
+                            width: 1.0,
+                            style: BorderStyle.solid,
+                          )
+                      )
                     ),
                     child: Row (
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,12 +145,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                                       )
                                     ],
                                   ),
-                                  SizedBox(height: 2.0),
+                                  //SizedBox(height: 2.0),
                                   Container(
                                     child: Row (
                                       children: [
                                         Text(
-                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmount/MULTIPLYING_FACTOR)),
+                                          new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmountAccordingQuantity/MULTIPLYING_FACTOR)),
                                           style: TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 16.0,
@@ -173,6 +174,29 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           ),
                                           textAlign: TextAlign.start,
                                         ),
+                                        cart.getItem(index).quantityMaxPrice != 999999 ? IconButton (
+                                          icon: Image.asset (
+                                            'assets/images/logoInfo.png',
+                                            //fit: BoxFit.fill,
+                                            width: 20.0,
+                                            height: 20.0,
+                                          ),
+                                          iconSize: 20.0,
+                                          onPressed: () {
+                                            final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                            if (cart.getItem(index).quantityMaxPrice != 999999) {
+                                              // There is multiprice for this product
+                                              final item = new MultiPriceListElement(cart.getItem(index).quantityMinPrice, cart.getItem(index).quantityMaxPrice, cart.getItem(index).totalAmount);
+                                              listMultiPriceListElement.add(item);
+                                              cart.getItem(index).items.where((element) => element.partnerId != 1)
+                                                  .forEach((element) {
+                                                final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                                listMultiPriceListElement.add(item);
+                                              });
+                                            }
+                                            DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                          },
+                                        ) : Container()
                                       ],
                                     ),
                                   ),
@@ -437,12 +461,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                                         )
                                       ],
                                     ),
-                                    SizedBox(height: 2.0),
+                                    //SizedBox(height: 2.0),
                                     Container(
                                       child: Row (
                                         children: [
                                           Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmount/MULTIPLYING_FACTOR)),
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmountAccordingQuantity/MULTIPLYING_FACTOR)),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w900,
                                               fontSize: 16.0,
@@ -466,6 +490,29 @@ class _LargeScreenState extends State<_LargeScreen> {
                                             ),
                                             textAlign: TextAlign.start,
                                           ),
+                                          cart.getItem(index).quantityMaxPrice != 999999 ? IconButton (
+                                            icon: Image.asset (
+                                              'assets/images/logoInfo.png',
+                                              //fit: BoxFit.fill,
+                                              width: 20.0,
+                                              height: 20.0,
+                                            ),
+                                            iconSize: 20.0,
+                                            onPressed: () {
+                                              final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                              if (cart.getItem(index).quantityMaxPrice != 999999) {
+                                                // There is multiprice for this product
+                                                final item = new MultiPriceListElement(cart.getItem(index).quantityMinPrice, cart.getItem(index).quantityMaxPrice, cart.getItem(index).totalAmount);
+                                                listMultiPriceListElement.add(item);
+                                                cart.getItem(index).items.where((element) => element.partnerId != 1)
+                                                    .forEach((element) {
+                                                  final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                                  listMultiPriceListElement.add(item);
+                                                });
+                                              }
+                                              DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                            },
+                                          ) : Container()
                                         ],
                                       ),
                                     ),
@@ -692,7 +739,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                 maxLines: 1,
                                 softWrap: false,
                               ),
-                              IconButton(
+                              IconButton (
                                 icon: Image.asset('assets/images/logoInfo.png'),
                                 iconSize: 6.0,
                                 onPressed: () {

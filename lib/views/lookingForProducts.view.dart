@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,11 +8,12 @@ import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 
 import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
-import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
+import 'package:plataforma_compras/utils/multiPriceListElement.dart';
+import 'package:plataforma_compras/utils/displayDialog.dart';
 
-class LookingForProducts extends StatefulWidget{
+class LookingForProducts extends StatefulWidget {
   @override
   _LookingForProductsState createState() {
     return _LookingForProductsState();
@@ -19,7 +21,7 @@ class LookingForProducts extends StatefulWidget{
 }
 class _LookingForProductsState extends State<LookingForProducts> {
   final TextEditingController _searchController = TextEditingController();
-  List<ProductAvail> _productList = [];
+  List<MultiPricesProductAvail> _productList = [];
   Timer _throttle;
 
   @override
@@ -113,8 +115,8 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                     )
                                   ],
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
+                                Container(
+                                  padding: const EdgeInsets.fromLTRB(15.0, 0.0, 0.0, 0.0),
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -123,10 +125,10 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                         child: Image.asset('assets/images/00001.png'),
                                         padding: EdgeInsets.only(right: 8.0),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 3.0),
+                                      Container(
+                                        padding: const EdgeInsets.only(right: 8.0),
                                         child: Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].productPrice/MULTIPLYING_FACTOR).toString())),
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w500,
                                               fontSize: 24.0,
@@ -135,6 +137,36 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                             textAlign: TextAlign.start
                                         ),
                                       ),
+                                      _productList[index].quantityMaxPrice != 999999 ? Container(
+                                        padding: EdgeInsets.zero,
+                                        width: 20.0,
+                                        height: 20.0,
+                                        child: IconButton (
+                                          alignment: Alignment.centerRight,
+                                          padding: EdgeInsets.zero,
+                                          icon: Image.asset (
+                                            'assets/images/logoInfo.png',
+                                            //fit: BoxFit.fill,
+                                            width: 20.0,
+                                            height: 20.0,
+                                          ),
+                                          iconSize: 20.0,
+                                          onPressed: () {
+                                            final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                            if (_productList[index].quantityMaxPrice != 999999) {
+                                              // There is multiprice for this product
+                                              final item = new MultiPriceListElement(_productList[index].quantityMinPrice, _productList[index].quantityMaxPrice, _productList[index].totalAmount);
+                                              listMultiPriceListElement.add(item);
+                                              _productList[index].items.where((element) => element.partnerId != 1)
+                                                  .forEach((element) {
+                                                final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                                listMultiPriceListElement.add(item);
+                                              });
+                                            }
+                                            DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                          },
+                                        ),
+                                      ) : Container()
                                     ],
                                   ),
                                 ),
@@ -148,7 +180,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                         _productList[index].productName,
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
-                                          fontSize: 16.0,
+                                          fontSize: 14.0,
                                           fontFamily: 'SF Pro Display',
                                           fontStyle: FontStyle.normal,
                                           color: Colors.black,
@@ -213,6 +245,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                                 // Manage the item of the local list
                                                 // Manage the add of the _productList
                                                 _productList[index].purchased += _productList[index].minQuantitySell;
+                                                _productList[index].totalAmountAccordingQuantity = _productList[index].getTotalAmountAccordingQuantity(); // Update the price according the quantity purchased
                                               });
                                               catalog.add(_productList[index]);
                                               cart.add(_productList[index]);
@@ -309,6 +342,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                                               // Manage the item of the local list
                                                               // Manage the delete of the _productList
                                                               (_productList[index].purchased == _productList[index].minQuantitySell) ? _productList[index].purchased = 0 : _productList[index].purchased -= _productList[index].minQuantitySell;
+                                                              _productList[index].totalAmountAccordingQuantity = _productList[index].getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
                                                             }
                                                           });
                                                           cart.remove(_productList[index]);
@@ -376,6 +410,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                                       onPressed: () {
                                                         setState(() {
                                                           _productList[index].purchased += _productList[index].minQuantitySell;
+                                                          _productList[index].totalAmountAccordingQuantity = _productList[index].getTotalAmountAccordingQuantity();   // Update the price according the quantity purchased
                                                         });
                                                         cart.add(_productList[index]);
                                                         catalog.add(_productList[index]);
@@ -411,13 +446,13 @@ class _LookingForProductsState extends State<LookingForProducts> {
     });
   }
   void _getProductResults (String input) {
-    List<ProductAvail> tempProductList = [];
+    List<MultiPricesProductAvail> tempProductList = [];
     RegExp exp = RegExp (input, caseSensitive: false);
     var catalog = context.read<Catalog>();
     for (var i = 0; i < catalog.numItems; i++) {
       if (exp.hasMatch(catalog.getItem(i).productName)) {
         // Add the catalog element to the temporal list
-        final itemCatalog = new ProductAvail (
+        final itemCatalog = new MultiPricesProductAvail (
           productId: catalog.getItem(i).productId,
           productName: catalog.getItem(i).productName,
           productNameLong: catalog.getItem(i).productNameLong,
@@ -443,8 +478,17 @@ class _LookingForProductsState extends State<LookingForProducts> {
           remark: catalog.getItem(i).remark,
           minQuantitySell: catalog.getItem(i).minQuantitySell,
           partnerId: catalog.getItem(i).partnerId,
-          partnerName: catalog.getItem(i).partnerName
+          partnerName: catalog.getItem(i).partnerName,
+          quantityMinPrice: catalog.getItem(i).quantityMinPrice,
+          quantityMaxPrice: catalog.getItem(i).quantityMaxPrice,
+          productCategoryId: catalog.getItem(i).productCategoryId,
+          rn: catalog.getItem(i).rn
         );
+        if (catalog.getItem(i).numItems > 0) {
+          catalog.getItem(i).items.forEach((element) {
+            itemCatalog.add(element);
+          });
+        }
         tempProductList.add(itemCatalog);
       }
     }

@@ -18,6 +18,7 @@ import 'package:plataforma_compras/models/cart.model.dart';
 import 'package:plataforma_compras/views/confirmPurchase.view.dart';
 import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:plataforma_compras/models/catalog.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 
 class SigInView extends StatelessWidget {
   SigInView (this.email, this.reason);
@@ -140,10 +141,99 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                         final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
                         debugPrint ('Entre medias de la api RESPONSE.');
                         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-                        debugPrint ('Entre medias de la api RESPONSE.');
-                        cart.clearCart();
-                        catalog.removeCatalog();
+                        final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                        int tmpProductCategoryIdPrevious;
+                        String tmpPersonNamePrevious;
                         resultListProducts.forEach((element) {
+                          if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                            // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                            debugPrint ('He pasado por el elemento principal');
+                            debugPrint ('El product_description retornado desde el API es: ' + element.productName);
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            final item = new MultiPricesProductAvail(
+                                productId: element.productId,
+                                productName: element.productName,
+                                productNameLong: element.productNameLong,
+                                productDescription: element.productDescription,
+                                productType: element.productType,
+                                brand: element.brand,
+                                numImages: element.numImages,
+                                numVideos: element.numVideos,
+                                purchased: element.purchased,
+                                productPrice: element.productPrice,
+                                totalBeforeDiscount: element.totalBeforeDiscount,
+                                taxAmount: element.taxAmount,
+                                personeId: element.personeId,
+                                personeName: element.personeName,
+                                businessName: element.businessName,
+                                email: element.email,
+                                taxId: element.taxId,
+                                taxApply: element.taxApply,
+                                productPriceDiscounted: element.productPriceDiscounted,
+                                totalAmount: element.totalAmount,
+                                discountAmount: element.discountAmount,
+                                idUnit: element.idUnit,
+                                remark: element.remark,
+                                minQuantitySell: element.minQuantitySell,
+                                partnerId: element.partnerId,
+                                partnerName: element.partnerName,
+                                quantityMinPrice: element.quantityMinPrice,
+                                quantityMaxPrice: element.quantityMaxPrice,
+                                productCategoryId: element.productCategoryId,
+                                rn: element.rn
+                            );
+                            resultListMultiPriceProducts.add(item);
+                          } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                            // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                            debugPrint ('He pasado por el elemento secundario');
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            resultListMultiPriceProducts.last.add(element);
+                          } else {
+                            // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                            debugPrint ('He pasado por el elemento terciario');
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            final item = new MultiPricesProductAvail(
+                                productId: element.productId,
+                                productName: element.productName,
+                                productNameLong: element.productNameLong,
+                                productDescription: element.productDescription,
+                                productType: element.productType,
+                                brand: element.brand,
+                                numImages: element.numImages,
+                                numVideos: element.numVideos,
+                                purchased: element.purchased,
+                                productPrice: element.productPrice,
+                                totalBeforeDiscount: element.totalBeforeDiscount,
+                                taxAmount: element.taxAmount,
+                                personeId: element.personeId,
+                                personeName: element.personeName,
+                                businessName: element.businessName,
+                                email: element.email,
+                                taxId: element.taxId,
+                                taxApply: element.taxApply,
+                                productPriceDiscounted: element.productPriceDiscounted,
+                                totalAmount: element.totalAmount,
+                                discountAmount: element.discountAmount,
+                                idUnit: element.idUnit,
+                                remark: element.remark,
+                                minQuantitySell: element.minQuantitySell,
+                                partnerId: element.partnerId,
+                                partnerName: element.partnerName,
+                                quantityMinPrice: element.quantityMinPrice,
+                                quantityMaxPrice: element.quantityMaxPrice,
+                                productCategoryId: element.productCategoryId,
+                                rn: element.rn
+                            );
+                            resultListMultiPriceProducts.add(item);
+                          }
+                        });
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        cart.removeCart();
+                        catalog.removeCatalog();
+                        resultListMultiPriceProducts.forEach((element) {
                           catalog.add(element);
                         });
                         debugPrint ('Antes de terminar de responder la API.');
@@ -478,10 +568,99 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                           final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
                           debugPrint ('Entre medias de la api RESPONSE.');
                           final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-                          debugPrint ('Entre medias de la api RESPONSE.');
-                          cart.clearCart();
-                          catalog.removeCatalog();
+                          final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                          int tmpProductCategoryIdPrevious;
+                          String tmpPersonNamePrevious;
                           resultListProducts.forEach((element) {
+                            if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                              // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                              debugPrint ('He pasado por el elemento principal');
+                              debugPrint ('El product_description retornado desde el API es: ' + element.productName);
+                              tmpProductCategoryIdPrevious = element.productCategoryId;
+                              tmpPersonNamePrevious = element.personeName;
+                              final item = new MultiPricesProductAvail(
+                                  productId: element.productId,
+                                  productName: element.productName,
+                                  productNameLong: element.productNameLong,
+                                  productDescription: element.productDescription,
+                                  productType: element.productType,
+                                  brand: element.brand,
+                                  numImages: element.numImages,
+                                  numVideos: element.numVideos,
+                                  purchased: element.purchased,
+                                  productPrice: element.productPrice,
+                                  totalBeforeDiscount: element.totalBeforeDiscount,
+                                  taxAmount: element.taxAmount,
+                                  personeId: element.personeId,
+                                  personeName: element.personeName,
+                                  businessName: element.businessName,
+                                  email: element.email,
+                                  taxId: element.taxId,
+                                  taxApply: element.taxApply,
+                                  productPriceDiscounted: element.productPriceDiscounted,
+                                  totalAmount: element.totalAmount,
+                                  discountAmount: element.discountAmount,
+                                  idUnit: element.idUnit,
+                                  remark: element.remark,
+                                  minQuantitySell: element.minQuantitySell,
+                                  partnerId: element.partnerId,
+                                  partnerName: element.partnerName,
+                                  quantityMinPrice: element.quantityMinPrice,
+                                  quantityMaxPrice: element.quantityMaxPrice,
+                                  productCategoryId: element.productCategoryId,
+                                  rn: element.rn
+                              );
+                              resultListMultiPriceProducts.add(item);
+                            } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                              // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                              debugPrint ('He pasado por el elemento secundario');
+                              tmpProductCategoryIdPrevious = element.productCategoryId;
+                              tmpPersonNamePrevious = element.personeName;
+                              resultListMultiPriceProducts.last.add(element);
+                            } else {
+                              // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                              debugPrint ('He pasado por el elemento terciario');
+                              tmpProductCategoryIdPrevious = element.productCategoryId;
+                              tmpPersonNamePrevious = element.personeName;
+                              final item = new MultiPricesProductAvail(
+                                  productId: element.productId,
+                                  productName: element.productName,
+                                  productNameLong: element.productNameLong,
+                                  productDescription: element.productDescription,
+                                  productType: element.productType,
+                                  brand: element.brand,
+                                  numImages: element.numImages,
+                                  numVideos: element.numVideos,
+                                  purchased: element.purchased,
+                                  productPrice: element.productPrice,
+                                  totalBeforeDiscount: element.totalBeforeDiscount,
+                                  taxAmount: element.taxAmount,
+                                  personeId: element.personeId,
+                                  personeName: element.personeName,
+                                  businessName: element.businessName,
+                                  email: element.email,
+                                  taxId: element.taxId,
+                                  taxApply: element.taxApply,
+                                  productPriceDiscounted: element.productPriceDiscounted,
+                                  totalAmount: element.totalAmount,
+                                  discountAmount: element.discountAmount,
+                                  idUnit: element.idUnit,
+                                  remark: element.remark,
+                                  minQuantitySell: element.minQuantitySell,
+                                  partnerId: element.partnerId,
+                                  partnerName: element.partnerName,
+                                  quantityMinPrice: element.quantityMinPrice,
+                                  quantityMaxPrice: element.quantityMaxPrice,
+                                  productCategoryId: element.productCategoryId,
+                                  rn: element.rn
+                              );
+                              resultListMultiPriceProducts.add(item);
+                            }
+                          });
+                          debugPrint ('Entre medias de la api RESPONSE.');
+                          cart.removeCart();
+                          catalog.removeCatalog();
+                          resultListMultiPriceProducts.forEach((element) {
                             catalog.add(element);
                           });
                           debugPrint ('Antes de terminar de responder la API.');
