@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class PurchaseLine {
-  PurchaseLine({
+  PurchaseLine ({
     @required this.orderId,
     @required this.providerName,
     @required this.allStatus,
@@ -13,7 +13,10 @@ class PurchaseLine {
     @required this.taxAmount,
     @required this.discountAmount,
     @required this.productPriceFinal,
-    @required this.productPrice
+    @required this.productPrice,
+    @required this.totalBeforeDiscountWithoutTax,
+    @required this.totalAfterDiscountWithoutTax,
+    @required this.orderDate
   });
   final int orderId;
   final String providerName;
@@ -26,10 +29,13 @@ class PurchaseLine {
   final double discountAmount;
   final double productPriceFinal;
   final double productPrice;
+  final double totalBeforeDiscountWithoutTax;
+  final double totalAfterDiscountWithoutTax;
+  final DateTime orderDate;
   factory PurchaseLine.fromJson (Map<String, dynamic> json) {
     return new PurchaseLine (
       orderId: int.parse(json['ORDER_ID'].toString()),
-      providerName: json['PRODUCT_NAME'],
+      providerName: json['PROVIDER_NAME'],
       allStatus: json['ALL_STATUS'],
       numStatus: int.parse(json['NUM_STATUS'].toString()),
       items: int.parse(json['ITEMS'].toString()),
@@ -38,7 +44,10 @@ class PurchaseLine {
       taxAmount: double.parse(json['TAX_AMOUNT'].toString()),
       discountAmount: double.parse(json['DISCOUNT_AMOUNT'].toString()),
       productPriceFinal: double.parse(json['PRODUCT_PRICE_FINAL'].toString()),
-      productPrice: double.parse(json['PRODUCT_PRICE'].toString())
+      productPrice: double.parse(json['PRODUCT_PRICE'].toString()),
+      totalBeforeDiscountWithoutTax: double.parse(json['TOTAL_BEFORE_DISCOUNT_WITHOUT_TAX'].toString()),
+      totalAfterDiscountWithoutTax: double.parse(json['TOTAL_AFTER_DISCOUNT_WITHOUT_TAX'].toString()),
+      orderDate: DateTime.parse(json['ORDER_DATE'])
     );
   }
 }
