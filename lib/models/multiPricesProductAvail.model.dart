@@ -6,6 +6,7 @@ import 'package:plataforma_compras/models/productAvail.model.dart';
 class MultiPricesProductAvail extends ProductAvail {
   MultiPricesProductAvail({
     @required productId,
+    @required productCode,
     @required productName,
     @required productNameLong,
     @required productDescription,
@@ -37,6 +38,7 @@ class MultiPricesProductAvail extends ProductAvail {
     @required rn
   }): super (
     productId: productId,
+    productCode: productCode,
     productName: productName,
     productNameLong: productNameLong,
     productDescription: productDescription,
@@ -73,6 +75,7 @@ class MultiPricesProductAvail extends ProductAvail {
   factory MultiPricesProductAvail.fromJson (Map<String, dynamic> json) {
     return MultiPricesProductAvail (
         productId: int.parse(json['PRODUCT_ID'].toString()),
+        productCode: int.parse(json['PRODUCT_CODE'].toString()),
         productName: json['PRODUCT_NAME'],
         productNameLong: json['PRODUCT_NAME_LONG'],
         productDescription: json['PRODUCT_DESCRIPTION'] ?? '',
@@ -123,6 +126,7 @@ class MultiPricesProductAvail extends ProductAvail {
     if (!founded) {
       final itemCatalog = new ProductAvail(
         productId: item.productId,
+        productCode: item.productCode,
         productName: item.productName,
         productNameLong: item.productNameLong,
         productDescription: item.productDescription,
