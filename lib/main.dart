@@ -16,9 +16,10 @@ class MyHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        //final isValidHost = host == "52.55.250.28";
-        final isValidHost = host == "192.168.2.107";
-        //final isValidHost = host == "192.168.2.106";
+        //final isValidHost = host == "52.55.223.20";     // PRODUCTION
+        final isValidHost = host == "192.168.2.106";  // DEVELOPMENT
+        //final isValidHost = host == "192.168.18.100";
+        //final isValidHost = host == "192.168.1.134";
         return isValidHost;
       };
   }
@@ -81,7 +82,6 @@ ThemeData _buildTanteLadenTheme(){
     ),
   );
   return base.copyWith(
-    accentColor: tanteLadenOrange900,
     primaryColor: tanteLadenAmber500,
     primaryIconTheme: base.primaryIconTheme.copyWith(
       color: tanteLadenBrown500
