@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class ProductAvail {
   ProductAvail({
     @required this.productId,
+    @required this.productCode,
     @required this.productName,
     @required this.productNameLong,
     @required this.productDescription,
@@ -35,6 +36,7 @@ class ProductAvail {
     @required this.rn
   });
   final int productId;
+  final int productCode;
   final String productName;
   final String productNameLong;
   final String productDescription;
@@ -67,28 +69,41 @@ class ProductAvail {
 
 
   factory ProductAvail.fromJson (Map<String, dynamic> json) {
+    //debugPrint('Entro en el FACTORY.');
+    //debugPrint('El productId es: ' + json['PRODUCT_ID'].toString());
+    //debugPrint('El productName es: ' + json['PRODUCT_NAME'].toString());
+    //debugPrint('El productNameLong es: ' + json['PRODUCT_NAME_LONG'].toString());
+    //debugPrint('El productDescription es: ' + json['PRODUCT_DESCRIPTION'].toString());
+    //debugPrint('El productType es: ' + json['PRODUCT_TYPE'].toString());
+    //debugPrint('El brand es: ' + json['BRAND'].toString());
+    //debugPrint('El numImages es: ' + json['NUM_IMAGES'].toString());
+    //debugPrint('El numVideos es: ' + json['NUM_VIDEOS'].toString());
+    //debugPrint('El productPrice es: ' + json['PRODUCT_PRICE'].toString());
+    //debugPrint('El totalBeforeDiscount es: ' + json['TOTAL_BEFORE_DISCOUNT'].toString());
+    //debugPrint('El taxAmount es: ' + json['TAX_AMOUNT'].toString());
     return ProductAvail (
       productId: int.parse(json['PRODUCT_ID'].toString()),
-      productName: json['PRODUCT_NAME'],
-      productNameLong: json['PRODUCT_NAME_LONG'],
-      productDescription: json['PRODUCT_DESCRIPTION'] ?? '',
+      productCode: int.parse(json['PRODUCT_CODE'].toString()),
+      productName: json['PRODUCT_NAME'] ?? '',
+      productNameLong: json['PRODUCT_NAME_LONG'] ?? '',
+      productDescription: json['PRODUCT_DESCRIPTION'] ?? 'NULL',
       productType: json['PRODUCT_TYPE'] ?? '',
       brand: json['BRAND'] ?? '',
       numImages: int.parse((json['NUM_IMAGES'] ?? '0').toString()),
       numVideos: int.parse((json['NUM_VIDEOS'] ?? '0').toString()),
       purchased: 0,
-      productPrice: double.parse(json['PRODUCT_PRICE'].toString()),
-      totalBeforeDiscount: double.parse(json['TOTAL_BEFORE_DISCOUNT'].toString()),
-      taxAmount: double.parse(json['TAX_AMOUNT'].toString()),
+      productPrice: double.parse((json['PRODUCT_PRICE'] ?? '0').toString()),
+      totalBeforeDiscount: double.parse((json['PRODUCT_PRICE'] ?? '0').toString()),
+      taxAmount: double.parse((json['TAX_AMOUNT'] ?? '0').toString()),
       personeId: int.parse((json['PERSONE_ID'] ?? '0').toString()),
       personeName: json['PERSONE_NAME'] ?? '',
       businessName: json['BUSINESS_NAME'].toString() ?? '',
       email: json['EMAIL'] ?? '',
-      taxId: int.parse(json['TAX_ID'].toString()),
-      taxApply: double.parse(json['TAX_APPLY'].toString()),
-      productPriceDiscounted: double.parse(json['PRODUCT_PRICE_DISCOUNTED'].toString()),
-      totalAmount: double.parse(json['TOTAL_AMOUNT'].toString()),
-      discountAmount: int.parse(json['DISCOUNT_AMOUNT'].toString()),
+      taxId: int.parse((json['TAX_ID'] ?? '0').toString()),
+      taxApply: double.parse((json['TAX_APPLY'] ?? '10').toString()),
+      productPriceDiscounted: double.parse((json['PRODUCT_PRICE_DISCOUNTED'] ?? '0').toString()),
+      totalAmount: double.parse((json['TOTAL_AMOUNT'] ?? '0').toString()),
+      discountAmount: int.parse((json['DISCOUNT_AMOUNT'] ?? '0').toString()),
       idUnit: json['ID_UNIT'] ?? '',
       remark: json['REMARK'] ?? '',
       minQuantitySell: int.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString()),
