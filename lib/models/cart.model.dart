@@ -23,6 +23,7 @@ class Cart with ChangeNotifier {
     if (!founded) {
       final itemCart = new MultiPricesProductAvail (
         productId: item.productId,
+        productCode: item.productCode,
         productName: item.productName,
         productNameLong: item.productNameLong,
         productDescription: item.productDescription,
