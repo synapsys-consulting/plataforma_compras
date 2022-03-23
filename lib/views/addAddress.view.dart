@@ -7,7 +7,8 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 
 class AddAddressView extends StatelessWidget {
   final String personeId;
-  AddAddressView (this.personeId);
+  final String userId;
+  AddAddressView (this.personeId, this.userId);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,15 +37,16 @@ class AddAddressView extends StatelessWidget {
         ],
       ),
       body: ResponsiveWidget (
-        smallScreen: _SmallScreenView(personeId: this.personeId),
-        largeScreen: _LargeScreenView(personeId: this.personeId),
+        smallScreen: _SmallScreenView(personeId: this.personeId, userId: this.userId),
+        largeScreen: _LargeScreenView(personeId: this.personeId, userId: this.userId),
       ),
     );
   }
 }
 class _SmallScreenView extends StatelessWidget {
   final String personeId;
-  _SmallScreenView ({@required this.personeId});
+  final String userId;
+  _SmallScreenView ({@required this.personeId, @required this.userId});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -94,7 +96,7 @@ class _SmallScreenView extends StatelessWidget {
                   Navigator.push (
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AddressView(this.personeId, COME_FROM_ANOTHER)
+                          builder: (context) => AddressView(this.personeId, this.userId, COME_FROM_ANOTHER)
                       )
                   );
                 },
@@ -143,7 +145,8 @@ class _SmallScreenView extends StatelessWidget {
 }
 class _LargeScreenView extends StatelessWidget {
   final String personeId;
-  _LargeScreenView ({@required this.personeId});
+  final String userId;
+  _LargeScreenView ({@required this.personeId, @required this.userId});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -232,7 +235,7 @@ class _LargeScreenView extends StatelessWidget {
                       Navigator.push (
                           context,
                           MaterialPageRoute(
-                              builder: (context) => AddressView(this.personeId, COME_FROM_ANOTHER)
+                              builder: (context) => AddressView(this.personeId, this.userId, COME_FROM_ANOTHER)
                           )
                       );
                     },
