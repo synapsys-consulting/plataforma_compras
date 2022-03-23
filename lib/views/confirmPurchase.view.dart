@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -61,6 +62,7 @@ class _SmallScreenView extends StatefulWidget {
 }
 class _SmallScreenViewState extends State<_SmallScreenView> {
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool _pleaseWait;
   String _phoneNumber;
 
@@ -76,13 +78,28 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     });
   }
   Future<String> _processPurchase (Cart cartPurchased) async {
+    int userId;
     String message = '';
     try {
+      final SharedPreferences prefs = await _prefs;
+      final String token = prefs.get ('token') ?? '';
+      if (token == '') {
+        userId = 1;
+      } else {
+        Map<String, dynamic> payload;
+        payload = json.decode(
+            utf8.decode(
+                base64.decode (base64.normalize(token.split(".")[1]))
+            )
+        );
+        userId = payload['user_id'];
+      }
       final List<ProductAvail> productAvailListToSave = [];
       cartPurchased.items.forEach((element) {
         if (element.getIndexElementAmongQuantity() == -1) {
           final item = new ProductAvail(
               productId: element.productId,
+              productCode: element.productCode,
               productName: element.productName,
               productNameLong: element.productNameLong,
               productDescription: element.productDescription,
@@ -102,7 +119,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               taxApply: element.taxApply,
               productPriceDiscounted: element.productPriceDiscounted,
               totalAmount: element.totalAmount,
-              discountAmount: element.discountAmount,
+              discountAmount: (element.discountAmount * -1),  // Save a negative amount because it is a discount
               idUnit: element.idUnit,
               remark: element.remark,
               minQuantitySell: element.minQuantitySell,
@@ -116,8 +133,9 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
           productAvailListToSave.add(item);
         } else {
           var index = element.getIndexElementAmongQuantity();
-          final item = new ProductAvail(
+          final item = new ProductAvail (
               productId: element.items[index].productId,
+              productCode: element.items[index].productCode,
               productName: element.items[index].productName,
               productNameLong: element.items[index].productNameLong,
               productDescription: element.items[index].productDescription,
@@ -137,7 +155,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               taxApply: element.items[index].taxApply,
               productPriceDiscounted: element.items[index].productPriceDiscounted,
               totalAmount: element.items[index].totalAmount,
-              discountAmount: element.items[index].discountAmount,
+              discountAmount: (element.items[index].discountAmount * -1), // Save a negative amount because it is a discount
               idUnit: element.items[index].idUnit,
               remark: element.items[index].remark,
               minQuantitySell: element.items[index].minQuantitySell,
@@ -179,7 +197,8 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 'tax_id': e.taxId,
                 'tax_apply': e.taxApply,
                 'partner_id': e.partnerId,
-                'partner_name': e.partnerName
+                'partner_name': e.partnerName,
+                'user_id': userId
               };
             }).toList()
           })
@@ -211,7 +230,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   @override
   Widget build (BuildContext context) {
     var cart = context.read<Cart>();
-    final Widget tmpBuilder = GestureDetector(
+    final Widget tmpBuilder = GestureDetector (
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 80.0),
         alignment: Alignment.center,
@@ -556,6 +575,7 @@ class _LargeScreenView extends StatefulWidget {
 
 class _LargeScreenViewState extends State<_LargeScreenView> {
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool _pleaseWait;
   String _phoneNumber;
 
@@ -572,14 +592,103 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
   }
   Future<String> _processPurchase(Cart cartPurchased) async {
     String message = '';
+    int userId;
     try {
+      final SharedPreferences prefs = await _prefs;
+      final String token = prefs.get ('token') ?? '';
+      if (token == '') {
+        userId = 1;
+      } else {
+        Map<String, dynamic> payload;
+        payload = json.decode(
+            utf8.decode(
+                base64.decode (base64.normalize(token.split(".")[1]))
+            )
+        );
+        userId = payload['user_id'];
+      }
+      final List<ProductAvail> productAvailListToSave = [];
+      cartPurchased.items.forEach((element) {
+        if (element.getIndexElementAmongQuantity() == -1) {
+          final item = new ProductAvail (
+              productId: element.productId,
+              productCode: element.productCode,
+              productName: element.productName,
+              productNameLong: element.productNameLong,
+              productDescription: element.productDescription,
+              productType: element.productType,
+              brand: element.brand,
+              numImages: element.numImages,
+              numVideos: element.numVideos,
+              purchased: element.purchased,
+              productPrice: element.productPrice,
+              totalBeforeDiscount: element.totalBeforeDiscount,
+              taxAmount: element.taxAmount,
+              personeId: element.personeId,
+              personeName: element.personeName,
+              businessName: element.businessName,
+              email: element.email,
+              taxId: element.taxId,
+              taxApply: element.taxApply,
+              productPriceDiscounted: element.productPriceDiscounted,
+              totalAmount: element.totalAmount,
+              discountAmount: (element.discountAmount * -1),
+              idUnit: element.idUnit,
+              remark: element.remark,
+              minQuantitySell: element.minQuantitySell,
+              partnerId: element.partnerId,
+              partnerName: element.partnerName,
+              quantityMinPrice: element.quantityMinPrice,
+              quantityMaxPrice: element.quantityMaxPrice,
+              productCategoryId: element.productCategoryId,
+              rn: element.rn
+          );
+          productAvailListToSave.add(item);
+        } else {
+          var index = element.getIndexElementAmongQuantity();
+          final item = new ProductAvail (
+              productId: element.items[index].productId,
+              productCode: element.items[index].productCode,
+              productName: element.items[index].productName,
+              productNameLong: element.items[index].productNameLong,
+              productDescription: element.items[index].productDescription,
+              productType: element.items[index].productType,
+              brand: element.items[index].brand,
+              numImages: element.items[index].numImages,
+              numVideos: element.items[index].numVideos,
+              purchased: element.purchased,   // The quantity purchased is in the father product field
+              productPrice: element.items[index].productPrice,
+              totalBeforeDiscount: element.items[index].totalBeforeDiscount,
+              taxAmount: element.items[index].taxAmount,
+              personeId: element.items[index].personeId,
+              personeName: element.items[index].personeName,
+              businessName: element.items[index].businessName,
+              email: element.items[index].email,
+              taxId: element.items[index].taxId,
+              taxApply: element.items[index].taxApply,
+              productPriceDiscounted: element.items[index].productPriceDiscounted,
+              totalAmount: element.items[index].totalAmount,
+              discountAmount: (element.items[index].discountAmount * -1),
+              idUnit: element.items[index].idUnit,
+              remark: element.items[index].remark,
+              minQuantitySell: element.items[index].minQuantitySell,
+              partnerId: element.items[index].partnerId,
+              partnerName: element.items[index].partnerName,
+              quantityMinPrice: element.items[index].quantityMinPrice,
+              quantityMaxPrice: element.items[index].quantityMaxPrice,
+              productCategoryId: element.items[index].productCategoryId,
+              rn: element.items[index].rn
+          );
+          productAvailListToSave.add(item);
+        }
+      });
       final Uri url = Uri.parse('$SERVER_IP/savePurchasedProducts');
       final http.Response res = await http.post(url,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode(<String, dynamic>{
-            'purchased_products': cartPurchased.items.map<Map<String, dynamic>>((e) {
+            'purchased_products': productAvailListToSave.map<Map<String, dynamic>>((e) {
               return {
                 'product_id': e.productId,
                 'product_name': e.productName,
@@ -601,7 +710,8 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                 'tax_id': e.taxId,
                 'tax_apply': e.taxApply,
                 'partner_id': e.partnerId,
-                'partner_name': e.partnerName
+                'partner_name': e.partnerName,
+                'user_id': userId
               };
             }).toList()
           })

@@ -84,7 +84,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                 child: CachedNetworkImage(
                                   placeholder: (context, url) => CircularProgressIndicator(),
                                   //imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                  imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productId.toString() + '_0.gif',
+                                  imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productCode.toString() + '_0.gif',
                                   fit: BoxFit.scaleDown,
                                   errorWidget: (context, url, error) => Icon(Icons.error),
                                 ),
@@ -132,10 +132,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                            'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString() + ' ' + ((cart.getItem(index).minQuantitySell > 1) ? cart.getItem(index).idUnit.toString() + 's.' : cart.getItem(index).idUnit.toString() + '.'),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
-                                              fontSize: 12.0,
+                                              fontSize: 10.0,
                                               fontFamily: 'SF Pro Display',
                                               fontStyle: FontStyle.normal,
                                               color: Color(0xFF6C6D77),
@@ -149,7 +149,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   Container(
                                     child: Row (
                                       children: [
-                                        Text(
+                                        Text (
                                           new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmountAccordingQuantity/MULTIPLYING_FACTOR)),
                                           style: TextStyle(
                                             fontWeight: FontWeight.w900,
@@ -163,8 +163,8 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           maxLines: 2,
                                           softWrap: false,
                                         ),
-                                        Text(
-                                          cart.getItem(index).idUnit + '.',
+                                        Text (
+                                          '/' + cart.getItem(index).idUnit + '.',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w300,
                                             fontSize: 16.0,
@@ -400,7 +400,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   child: CachedNetworkImage(
                                     placeholder: (context, url) => CircularProgressIndicator(),
                                     //imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productId.toString() + '_0.gif',
+                                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productCode.toString() + '_0.gif',
                                     fit: BoxFit.scaleDown,
                                     errorWidget: (context, url, error) => Icon(Icons.error),
                                   ),
@@ -448,7 +448,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       children: [
                                         Container(
                                           child: Text(
-                                              'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString(),
+                                              'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString() + ' ' + ((cart.getItem(index).minQuantitySell > 1) ? cart.getItem(index).idUnit.toString() + 's.' : cart.getItem(index).idUnit.toString() + '.'),
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w300,
                                                 fontSize: 12.0,
@@ -465,7 +465,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                     Container(
                                       child: Row (
                                         children: [
-                                          Text(
+                                          Text (
                                             new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmountAccordingQuantity/MULTIPLYING_FACTOR)),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w900,
@@ -479,8 +479,8 @@ class _LargeScreenState extends State<_LargeScreen> {
                                             maxLines: 2,
                                             softWrap: false,
                                           ),
-                                          Text(
-                                            cart.getItem(index).idUnit + '.',
+                                          Text (
+                                            '/' + cart.getItem(index).idUnit + '.',
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
                                               fontSize: 16.0,
@@ -877,7 +877,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                             Navigator.push (
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                                                 )
                                             );
                                           }

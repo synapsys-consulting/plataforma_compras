@@ -16,16 +16,17 @@ class MyHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        //final isValidHost = host == "52.55.223.20";     // PRODUCTION
-        final isValidHost = host == "192.168.2.106";  // DEVELOPMENT
-        //final isValidHost = host == "192.168.18.100";
+        //final isValidHost = host == "54.87.206.162";     // PRODUCTION
+        //final isValidHost = host == "192.168.2.106";  // DEVELOPMENT
+        //final isValidHost = host == "localhost";  // DEVELOPMENT
+        final isValidHost = host == "3.92.229.110";  // PRUEBA
         //final isValidHost = host == "192.168.1.134";
         return isValidHost;
       };
   }
 }
 void main() {
-  HttpOverrides.global = new MyHttpOverrides();
+  //HttpOverrides.global = new MyHttpOverrides();
   runApp(MyApp());
 }
 

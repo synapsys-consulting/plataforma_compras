@@ -67,7 +67,7 @@ class PurchaseDetailModifyViewState extends State<PurchaseDetailModifyView> {
         ),
         title: Text(
           widget.father.productName,
-          style: TextStyle(
+          style: TextStyle (
               fontFamily: 'SF Pro Display',
               fontSize: 16.0,
               fontWeight: FontWeight.w500
@@ -123,10 +123,11 @@ class _SmallScreenState extends State<_SmallScreen> {
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   final TextEditingController _valueDiscountTextField = TextEditingController();
   final TextEditingController _percentDiscountTextField = TextEditingController();
+  final TextEditingController _valueDiscountTextFieldOnlyForCaseOne = TextEditingController();  // Use a new text controller only for modifying the price text field of the case 1
+  final TextEditingController _percentDiscountTextFieldOnlyForCaseOne = TextEditingController();  // Use a new text controller only for modifying the price text field of the case 1
   final _formPercentKey = GlobalKey<FormState>();
   final _formNewPricekey = GlobalKey<FormState>();
   // fields to save temporal values
-  double _newPrice;
   double _valueDiscount = 0.0;
   double _percentDiscount = 0.0;
   double _totalBeforeDiscount = 0.0;
@@ -137,6 +138,7 @@ class _SmallScreenState extends State<_SmallScreen> {
   double _totalAmount = 0.0;
   int _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
   double _newNewProductPriceFinal;  // save the value of the field NEW_PRODUCT_PRICE_FINAL of the KRC_PURCHASE table.
+  double _newPrice; // save the value of the field PRODUCT_PRICE of the KRC_PURCHASE table.
   _PriceChangeType _changeType = _PriceChangeType.priceValue;
   bool _isOfficial = false;
   String _comment;
@@ -162,55 +164,126 @@ class _SmallScreenState extends State<_SmallScreen> {
     if (widget.father.newProductPrice != -1) {
       debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
       // the price has been previously modified
-      _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_valueDiscount != null) {
-        debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
-        //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-        // There is a change in the price
-        debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.newProductPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.newProductPrice*(1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     } else {
       // the price has not yet modified
       debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
-      _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_valueDiscount != null) {
-        //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-        // There is a change in the price
-        debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     }
   }
@@ -218,52 +291,379 @@ class _SmallScreenState extends State<_SmallScreen> {
     debugPrint ('Estoy en el listener _percentDiscountTextFieldProcessor');
     if (widget.father.newProductPrice != -1) {
       debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
-      debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
-      // the price has been previously modified
-      _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_percentDiscount != null) {
-        debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.newProductPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.newProductPrice * (1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * (widget.father.newProductPrice * (_percentDiscount/100));
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     } else {
       // the price has not yet modified
       debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
-      _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_percentDiscount != null) {
-        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    }
+  }
+  void _valueDiscountTextFieldForCaseOneProcessor() {
+    // Use a new and different listener for the case 1 (Price and Amount modified)
+    debugPrint ('Estoy en el listener _valueDiscountTextFieldForCaseOneProcessor');
+    if (widget.father.newProductPrice != -1) {
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        // the price has been previously modified
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextFieldOnlyForCaseOne.text: ' + _valueDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        // the price has been previously modified
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextFieldOnlyForCaseOne.text: ' + _valueDiscountTextFieldOnlyForCaseOne.text);
+          //_totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.newProductPrice;
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    } else {
+      // the price has not yet modified
+      debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    }
+  }
+  void _percentDiscountTextFieldForCaseOneProcessor() {
+    // Use a new and different listener for the case 1 (Price and Amount modified)
+    debugPrint ('Estoy en el listener _percentDiscountTextFieldForCaseOneProcessor.');
+    if (widget.father.newProductPrice != -1) {
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          //_totalBeforeDiscount = _newNumItemsPurchased * (widget.father.newProductPrice * (1+widget.productItem.taxApply/100));
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          //_discountAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (_percentDiscount/100));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          //_totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _percentDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    } else {
+      // the price has not yet modified
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     }
   }
@@ -280,11 +680,13 @@ class _SmallScreenState extends State<_SmallScreen> {
     _totalBeforeDiscountWithoutTax = widget.father.totalBeforeDiscountWithoutTax;
     _valueDiscount = 0.0;
     _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+    _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
     _percentDiscount = 0.0;
-    _newPrice = widget.father.productPrice;
     _newNewProductPriceFinal = widget.father.newProductPrice;
+    _newPrice = widget.father.productPrice;
     debugPrint ('El valor de _newNewProductPriceFinal es: ' + _newNewProductPriceFinal.toString());
     _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+    _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
     _totalBeforeDiscountWithoutTax = widget.father.totalBeforeDiscountWithoutTax;
     _totalBeforeDiscount = widget.productItem.totalBeforeDiscount;
     _discountAmount = widget.father.discountAmount;
@@ -298,11 +700,15 @@ class _SmallScreenState extends State<_SmallScreen> {
     }
     _valueDiscountTextField.addListener (_valueDiscountTextFieldProcessor);
     _percentDiscountTextField.addListener (_percentDiscountTextFieldProcessor);
+    _valueDiscountTextFieldOnlyForCaseOne.addListener(_valueDiscountTextFieldForCaseOneProcessor);  // Use a new and different listener for the case 1 (Price and Amount modified)
+    _percentDiscountTextFieldOnlyForCaseOne.addListener(_percentDiscountTextFieldForCaseOneProcessor);  // Use a new and different listener for the case 1 (Price and Amount modified)
   }
   @override
   void dispose() {
     _valueDiscountTextField.dispose();
     _percentDiscountTextField.dispose();
+    _valueDiscountTextFieldOnlyForCaseOne.dispose();
+    _percentDiscountTextFieldOnlyForCaseOne.dispose();
     super.dispose();
   }
   @override
@@ -348,69 +754,88 @@ class _SmallScreenState extends State<_SmallScreen> {
                   debugPrint ('Comienzo la modificación del pedido');
                   _showPleaseWait(true);
                   // Detect if the amount purchased has changed
-                  if ((_valueDiscount != 0 || _percentDiscount != 0)
-                      && widget.father.items != widget.productItem.purchased) {
+                  if (widget.father.banQuantity == "SI" && widget.father.banPrice == "SI") {
                     // Case 1
                     // The price and the quantity of the purchased has been changed by the user
-
-                    debugPrint('Entro en el caso 1.');
-                    debugPrint('El valor de _valueDiscountTextField es: ' + _valueDiscountTextField.text);
-                    debugPrint('El valor de _percentDiscountTextField es: ' + _percentDiscountTextField.text);
-                    final Uri url = Uri.parse('$SERVER_IP/modifyPurchaseLine/' + widget.father.orderId.toString() + "/" + widget.father.providerName);
-                    debugPrint ("La URL es: " + url.toString());
-                    final http.Response res = await http.put (
-                        url,
-                        headers: <String, String>{
-                          'Content-Type': 'application/json; charset=UTF-8',
-                          //'Authorization': jwt
-                        },
-                        body: jsonEncode (<String, String> {
-                          'product_id': widget.father.productId.toString(),
-                          'user_id': widget.userId.toString(),
-                          'user_role': widget.userRole.toString(),
-                          'new_purchased': widget.productItem.purchased.toString(),
-                          'new_product_price': _newPrice.toString(),
-                          'total_before_discount': _totalBeforeDiscount.toString(),
-                          'total_amount': _totalAmount.toString(),
-                          'discount_amount': _discountAmount.toString(),
-                          'tax_amount': _taxAmount.toString(),
-                          'is_official': _isOfficial.toString(),
-                          'case_to_apply': '1',  // Case 1. he price and the quantity of the purchased has been changed
-                          'comment': _comment
-                        })
-                    );
-                    _showPleaseWait(false);
-                    if (res.statusCode == 200) {
-                      // Process the order
-                      debugPrint ('OK. ');
-                      final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
-                      debugPrint ('Entre medias de la api RESPONSE.');
-                      final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
-                      if (resultListPurchaseStatusToTransitionTo.length > 0) {
-                        widget.father.possibleStatusToTransitionTo.clear();
-                        resultListPurchaseStatusToTransitionTo.forEach((element) {
-                          widget.father.possibleStatusToTransitionTo.add(element);
-                        });
-                      }
-                      widget.stateChanged.changed = true;
-                      widget.father.items = widget.productItem.purchased;
-                      widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
-                      widget.father.discountAmount = _discountAmount;
-                      widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
-                      widget.father.taxAmount = _taxAmount;
-                      widget.father.totalAmount = _totalAmount;
-                      if (widget.userRole == 'BUYER') {
-                        widget.father.remarkBuyer = _comment;
+                    if (_valueDiscount != 0 || _percentDiscount != 0
+                    || _newNumItemsPurchased != widget.father.newProductPrice
+                    || widget.productItem.purchased != widget.father.items) {
+                      // There is a modification
+                      debugPrint('Entro en el caso 1.');
+                      debugPrint('El valor de _valueDiscountTextField es: ' + _valueDiscountTextField.text);
+                      debugPrint('El valor de _percentDiscountTextField es: ' + _percentDiscountTextField.text);
+                      final Uri url = Uri.parse('$SERVER_IP/modifyPurchaseLine/' + widget.father.orderId.toString() + "/" + widget.father.providerName);
+                      debugPrint ("La URL es: " + url.toString());
+                      final http.Response res = await http.put (
+                          url,
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            //'Authorization': jwt
+                          },
+                          body: jsonEncode (<String, String> {
+                            'product_id': widget.father.productId.toString(),
+                            'user_id': widget.userId.toString(),
+                            'user_role': widget.userRole.toString(),
+                            //'new_purchased': _newNumItemsPurchased != -1 ? _newNumItemsPurchased.toString() : widget.productItem.purchased.toString(),
+                            'new_purchased': _newNumItemsPurchased != -1 ? _newNumItemsPurchased.toString() : (widget.productItem.purchased != widget.father.items ? widget.productItem.purchased.toString() : null),
+                            'new_product_price': _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal.toString() : null,
+                            'total_before_discount': _totalBeforeDiscount.toString(),
+                            'total_amount': _totalAmount.toString(),
+                            'discount_amount': _discountAmount.toString(),
+                            'tax_amount': _taxAmount.toString(),
+                            'is_official': _isOfficial.toString(),
+                            'case_to_apply': '1',  // Case 1. he price and the quantity of the purchased has been changed
+                            'comment': _comment
+                          })
+                      );
+                      _showPleaseWait(false);
+                      if (res.statusCode == 200) {
+                        // Process the order
+                        debugPrint ('OK. ');
+                        final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                        if (resultListPurchaseStatusToTransitionTo.length > 0) {
+                          widget.father.possibleStatusToTransitionTo.clear();
+                          resultListPurchaseStatusToTransitionTo.forEach((element) {
+                            debugPrint ('El valor de statusName es: ' + element.statusName);
+                            debugPrint ('El valor de BAN_PRICE es: ' + element.banPrice);
+                            debugPrint ('El valor de BAN_QUANTITY es: ' + element.banQuantity);
+                            widget.father.possibleStatusToTransitionTo.add(element);
+                          });
+                        }
+                        debugPrint ('Despues de retornar los statusToTransitionTo.');
+                        // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                        final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                        if (currentBanPriceBanStatusValues.length > 0) {
+                          widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                          widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                        }
+                        debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
+                        widget.stateChanged.changed = true;
+                        widget.father.newQuantity = _newNumItemsPurchased != -1 ? _newNumItemsPurchased : (widget.productItem.purchased != widget.father.items ? widget.productItem.purchased : -1);
+                        widget.father.newProductPrice = _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal : widget.father.newProductPrice;
+                        debugPrint ('El valor de widget.father.newProductPrice es: ' + widget.father.newProductPrice.toString());
+                        widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
+                        widget.father.discountAmount = _discountAmount;
+                        widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
+                        widget.father.taxAmount = _taxAmount;
+                        widget.father.totalAmount = _totalAmount;
+                        if (widget.userRole == 'BUYER') {
+                          widget.father.remarkBuyer = _comment;
+                        } else {
+                          widget.father.remarkSeller = _comment;
+                        }
+                        widget.father.statusId = "O";
+                        widget.father.allStatus = "OBSERVACIONES";
+                        Navigator.pop(context, widget.stateChanged.changed);
                       } else {
-                        widget.father.remarkSeller = _comment;
+                        // Error
+                        widget.stateChanged.changed = false;
+                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                       }
-                      widget.father.statusId = "O";
-                      widget.father.allStatus = "OBSERVACIONES";
-                      Navigator.pop(context, widget.stateChanged.changed);
-                    } else {
-                      // Error
-                      widget.stateChanged.changed = false;
-                      ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                     }
                   } else if (widget.father.banQuantity == "NO" && widget.father.banPrice == "SI") {
                     // Case 2
@@ -465,6 +890,8 @@ class _SmallScreenState extends State<_SmallScreen> {
                       widget.stateChanged.changed = true;
                       widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
                       widget.father.discountAmount = _discountAmount;
+                      widget.father.newProductPrice = _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal : widget.father.newProductPrice;
+                      debugPrint ('El valor de widget.father.newProductPrice es: ' + widget.father.newProductPrice.toString());
                       widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
                       widget.father.taxAmount = _taxAmount;
                       widget.father.totalAmount = _totalAmount;
@@ -516,7 +943,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                         if (res.statusCode == 200) {
                           // Process the order
                           debugPrint ('OK. ');
-                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
                           debugPrint ('Entre medias de la api RESPONSE.');
                           final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
                           if (resultListPurchaseStatusToTransitionTo.length > 0) {
@@ -525,9 +952,20 @@ class _SmallScreenState extends State<_SmallScreen> {
                               widget.father.possibleStatusToTransitionTo.add(element);
                             });
                           }
+                          debugPrint ('Despues de retornar los statusToTransitionTo.');
+                          // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                          final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                          debugPrint ('Entre medias de la api RESPONSE.');
+                          final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                          if (currentBanPriceBanStatusValues.length > 0) {
+                            widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                            widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                          }
+                          debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
                           widget.stateChanged.changed = true;
                           //widget.father.items = widget.productItem.purchased;
                           widget.father.newQuantity = _newNumItemsPurchased;
+                          debugPrint ("El valor de widget.father.newQuantity es: " + widget.father.newQuantity.toString());
                           widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
                           widget.father.discountAmount = _discountAmount;
                           widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
@@ -568,7 +1006,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               'product_id': widget.father.productId.toString(),
                               'user_id': widget.userId.toString(),
                               'user_role': widget.userRole.toString(),
-                              'new_purchased': widget.productItem.purchased.toString(),
+                              'new_purchased': widget.productItem.purchased != widget.father.items ? widget.productItem.purchased.toString() : null,
                               'total_before_discount': _totalBeforeDiscount.toString(),
                               'total_amount': _totalAmount.toString(),
                               'discount_amount': _discountAmount.toString(),
@@ -581,7 +1019,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                         if (res.statusCode == 200) {
                           // Process the order
                           debugPrint ('OK. ');
-                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
                           debugPrint ('Entre medias de la api RESPONSE.');
                           final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
                           if (resultListPurchaseStatusToTransitionTo.length > 0) {
@@ -590,8 +1028,19 @@ class _SmallScreenState extends State<_SmallScreen> {
                               widget.father.possibleStatusToTransitionTo.add(element);
                             });
                           }
+                          debugPrint ('Despues de retornar los statusToTransitionTo.');
+                          // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                          final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                          debugPrint ('Entre medias de la api RESPONSE.');
+                          final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                          if (currentBanPriceBanStatusValues.length > 0) {
+                            widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                            widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                          }
+                          debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
                           widget.stateChanged.changed = true;
-                          widget.father.items = widget.productItem.purchased;
+                          widget.father.newQuantity = widget.productItem.purchased != widget.father.items ? widget.productItem.purchased : -1;
+                          debugPrint ("El valor de widget.father.newQuantity es: " + widget.father.newQuantity.toString());
                           widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
                           widget.father.discountAmount = _discountAmount;
                           widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
@@ -625,6 +1074,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                   }
                 } catch (e) {
                   _showPleaseWait(false);
+                  widget.stateChanged.changed = false;
                   ShowSnackBar.showSnackBar(context, e.toString(), error: true);
                 }
               },
@@ -640,7 +1090,7 @@ class _SmallScreenState extends State<_SmallScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++){
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -697,7 +1147,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -725,14 +1175,14 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     fontFamily: 'SF Pro Display',
                                   ),
                                   children: <TextSpan>[
-                                    TextSpan(
-                                        text: ' (' + NumberFormat("###.00#", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
+                                    TextSpan (
+                                        text: ' (' + NumberFormat("##0.00", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 30.0,
                                           fontFamily: 'SF Pro Display',
                                         )
-                                    )
+                                    ),
                                   ]
                               )
                           ) : Text(
@@ -807,7 +1257,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       Container (
                         padding: const EdgeInsets.only(left: 24),
                         child: Text(
-                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString(),
+                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString() + ' ' + ((widget.productItem.minQuantitySell > 1) ? widget.productItem.idUnit.toString() + 's.' : widget.productItem.idUnit.toString() + '.'),
                           style: TextStyle(
                             fontWeight: FontWeight.w300,
                             fontSize: 12.0,
@@ -845,31 +1295,88 @@ class _SmallScreenState extends State<_SmallScreen> {
                               // the quantity of the purchase line has been changed.
                               // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              if (_newNumItemsPurchased > 0) {
-                                setState (() {
-                                  _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
-                                  if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                                _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if (widget.father.newProductPrice != -1) {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  //_totalBeforeDiscountWithoutTax = _newNumItemsPurchased * (widget.father.totalBeforeDiscountWithoutTax / widget.father.items);
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  //_discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = _newNumItemsPurchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              if (widget.productItem.purchased > 0) {
-                                setState (() {
-                                  widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
-                                  if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                                _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (widget.father.newProductPrice != -1) {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = widget.productItem.purchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  //_discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = widget.productItem.purchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             }
                           },
@@ -901,20 +1408,35 @@ class _SmallScreenState extends State<_SmallScreen> {
                             ),
                           )
                       ),
-                      Padding(
+                      Padding (
                         //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                         padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
-                        child: Text(
-                          widget.father.newQuantity != -1
-                              ? _newNumItemsPurchased.toString() + ' (' + widget.productItem.purchased.toString() + ') '
-                              : widget.productItem.purchased.toString(),
-                          style: TextStyle (
-                            fontWeight: FontWeight.w700,
-                            fontSize: 24.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.normal,
-                            color: Colors.black,
-                          ),
+                        child: RichText (
+                            text: TextSpan (
+                                text: widget.father.newQuantity != -1
+                                    ? _newNumItemsPurchased.toString()
+                                    + ' ('
+                                    + widget.productItem.purchased.toString()
+                                    + ') '
+                                    : widget.productItem.purchased.toString(),
+                                style: TextStyle (
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 24.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Colors.black,
+                                ),
+                                children: <TextSpan>[
+                                  TextSpan (
+                                      text: widget.father.newQuantity != -1
+                                          ? _newNumItemsPurchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.'
+                                          : widget.productItem.purchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.',
+                                      style: TextStyle (
+                                          fontWeight: FontWeight.bold
+                                      )
+                                  )
+                                ]
+                            )
                         ),
                       ),
                       TextButton(
@@ -923,26 +1445,83 @@ class _SmallScreenState extends State<_SmallScreen> {
                               // the quantity of the purchase line has been changed.
                               // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              setState(() {
-                                _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                              _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                              _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if(widget.father.newProductPrice != -1) {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  //_totalBeforeDiscountWithoutTax = _newNumItemsPurchased * (widget.father.totalBeforeDiscountWithoutTax / widget.father.items);
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = _newNumItemsPurchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              setState(() {
-                                widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                              _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                              _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (widget.father.newProductPrice != -1) {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = widget.productItem.purchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  _taxAmount = widget.productItem.purchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              }
                             }
                           },
                           child: Container(
@@ -1037,7 +1616,7 @@ class _SmallScreenState extends State<_SmallScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++) {
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -1113,9 +1692,9 @@ class _SmallScreenState extends State<_SmallScreen> {
                         ),
                         Padding (
                           padding: const EdgeInsets.only(right: 15.0),
-                          child: widget.father.newProductPrice != -1 ? Text.rich (
+                          child: _newNewProductPriceFinal != -1 ? Text.rich (
                             TextSpan (
-                              text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.newProductPrice/MULTIPLYING_FACTOR).toString())),
+                              text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newNewProductPriceFinal/MULTIPLYING_FACTOR).toString())),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 40.0,
@@ -1133,7 +1712,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               ]
                             )
                           ) : Text(
-                            new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())),
+                            new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newPrice/MULTIPLYING_FACTOR).toString())),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 40.0,
@@ -1255,7 +1834,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                             onChanged: (_PriceChangeType value){
                               setState(() {
                                 _changeType = value;
+                                _valueDiscount = 0.0;
+                                _percentDiscount = 0.0;
+                                _newNewProductPriceFinal = widget.father.newProductPrice;
                               });
+                              _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                              _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
                             },
                           ),
                         )
@@ -1270,7 +1854,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                             onChanged: (_PriceChangeType value){
                               setState(() {
                                 _changeType = value;
+                                _percentDiscount = 0.0;
+                                _valueDiscount = 0.0;
+                                _newNewProductPriceFinal = widget.father.newProductPrice;
                               });
+                              _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+                              _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                             },
                           ),
                         )
@@ -1280,7 +1869,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                   Divider(thickness: 2.0,),
                   (_changeType == _PriceChangeType.priceValue) ? Center (
                     child: Text(
-                      'Descuento neto',
+                      'Modificación neta',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -1291,7 +1880,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                     ),
                   ) : Center (
                     child: Text (
-                      'Descuento porcentual',
+                      'Modificación porcentual',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -1735,7 +2324,7 @@ class _SmallScreenState extends State<_SmallScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++) {
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -1811,9 +2400,9 @@ class _SmallScreenState extends State<_SmallScreen> {
                         ),
                         Padding (
                           padding: const EdgeInsets.only(right: 15.0),
-                          child: widget.father.newProductPrice != -1 ? Text.rich (
+                          child: _newNewProductPriceFinal != -1 ? Text.rich (
                               TextSpan (
-                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.newProductPrice/MULTIPLYING_FACTOR).toString())),
+                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newNewProductPriceFinal/MULTIPLYING_FACTOR).toString())),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 40.0,
@@ -1821,7 +2410,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   ),
                                   children: <TextSpan>[
                                     TextSpan(
-                                        text: ' (' + NumberFormat("###.00#", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
+                                        text: ' (' + NumberFormat("##0.00", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 30.0,
@@ -1831,7 +2420,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                   ]
                               )
                           ) : Text(
-                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())),
+                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newPrice/MULTIPLYING_FACTOR).toString())),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 40.0,
@@ -1902,7 +2491,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       Container (
                         padding: const EdgeInsets.only(left: 24),
                         child: Text(
-                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString(),
+                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString() + ' ' + ((widget.productItem.minQuantitySell > 1) ? widget.productItem.idUnit.toString() + 's.' : widget.productItem.idUnit.toString() + '.'),
                           style: TextStyle(
                             fontWeight: FontWeight.w300,
                             fontSize: 12.0,
@@ -1935,37 +2524,106 @@ class _SmallScreenState extends State<_SmallScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      TextButton(
+                      TextButton (
                           onPressed: () {
-                            if (_newNumItemsPurchased != -1) {
+                            if (widget.father.newQuantity != -1) {
                               // the quantity of the purchase line has been changed.
-                              // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
+                              // The value -1 is the value if the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              if (_newNumItemsPurchased > 0) {
-                                setState (() {
-                                  _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
-                                  if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                                _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  _discountAmount = _newNumItemsPurchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              if (widget.productItem.purchased > 0) {
-                                setState (() {
-                                  widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
-                                  if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                                _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = widget.productItem.purchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             }
                           },
@@ -1997,51 +2655,132 @@ class _SmallScreenState extends State<_SmallScreen> {
                             ),
                           )
                       ),
-                      Padding(
+                      Padding (
                         //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                         padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
-                        child: Text(
-                          widget.father.newQuantity != -1
-                              ? _newNumItemsPurchased.toString() + ' (' + widget.productItem.purchased.toString() + ') '
-                              : widget.productItem.purchased.toString(),
-                          style: TextStyle (
-                            fontWeight: FontWeight.w700,
-                            fontSize: 24.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.normal,
-                            color: Colors.black,
+                        child: RichText (
+                          text: TextSpan (
+                              text: widget.father.newQuantity != -1
+                                  ? _newNumItemsPurchased.toString()
+                                  + ' ('
+                                  + widget.productItem.purchased.toString()
+                                  + ') '
+                                  : widget.productItem.purchased.toString(),
+                              style: TextStyle (
+                                fontWeight: FontWeight.w700,
+                                fontSize: 24.0,
+                                fontFamily: 'SF Pro Display',
+                                fontStyle: FontStyle.normal,
+                                color: Colors.black,
+                              ),
+                              children: <TextSpan>[
+                                TextSpan (
+                                    text: widget.father.newQuantity != -1
+                                        ? _newNumItemsPurchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.'
+                                        : widget.productItem.purchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.',
+                                    style: TextStyle (
+                                        fontWeight: FontWeight.bold
+                                    )
+                                )
+                              ]
                           ),
                         ),
                       ),
                       TextButton(
                           onPressed: () {
-                            if (_newNumItemsPurchased != -1) {
+                            if (widget.father.newQuantity != -1) {
                               // the quantity of the purchase line has been changed.
                               // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              setState(() {
-                                _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                              _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                              _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                setState(() {
+                                  _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              } else {
+                                setState(() {
+                                  _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = _newNumItemsPurchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = _newNumItemsPurchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              setState(() {
-                                widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                              _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                              _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                setState(() {
+                                  widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                //_totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              } else {
+                                setState(() {
+                                  widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+                                final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = widget.productItem.purchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = widget.productItem.purchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              }
                             }
                           },
-                          child: Container(
+                          child: Container (
                             alignment: Alignment.center,
                             padding: EdgeInsets.all(2.0),
                             decoration: BoxDecoration(
@@ -2107,7 +2846,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _valueDiscount = 0.0;
+                                  _percentDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
                               },
                             ),
                           )
@@ -2122,7 +2866,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _percentDiscount = 0.0;
+                                  _valueDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+                                _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                               },
                             ),
                           )
@@ -2132,7 +2881,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                   Divider(thickness: 2.0,),
                   (_changeType == _PriceChangeType.priceValue) ? Center (
                     child: Text(
-                      'Descuento neto',
+                      'Modificación neta',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -2143,7 +2892,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                     ),
                   ) : Center(
                     child: Text (
-                      'Descuento porcentual',
+                      'Modificación porcentual',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -2168,39 +2917,35 @@ class _SmallScreenState extends State<_SmallScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if (_valueDiscount > 0) {
-                                      setState(() {
-                                        _valueDiscount = _valueDiscount - 0.5;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_valueDiscount > 0) {
-                                      setState(() {
-                                        _valueDiscount = _valueDiscount - 1.0;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                    debugPrint ('Estoy en el onPressed de -');
+                                    if (widget.father.newProductPrice != -1) {
+                                      // the price has been previously modified
+                                      debugPrint ('Estoy en el onPressed de -. Dentro de la parte de que el precio ha sido previamente modificado.');
+                                      final double tmpValueDiscount = _valueDiscount;
+                                      _valueDiscount = _valueDiscount - 0.1;
+                                      if (widget.father.newProductPrice >= (_valueDiscount * MULTIPLYING_FACTOR).abs()) {
+                                        // the price can't be negative
+                                        setState(() {
+                                          _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        });
+                                      } else {
+                                        _valueDiscount = tmpValueDiscount;
+                                      }
+                                    } else {
+                                      // the price has not yet modified
+                                      //debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+                                      debugPrint ('Estoy en el onPressed de -. Dentro de la parte de que el precio nunca ha sido previamente modificado.');
+                                      final double tmpValueDiscount = _valueDiscount;
+                                      _valueDiscount = _valueDiscount - 0.1;
+                                      debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+                                      if (widget.father.productPrice >= (_valueDiscount * MULTIPLYING_FACTOR).abs()) {
+                                        // the price can't be negative
+                                        setState(() {
+                                          _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        });
+                                      } else {
+                                        _valueDiscount = tmpValueDiscount;
+                                      }
                                     }
                                   },
                                   child: Container (
@@ -2218,7 +2963,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                       width: 40.0,
                                       height: 40.0,
                                       alignment: Alignment.center,
-                                      child: Text(
+                                      child: Text (
                                         '-',
                                         style: TextStyle(
                                             fontWeight: FontWeight.w300,
@@ -2237,7 +2982,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               child: Form(
                                 key: _formNewPricekey,
                                 child: TextFormField(
-                                  controller: _valueDiscountTextField,
+                                  controller: _valueDiscountTextFieldOnlyForCaseOne,
                                   decoration: InputDecoration (
                                       prefixIcon: Icon(Icons.euro_rounded)
                                   ),
@@ -2270,39 +3015,23 @@ class _SmallScreenState extends State<_SmallScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if ((_valueDiscount * MULTIPLYING_FACTOR) <= widget.father.productPrice - widget.father.discountAmount) {
+                                    debugPrint ('Estoy en el onPressed de +');
+                                    if (widget.father.newProductPrice != -1) {
+                                      // the price has been previously modified
+                                      debugPrint ('Estoy en el onPressed de +. Dentro de la parte de que el precio ha sido previamente modificado.');
+                                      _valueDiscount = _valueDiscount + 0.1;
                                       setState(() {
-                                        _valueDiscount = _valueDiscount + 0.5;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                                       });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if ((_valueDiscount * MULTIPLYING_FACTOR) <= widget.father.productPrice - widget.father.discountAmount) {
+                                    } else {
+                                      // the price has not yet modified
+                                      //debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+                                      debugPrint ('Estoy en el onPressed de +. Dentro de la parte de que el precio nunca ha sido previamente modificado.');
+                                      _valueDiscount = _valueDiscount + 0.1;
+                                      debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
                                       setState(() {
-                                        _valueDiscount = _valueDiscount + 1.0;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                                       });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
                                     }
                                   },
                                   child: Container(
@@ -2357,40 +3086,19 @@ class _SmallScreenState extends State<_SmallScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if (_percentDiscount > 0) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount - 0.5;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_percentDiscount > 0) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount - 1;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
+                                    setState(() {
+                                      _percentDiscount = _percentDiscount - 0.5;
+                                      _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
+                                    });
+                                    // There is a change in the price
+                                    _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                    _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                    final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
+                                    _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
+                                    _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
+                                    final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                    _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                    _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
                                   },
                                   child: Container (
                                     alignment: Alignment.center,
@@ -2426,7 +3134,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               child: Form(
                                 key: _formPercentKey,
                                 child: TextFormField(
-                                  controller: _percentDiscountTextField,
+                                  controller: _percentDiscountTextFieldOnlyForCaseOne,
                                   decoration: InputDecoration (
                                     prefixText: '  %  ',
                                     prefixStyle: TextStyle (
@@ -2469,31 +3177,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     if (_percentDiscount <= 100) {
                                       setState(() {
                                         _percentDiscount = _percentDiscount + 0.5;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
+                                        _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
                                       });
                                       // There is a change in the price
                                       _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
                                       _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
                                       final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_percentDiscount <= 100) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount + 1;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
                                       _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
                                       _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
                                       final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
@@ -2645,10 +3334,11 @@ class _LargeScreenState extends State<_LargeScreen> {
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   final TextEditingController _valueDiscountTextField = TextEditingController();
   final TextEditingController _percentDiscountTextField = TextEditingController();
+  final TextEditingController _valueDiscountTextFieldOnlyForCaseOne = TextEditingController();  // Use a new text controller only for modifying the price text field of the case 1
+  final TextEditingController _percentDiscountTextFieldOnlyForCaseOne = TextEditingController();  // Use a new text controller only for modifying the price text field of the case 1
   final _formPercentKey = GlobalKey<FormState>();
   final _formNewPricekey = GlobalKey<FormState>();
   // fields to save temporal values
-  double _newPrice;
   double _valueDiscount = 0.0;
   double _percentDiscount = 0.0;
   double _totalBeforeDiscount = 0.0;
@@ -2659,6 +3349,7 @@ class _LargeScreenState extends State<_LargeScreen> {
   double _totalAmount = 0.0;
   int _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
   double _newNewProductPriceFinal;  // save the value of the field NEW_PRODUCT_PRICE_FINAL of the KRC_PURCHASE table.
+  double _newPrice; // save the value of the field PRODUCT_PRICE of the KRC_PURCHASE table.
   _PriceChangeType _changeType = _PriceChangeType.priceValue;
   bool _isOfficial = false;
   String _comment;
@@ -2684,55 +3375,126 @@ class _LargeScreenState extends State<_LargeScreen> {
     if (widget.father.newProductPrice != -1) {
       debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
       // the price has been previously modified
-      _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_valueDiscount != null) {
-        debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
-        //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-        // There is a change in the price
-        debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.newProductPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.newProductPrice*(1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextField.text: ' + _valueDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     } else {
       // the price has not yet modified
       debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
-      _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_valueDiscount != null) {
-        //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-        // There is a change in the price
-        debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     }
   }
@@ -2740,52 +3502,378 @@ class _LargeScreenState extends State<_LargeScreen> {
     debugPrint ('Estoy en el listener _percentDiscountTextFieldProcessor');
     if (widget.father.newProductPrice != -1) {
       debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
-      debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
-      // the price has been previously modified
-      _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_percentDiscount != null) {
-        debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.newProductPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.newProductPrice * (1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * (widget.father.newProductPrice * (_percentDiscount/100));
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     } else {
       // the price has not yet modified
       debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
-      _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
-      if (_percentDiscount != null) {
-        debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
-        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-        debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
-        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-        debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
-        final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
-        debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
-        _newNewProductPriceFinal = productPriceDiscounted;
-        _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-        debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
-        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
-        debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
-        final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-        debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
-        _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-        debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
-        _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-        debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+      if (widget.father.newQuantity != -1) {
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.father.newQuantity * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.father.newQuantity * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.father.newQuantity * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.father.newQuantity * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.father.newQuantity * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _percentDiscount = double.tryParse (_percentDiscountTextField.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextField.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    }
+  }
+  void _valueDiscountTextFieldForCaseOneProcessor() {
+    // Use a new and different listener for the case 1 (Price and Amount modified)
+    debugPrint ('Estoy en el listener _valueDiscountTextFieldForCaseOneProcessor');
+    if (widget.father.newProductPrice != -1) {
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        // the price has been previously modified
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextFieldOnlyForCaseOne.text: ' + _valueDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        // the price has been previously modified
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          debugPrint ('Estoy en el listener. El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('Valor de _valueDiscountTextFieldOnlyForCaseOne.text: ' + _valueDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.newProductPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    } else {
+      // the price has not yet modified
+      debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+      if (widget.father.newQuantity != -1) {
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        _valueDiscount = double.tryParse (_valueDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_valueDiscount != null) {
+          //_valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+          // There is a change in the price
+          debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_valueDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    }
+  }
+  void _percentDiscountTextFieldForCaseOneProcessor() {
+    // Use a new and different listener for the case 1 (Price and Amount modified)
+    debugPrint ('Estoy en el listener _percentDiscountTextFieldForCaseOneProcessor.');
+    if (widget.father.newProductPrice != -1) {
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _valueDiscount.toString());
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          //_totalBeforeDiscount = _newNumItemsPurchased * (widget.father.newProductPrice * (1+widget.productItem.taxApply/100));
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          //_discountAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (_percentDiscount/100));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          //_totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el _newNewProductPriceFinal != -1');
+        debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+        // the price has been previously modified
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('El valor de _percentDiscount es: ' + _percentDiscount.toString());
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.newProductPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            _newNewProductPriceFinal = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      }
+    } else {
+      // the price has not yet modified
+      if (widget.father.newQuantity != -1) {
+        debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextField.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
+      } else {
+        debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+        _percentDiscount = double.tryParse (_percentDiscountTextFieldOnlyForCaseOne.text.replaceFirst(RegExp(','), '.'));
+        if (_percentDiscount != null) {
+          debugPrint ('Valor de _percentDiscountTextFieldOnlyForCaseOne.text: ' + _percentDiscountTextFieldOnlyForCaseOne.text);
+          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+          final double productPriceDiscounted = widget.father.productPrice * (1+(_percentDiscount/100)); // product price minus discount
+          debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+          setState(() {
+            if (_percentDiscount == 0) {
+              _newNewProductPriceFinal = -1;
+            } else {
+              _newNewProductPriceFinal = productPriceDiscounted;
+            }
+            _newPrice = productPriceDiscounted;
+          });
+          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+          final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+          debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+          _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+        }
       }
     }
   }
@@ -2793,9 +3881,8 @@ class _LargeScreenState extends State<_LargeScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting('es_ES');
-    _valueDiscountTextField.addListener (_valueDiscountTextFieldProcessor);
-    _percentDiscountTextField.addListener (_percentDiscountTextFieldProcessor);
     _current = 0;
+    _changeType = _PriceChangeType.priceValue;
     _isOfficial = false;
     // fields to save temporal values
     widget.productItem.purchased = widget.father.items;
@@ -2803,10 +3890,13 @@ class _LargeScreenState extends State<_LargeScreen> {
     _totalBeforeDiscountWithoutTax = widget.father.totalBeforeDiscountWithoutTax;
     _valueDiscount = 0.0;
     _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+    _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
     _percentDiscount = 0.0;
-    _newPrice = widget.father.productPrice;
     _newNewProductPriceFinal = widget.father.newProductPrice;
+    _newPrice = widget.father.productPrice;
+    debugPrint ('El valor de _newNewProductPriceFinal es: ' + _newNewProductPriceFinal.toString());
     _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+    _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
     _totalBeforeDiscountWithoutTax = widget.father.totalBeforeDiscountWithoutTax;
     _totalBeforeDiscount = widget.productItem.totalBeforeDiscount;
     _discountAmount = widget.father.discountAmount;
@@ -2818,15 +3908,21 @@ class _LargeScreenState extends State<_LargeScreen> {
     } else {
       _comment = widget.father.remarkSeller;
     }
+    _valueDiscountTextField.addListener (_valueDiscountTextFieldProcessor);
+    _percentDiscountTextField.addListener (_percentDiscountTextFieldProcessor);
+    _valueDiscountTextFieldOnlyForCaseOne.addListener(_valueDiscountTextFieldForCaseOneProcessor);  // Use a new and different listener for the case 1 (Price and Amount modified)
+    _percentDiscountTextFieldOnlyForCaseOne.addListener(_percentDiscountTextFieldForCaseOneProcessor);  // Use a new and different listener for the case 1 (Price and Amount modified)
   }
   @override
   void dispose() {
     _valueDiscountTextField.dispose();
     _percentDiscountTextField.dispose();
+    _valueDiscountTextFieldOnlyForCaseOne.dispose();
+    _percentDiscountTextFieldOnlyForCaseOne.dispose();
     super.dispose();
   }
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     debugPrint('El productId es: ' + widget.productItem.productId.toString());
     Widget tmpBuilder = Container(
         padding: EdgeInsets.symmetric(vertical: 2.0, horizontal: 10.0),
@@ -2868,66 +3964,84 @@ class _LargeScreenState extends State<_LargeScreen> {
                   debugPrint ('Comienzo la modificación del pedido');
                   _showPleaseWait(true);
                   // Detect if the amount purchased has changed
-                  if ((_valueDiscount != 0 || _percentDiscount != 0)
-                      && widget.father.items != widget.productItem.purchased) {
+                  if (widget.father.banQuantity == "SI" && widget.father.banPrice == "SI") {
                     // Case 1
                     // The price and the quantity of the purchased has been changed by the user
-                    debugPrint('Entro en el caso 1.');
-                    final Uri url = Uri.parse ('$SERVER_IP/modifyPurchaseLine/' + widget.father.orderId.toString() + "/" + widget.father.providerName);
-                    debugPrint ("La URL es: " + url.toString());
-                    final http.Response res = await http.put (
-                        url,
-                        headers: <String, String>{
-                          'Content-Type': 'application/json; charset=UTF-8',
-                          //'Authorization': jwt
-                        },
-                        body: jsonEncode (<String, String> {
-                          'product_id': widget.father.productId.toString(),
-                          'user_id': widget.userId.toString(),
-                          'user_role': widget.userRole.toString(),
-                          'new_purchased': widget.productItem.purchased.toString(),
-                          'new_product_price': _newPrice.toString(),
-                          'total_before_discount': _totalBeforeDiscount.toString(),
-                          'total_amount': _totalAmount.toString(),
-                          'discount_amount': _discountAmount.toString(),
-                          'tax_amount': _taxAmount.toString(),
-                          'is_official': _isOfficial.toString(),
-                          'case_to_apply': '1', // Case 1. he price and the quantity of the purchased has been changed
-                          'comment': _comment
-                        })
-                    );
-                    _showPleaseWait(false);
-                    if (res.statusCode == 200) {
-                      // Process the order
-                      debugPrint ('OK. ');
-                      final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
-                      debugPrint ('Entre medias de la api RESPONSE.');
-                      final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
-                      if (resultListPurchaseStatusToTransitionTo.length > 0) {
-                        widget.father.possibleStatusToTransitionTo.clear();
-                        resultListPurchaseStatusToTransitionTo.forEach((element) {
-                          widget.father.possibleStatusToTransitionTo.add(element);
-                        });
-                      }
-                      widget.stateChanged.changed = true;
-                      widget.father.items = widget.productItem.purchased;
-                      widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
-                      widget.father.discountAmount = _discountAmount;
-                      widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
-                      widget.father.taxAmount = _taxAmount;
-                      widget.father.totalAmount = _totalAmount;
-                      if (widget.userRole == 'BUYER') {
-                        widget.father.remarkBuyer = _comment;
+                    if (_valueDiscount != 0 || _percentDiscount != 0
+                        || _newNumItemsPurchased != widget.father.newProductPrice
+                        || widget.productItem.purchased != widget.father.items) {
+                      // There is a modification
+                      debugPrint('Entro en el caso 1.');
+                      debugPrint('El valor de _valueDiscountTextField es: ' + _valueDiscountTextField.text);
+                      debugPrint('El valor de _percentDiscountTextField es: ' + _percentDiscountTextField.text);
+                      final Uri url = Uri.parse('$SERVER_IP/modifyPurchaseLine/' + widget.father.orderId.toString() + "/" + widget.father.providerName);
+                      debugPrint ("La URL es: " + url.toString());
+                      final http.Response res = await http.put (
+                          url,
+                          headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            //'Authorization': jwt
+                          },
+                          body: jsonEncode (<String, String> {
+                            'product_id': widget.father.productId.toString(),
+                            'user_id': widget.userId.toString(),
+                            'user_role': widget.userRole.toString(),
+                            'new_purchased': _newNumItemsPurchased != -1 ? _newNumItemsPurchased.toString() : (widget.productItem.purchased != widget.father.items ? widget.productItem.purchased.toString() : null),
+                            'new_product_price': _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal.toString() : null,
+                            'total_before_discount': _totalBeforeDiscount.toString(),
+                            'total_amount': _totalAmount.toString(),
+                            'discount_amount': _discountAmount.toString(),
+                            'tax_amount': _taxAmount.toString(),
+                            'is_official': _isOfficial.toString(),
+                            'case_to_apply': '1',  // Case 1. he price and the quantity of the purchased has been changed
+                            'comment': _comment
+                          })
+                      );
+                      _showPleaseWait(false);
+                      if (res.statusCode == 200) {
+                        // Process the order
+                        debugPrint ('OK. ');
+                        final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                        if (resultListPurchaseStatusToTransitionTo.length > 0) {
+                          widget.father.possibleStatusToTransitionTo.clear();
+                          resultListPurchaseStatusToTransitionTo.forEach((element) {
+                            widget.father.possibleStatusToTransitionTo.add(element);
+                          });
+                        }
+                        debugPrint ('Despues de retornar los statusToTransitionTo.');
+                        // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                        final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                        if (currentBanPriceBanStatusValues.length > 0) {
+                          widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                          widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                        }
+                        debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
+                        widget.stateChanged.changed = true;
+                        widget.father.newQuantity = _newNumItemsPurchased != -1 ? _newNumItemsPurchased : (widget.productItem.purchased != widget.father.items ? widget.productItem.purchased : -1);
+                        widget.father.newProductPrice = _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal : widget.father.newProductPrice;
+                        debugPrint ('El valor de widget.father.newProductPrice es: ' + widget.father.newProductPrice.toString());
+                        widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
+                        widget.father.discountAmount = _discountAmount;
+                        widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
+                        widget.father.taxAmount = _taxAmount;
+                        widget.father.totalAmount = _totalAmount;
+                        if (widget.userRole == 'BUYER') {
+                          widget.father.remarkBuyer = _comment;
+                        } else {
+                          widget.father.remarkSeller = _comment;
+                        }
+                        widget.father.statusId = "O";
+                        widget.father.allStatus = "OBSERVACIONES";
+                        Navigator.pop(context, widget.stateChanged.changed);
                       } else {
-                        widget.father.remarkSeller = _comment;
+                        // Error
+                        widget.stateChanged.changed = false;
+                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                       }
-                      widget.father.statusId = "O";
-                      widget.father.allStatus = "OBSERVACIONES";
-                      Navigator.pop(context, widget.stateChanged.changed);
-                    } else {
-                      // Error
-                      widget.stateChanged.changed = false;
-                      ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                     }
                   } else if (widget.father.banQuantity == "NO" && widget.father.banPrice == "SI") {
                     // Case 2
@@ -2951,7 +4065,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                           'discount_amount': _discountAmount.toString(),
                           'tax_amount': _taxAmount.toString(),
                           'is_official': _isOfficial.toString(),
-                          'case_to_apply': '2', // Only the price of the purchased has been changed by the user
+                          'case_to_apply': '2',  // Only the price of the purchased has been changed by the user
                           'comment': _comment
                         })
                     );
@@ -2959,6 +4073,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     if (res.statusCode == 200) {
                       // Process the order
                       debugPrint ('OK. ');
+                      // get the list of new states to tansition to
                       final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
                       debugPrint ('Entre medias de la api RESPONSE.');
                       final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
@@ -2981,6 +4096,8 @@ class _LargeScreenState extends State<_LargeScreen> {
                       widget.stateChanged.changed = true;
                       widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
                       widget.father.discountAmount = _discountAmount;
+                      widget.father.newProductPrice = _newNewProductPriceFinal != -1 ? _newNewProductPriceFinal : widget.father.newProductPrice;
+                      debugPrint ('El valor de widget.father.newProductPrice es: ' + widget.father.newProductPrice.toString());
                       widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
                       widget.father.taxAmount = _taxAmount;
                       widget.father.totalAmount = _totalAmount;
@@ -3001,8 +4118,8 @@ class _LargeScreenState extends State<_LargeScreen> {
                     // Case 3
                     // Only the quantity has been changed by the user
                     if (_newNumItemsPurchased != -1) {
-                      // the quantity of the purchase line has been changed previously.
-                      // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
+                      // the quantity of the purchase line has been changed.
+                      // The value -1 is the value if the field NEW_QUANTITY of the KRC_PURCHASE is null,
                       // then it has been not yet modified
                       if (_newNumItemsPurchased != widget.father.newQuantity) {
                         // the quantity of the purchase line has been modified
@@ -3032,7 +4149,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                         if (res.statusCode == 200) {
                           // Process the order
                           debugPrint ('OK. ');
-                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
                           debugPrint ('Entre medias de la api RESPONSE.');
                           final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
                           if (resultListPurchaseStatusToTransitionTo.length > 0) {
@@ -3041,6 +4158,16 @@ class _LargeScreenState extends State<_LargeScreen> {
                               widget.father.possibleStatusToTransitionTo.add(element);
                             });
                           }
+                          debugPrint ('Despues de retornar los statusToTransitionTo.');
+                          // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                          final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                          debugPrint ('Entre medias de la api RESPONSE.');
+                          final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                          if (currentBanPriceBanStatusValues.length > 0) {
+                            widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                            widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                          }
+                          debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
                           widget.stateChanged.changed = true;
                           //widget.father.items = widget.productItem.purchased;
                           widget.father.newQuantity = _newNumItemsPurchased;
@@ -3097,7 +4224,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                         if (res.statusCode == 200) {
                           // Process the order
                           debugPrint ('OK. ');
-                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['statusToTransitionTo'].cast<Map<String, dynamic>>();
                           debugPrint ('Entre medias de la api RESPONSE.');
                           final List<PurchaseStatus> resultListPurchaseStatusToTransitionTo = resultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
                           if (resultListPurchaseStatusToTransitionTo.length > 0) {
@@ -3106,8 +4233,17 @@ class _LargeScreenState extends State<_LargeScreen> {
                               widget.father.possibleStatusToTransitionTo.add(element);
                             });
                           }
+                          debugPrint ('Despues de retornar los statusToTransitionTo.');
+                          // get the values of BAN_PRICE and BAN_QUANTITY among the new state of the modified purchased line, "O" (OBSERVACIONES)
+                          final List<Map<String, dynamic>> anotherResultListJson = json.decode(res.body)['currentBanQuantityBanPrice'].cast<Map<String, dynamic>>();
+                          debugPrint ('Entre medias de la api RESPONSE.');
+                          final List<PurchaseStatus> currentBanPriceBanStatusValues = anotherResultListJson.map<PurchaseStatus>((json) => PurchaseStatus.fromJson(json)).toList();
+                          if (currentBanPriceBanStatusValues.length > 0) {
+                            widget.father.banQuantity = currentBanPriceBanStatusValues[0].banQuantity;
+                            widget.father.banPrice = currentBanPriceBanStatusValues[0].banPrice;
+                          }
+                          debugPrint ('Despues de retornar los currentBanPriceBanStatusValues.');
                           widget.stateChanged.changed = true;
-                          widget.father.items = widget.productItem.purchased;
                           widget.father.totalBeforeDiscountWithoutTax = _totalBeforeDiscountWithoutTax;
                           widget.father.discountAmount = _discountAmount;
                           widget.father.totalAfterDiscountWithoutTax = _totalAfterDiscountWithoutTax;
@@ -3157,7 +4293,7 @@ class _LargeScreenState extends State<_LargeScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++){
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -3214,7 +4350,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -3243,7 +4379,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   ),
                                   children: <TextSpan>[
                                     TextSpan(
-                                        text: ' (' + NumberFormat("###.00#", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
+                                        text: ' (' + NumberFormat("##0.00", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 30.0,
@@ -3324,7 +4460,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       Container (
                         padding: const EdgeInsets.only(left: 24),
                         child: Text(
-                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString(),
+                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString() + ' ' + ((widget.productItem.minQuantitySell > 1) ? widget.productItem.idUnit.toString() + 's.' : widget.productItem.idUnit.toString() + '.'),
                           style: TextStyle(
                             fontWeight: FontWeight.w300,
                             fontSize: 12.0,
@@ -3352,7 +4488,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       ),
                     ),
                   ),
-                  Row(
+                  Row (
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 4,child: Container()),
@@ -3366,35 +4502,94 @@ class _LargeScreenState extends State<_LargeScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
+                                    debugPrint ('Estoy en el onPress del boton menos.');
                                     if (_newNumItemsPurchased != -1) {
                                       // the quantity of the purchase line has been changed.
                                       // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                                       // then it has been not yet modified
-                                      if (_newNumItemsPurchased > 0) {
-                                        setState (() {
-                                          _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
-                                          if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
-                                        });
-                                        _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                                        _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                        _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                                        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                        _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                                        _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                                      if (widget.father.newProductPrice != -1) {
+                                        if (_newNumItemsPurchased > 0) {
+                                          setState (() {
+                                            _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                            if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      } else {
+                                        if (_newNumItemsPurchased > 0) {
+                                          setState (() {
+                                            _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                            if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                          //_totalBeforeDiscountWithoutTax = _newNumItemsPurchased * (widget.father.totalBeforeDiscountWithoutTax / widget.father.items);
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          //_discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = _newNumItemsPurchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
                                       }
                                     } else {
                                       // the quantity of the purchase line has not yet been changed.
-                                      if (widget.productItem.purchased > 0) {
-                                        setState (() {
-                                          widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
-                                          if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
-                                        });
-                                        _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                        _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                        _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                                        _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                        _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                                        _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                                      if (widget.father.newProductPrice != -1) {
+                                        debugPrint ('Estoy en el widget.father.newProductPrice != -1');
+                                        if (widget.productItem.purchased > 0) {
+                                          setState (() {
+                                            widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                            if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = widget.productItem.purchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      } else {
+                                        if (widget.productItem.purchased > 0) {
+                                          setState (() {
+                                            widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                            if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          //_discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = widget.productItem.purchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
                                       }
                                     }
                                   },
@@ -3428,20 +4623,35 @@ class _LargeScreenState extends State<_LargeScreen> {
                               ),
                             ),
                             Expanded(
-                              flex: 1,
+                              flex: 2,
                               child: Center(
                                 //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-                                child: Text(
-                                  widget.father.newQuantity != -1
-                                      ? _newNumItemsPurchased.toString() + ' (' + widget.productItem.purchased.toString() + ') '
-                                      : widget.productItem.purchased.toString(),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 24.0,
-                                    fontFamily: 'SF Pro Display',
-                                    fontStyle: FontStyle.normal,
-                                    color: Colors.black,
-                                  ),
+                                child: RichText (
+                                  text: TextSpan (
+                                    text: widget.father.newQuantity != -1
+                                          ? _newNumItemsPurchased.toString()
+                                          + ' ('
+                                          + widget.productItem.purchased.toString()
+                                          + ') '
+                                          : widget.productItem.purchased.toString(),
+                                      style: TextStyle (
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 24.0,
+                                        fontFamily: 'SF Pro Display',
+                                        fontStyle: FontStyle.normal,
+                                        color: Colors.black,
+                                      ),
+                                      children: <TextSpan>[
+                                        TextSpan (
+                                            text: widget.father.newQuantity != -1
+                                                ? _newNumItemsPurchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.'
+                                                : widget.productItem.purchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.',
+                                            style: TextStyle (
+                                                fontWeight: FontWeight.bold
+                                            )
+                                        )
+                                      ]
+                                    )
                                 ),
                               ),
                             ),
@@ -3453,26 +4663,84 @@ class _LargeScreenState extends State<_LargeScreen> {
                                       // the quantity of the purchase line has been changed.
                                       // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                                       // then it has been not yet modified
-                                      setState(() {
-                                        _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
-                                      });
-                                      _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                                      _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                                      if(widget.father.newProductPrice != -1) {
+                                        if (_newNumItemsPurchased > 0) {
+                                          setState (() {
+                                            _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = _newNumItemsPurchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      } else {
+                                        if (_newNumItemsPurchased > 0) {
+                                          setState (() {
+                                            _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                          //_totalBeforeDiscountWithoutTax = _newNumItemsPurchased * (widget.father.totalBeforeDiscountWithoutTax / widget.father.items);
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = _newNumItemsPurchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      }
                                     } else {
                                       // the quantity of the purchase line has not yet been changed.
-                                      setState(() {
-                                        widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
-                                      });
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                                      _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                                      if (widget.father.newProductPrice != -1) {
+                                        if (widget.productItem.purchased > 0) {
+                                          setState (() {
+                                            widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = widget.productItem.purchased * (_newNewProductPriceFinal * (widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      } else {
+                                        if (widget.productItem.purchased > 0) {
+                                          setState (() {
+                                            widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                          });
+                                          _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                          _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
+                                          debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                          _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                          _discountAmount = 0;  // If widget.father.newProductPrice means that there si no discount
+                                          debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                          _totalAfterDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                          debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                          _taxAmount = widget.productItem.purchased * (widget.father.productPrice*(widget.productItem.taxApply/100));
+                                          debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                          _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                          debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                        }
+                                      }
                                     }
                                   },
                                   child: Container (
@@ -3507,7 +4775,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                           ],
                         ),
                       ),
-                      Expanded(flex:4, child: Container())
+                      Expanded (flex: 4, child: Container())
                     ]
                   ),
                   SizedBox(height: constraints.maxHeight * HeightInDpis_35),
@@ -3582,7 +4850,7 @@ class _LargeScreenState extends State<_LargeScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++){
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -3658,9 +4926,9 @@ class _LargeScreenState extends State<_LargeScreen> {
                         ),
                         Padding (
                           padding: const EdgeInsets.only(right: 15.0),
-                          child: widget.father.newProductPrice != -1 ? Text.rich (
+                          child: _newNewProductPriceFinal != -1 ? Text.rich (
                               TextSpan (
-                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.newProductPrice/MULTIPLYING_FACTOR).toString())),
+                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newNewProductPriceFinal/MULTIPLYING_FACTOR).toString())),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 40.0,
@@ -3668,7 +4936,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   ),
                                   children: <TextSpan>[
                                     TextSpan(
-                                        text: ' (' + NumberFormat("###.00#", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
+                                        text: ' (' + NumberFormat("##0.00", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 30.0,
@@ -3678,7 +4946,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   ]
                               )
                           ) : Text(
-                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())),
+                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newPrice/MULTIPLYING_FACTOR).toString())),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 40.0,
@@ -3803,7 +5071,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _valueDiscount = 0.0;
+                                  _percentDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
                               },
                             ),
                           )
@@ -3818,7 +5091,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _percentDiscount = 0.0;
+                                  _valueDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+                                _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                               },
                             ),
                           )
@@ -3832,7 +5110,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                   Divider(thickness: 2.0,),
                   (_changeType == _PriceChangeType.priceValue) ? Center (
                     child: Text(
-                      'Descuento neto',
+                      'Modificación neta',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -3843,7 +5121,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     ),
                   ) : Center(
                     child: Text (
-                      'Descuento porcentual',
+                      'Modificación porcentual',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -4298,7 +5576,7 @@ class _LargeScreenState extends State<_LargeScreen> {
             builder: (context, constraints) {
               final List<String> listImagesProduct = [];
               for (var i = 0; i < widget.productItem.numImages; i++){
-                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_' + i.toString() + '.gif');
+                listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_' + i.toString() + '.gif');
               }
               return ListView (
                 children: [
@@ -4374,9 +5652,9 @@ class _LargeScreenState extends State<_LargeScreen> {
                         ),
                         Padding (
                           padding: const EdgeInsets.only(right: 15.0),
-                          child: widget.father.newProductPrice != -1 ? Text.rich (
+                          child: _newNewProductPriceFinal != -1 ? Text.rich (
                               TextSpan (
-                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.newProductPrice/MULTIPLYING_FACTOR).toString())),
+                                  text: NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newNewProductPriceFinal/MULTIPLYING_FACTOR).toString())),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 40.0,
@@ -4384,7 +5662,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   ),
                                   children: <TextSpan>[
                                     TextSpan(
-                                        text: ' (' + NumberFormat("###.00#", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
+                                        text: ' (' + NumberFormat("##0.00", "es_ES").format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())) + ')',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 30.0,
@@ -4394,7 +5672,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                   ]
                               )
                           ) : Text(
-                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((widget.father.productPrice/MULTIPLYING_FACTOR).toString())),
+                              new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_newPrice/MULTIPLYING_FACTOR).toString())),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 40.0,
@@ -4465,7 +5743,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       Container (
                         padding: const EdgeInsets.only(left: 24),
                         child: Text(
-                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString(),
+                          'Unids. mínim. venta: ' + widget.productItem.minQuantitySell.toString() + ' ' + ((widget.productItem.minQuantitySell > 1) ? widget.productItem.idUnit.toString() + 's.' : widget.productItem.idUnit.toString() + '.'),
                           style: TextStyle(
                             fontWeight: FontWeight.w300,
                             fontSize: 12.0,
@@ -4499,35 +5777,106 @@ class _LargeScreenState extends State<_LargeScreen> {
                     children: [
                       TextButton(
                           onPressed: () {
-                            if (_newNumItemsPurchased != -1) {
+                            if (widget.father.newQuantity != -1) {
                               // the quantity of the purchase line has been changed.
-                              // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
+                              // The value -1 is the value if the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              if (_newNumItemsPurchased > 0) {
-                                setState (() {
-                                  _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
-                                  if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                                _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (_newNumItemsPurchased > 0) {
+                                  setState (() {
+                                    _newNumItemsPurchased = _newNumItemsPurchased - widget.productItem.minQuantitySell;
+                                    if (_newNumItemsPurchased < 0) _newNumItemsPurchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _discountAmount = _newNumItemsPurchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = _newNumItemsPurchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              if (widget.productItem.purchased > 0) {
-                                setState (() {
-                                  widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
-                                  if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
-                                });
-                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
-                                _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                                _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                                _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
+                              } else {
+                                if (widget.productItem.purchased > 0) {
+                                  setState (() {
+                                    widget.productItem.purchased = widget.productItem.purchased - widget.productItem.minQuantitySell;
+                                    if (widget.productItem.purchased < 0) widget.productItem.purchased = 0;
+                                  });
+                                  _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                  debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                  _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                  debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                  _discountAmount = widget.productItem.purchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                  debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                  final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                  debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                  _totalAfterDiscountWithoutTax = widget.productItem.purchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                  debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                  final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                  debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                  _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                  debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                  _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                  debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                                }
                               }
                             }
                           },
@@ -4562,45 +5911,125 @@ class _LargeScreenState extends State<_LargeScreen> {
                       Padding(
                         //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                         padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
-                        child: Text(
-                          widget.father.newQuantity != -1
-                              ? _newNumItemsPurchased.toString() + ' (' + widget.productItem.purchased.toString() + ') '
-                              : widget.productItem.purchased.toString(),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 24.0,
-                            fontFamily: 'SF Pro Display',
-                            fontStyle: FontStyle.normal,
-                            color: Colors.black,
-                          ),
+                        child: RichText (
+                            text: TextSpan (
+                                text: widget.father.newQuantity != -1
+                                    ? _newNumItemsPurchased.toString()
+                                    + ' ('
+                                    + widget.productItem.purchased.toString()
+                                    + ') '
+                                    : widget.productItem.purchased.toString(),
+                                style: TextStyle (
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 24.0,
+                                  fontFamily: 'SF Pro Display',
+                                  fontStyle: FontStyle.normal,
+                                  color: Colors.black,
+                                ),
+                              children: <TextSpan>[
+                                TextSpan (
+                                    text: widget.father.newQuantity != -1
+                                        ? _newNumItemsPurchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.'
+                                        : widget.productItem.purchased > 1 ? ' ' + widget.productItem.idUnit.toString() + 's.' : ' ' + widget.productItem.idUnit.toString() + '.',
+                                    style: TextStyle (
+                                        fontWeight: FontWeight.bold
+                                    )
+                                )
+                              ]
+                            )
                         ),
                       ),
                       TextButton(
                           onPressed: () {
-                            if (_newNumItemsPurchased != -1) {
+                            if (widget.father.newQuantity != -1) {
                               // the quantity of the purchase line has been changed.
                               // The value -1 is the value when the field NEW_QUANTITY of the KRC_PURCHASE is null,
                               // then it has been not yet modified
-                              setState(() {
-                                _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
-                              _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = _newNumItemsPurchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = _newNumItemsPurchased * widget.productItem.taxAmount;
-                              _totalAmount = _newNumItemsPurchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                setState(() {
+                                  _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = _newNumItemsPurchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = _newNumItemsPurchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              } else {
+                                setState(() {
+                                  _newNumItemsPurchased = _newNumItemsPurchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = _newNumItemsPurchased * widget.father.productPrice;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = _newNumItemsPurchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = _newNumItemsPurchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = _newNumItemsPurchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = _newNumItemsPurchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              }
                             } else {
                               // the quantity of the purchase line has not yet been changed.
-                              setState(() {
-                                widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
-                              });
-                              _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                              _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                              _discountAmount = widget.productItem.purchased * widget.productItem.discountAmount.toDouble();
-                              _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                              _taxAmount = widget.productItem.purchased * widget.productItem.taxAmount;
-                              _totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                              if (_newNewProductPriceFinal != -1) {
+                                setState(() {
+                                  widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (_newNewProductPriceFinal + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = widget.productItem.purchased * ((_newNewProductPriceFinal - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = widget.productItem.purchased * _newNewProductPriceFinal;
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                //_totalAmount = widget.productItem.purchased * widget.productItem.totalAmount;
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              } else {
+                                setState(() {
+                                  widget.productItem.purchased = widget.productItem.purchased + widget.productItem.minQuantitySell;
+                                });
+                                _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                debugPrint ('El valor de _totalBeforeDiscountWithoutTax es: ' + _totalBeforeDiscountWithoutTax.toString());
+                                _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice*(1+(widget.productItem.taxApply/100)));
+                                debugPrint ('El valor de _totalBeforeDiscount es: ' + _totalBeforeDiscount.toString());
+                                final double productPriceDiscounted = (widget.father.productPrice + (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
+                                debugPrint ('El valor de productPriceDiscounted es: ' + productPriceDiscounted.toString());
+                                _discountAmount = widget.productItem.purchased * (((_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal) - widget.father.productPrice));
+                                debugPrint ('El valor de _discountAmount es: ' + _discountAmount.toString());
+                                _totalAfterDiscountWithoutTax = widget.productItem.purchased * (_newNewProductPriceFinal == -1 ? widget.father.productPrice : _newNewProductPriceFinal);
+                                debugPrint ('El valor de _totalAfterDiscountWithoutTax es: ' + _totalAfterDiscountWithoutTax.toString());
+                                final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                debugPrint ('El valor de taxAmountByProduct es: ' + taxAmountByProduct.toString());
+                                _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                debugPrint ('El valor de _taxAmount es: ' + _taxAmount.toString());
+                                _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                debugPrint ('El valor de _totalAmount es: ' + _totalAmount.toString());
+                              }
                             }
                           },
                           child: Container(
@@ -4671,7 +6100,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _valueDiscount = 0.0;
+                                  _percentDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
                               },
                             ),
                           )
@@ -4686,7 +6120,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                               onChanged: (_PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
+                                  _percentDiscount = 0.0;
+                                  _valueDiscount = 0.0;
+                                  _newNewProductPriceFinal = widget.father.newProductPrice;
                                 });
+                                _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_percentDiscount.toString()));
+                                _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                               },
                             ),
                           )
@@ -4700,7 +6139,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                   Divider(thickness: 2.0,),
                   (_changeType == _PriceChangeType.priceValue) ? Center (
                     child: Text(
-                      'Descuento neto',
+                      'Modificación neta',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -4711,7 +6150,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     ),
                   ) : Center(
                     child: Text (
-                      'Descuento porcentual',
+                      'Modificación porcentual',
                       style: TextStyle(
                         fontWeight: FontWeight.w300,
                         fontSize: 24.0,
@@ -4736,39 +6175,35 @@ class _LargeScreenState extends State<_LargeScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if (_valueDiscount > 0) {
-                                      setState(() {
-                                        _valueDiscount = _valueDiscount - 0.5;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_valueDiscount > 0) {
-                                      setState(() {
-                                        _valueDiscount = _valueDiscount - 1.0;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
+                                    debugPrint ('Estoy en el onPressed de -');
+                                    if (widget.father.newProductPrice != -1) {
+                                      // the price has been previously modified
+                                      debugPrint ('Estoy en el onPressed de -. Dentro de la parte de que el precio ha sido previamente modificado.');
+                                      final double tmpValueDiscount = _valueDiscount;
+                                      _valueDiscount = _valueDiscount - 0.1;
+                                      if (widget.father.newProductPrice >= (_valueDiscount * MULTIPLYING_FACTOR).abs()) {
+                                        // the price can't be negative
+                                        setState(() {
+                                          _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        });
+                                      } else {
+                                        _valueDiscount = tmpValueDiscount;
+                                      }
+                                    } else {
+                                      // the price has not yet modified
+                                      //debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+                                      debugPrint ('Estoy en el onPressed de -. Dentro de la parte de que el precio nunca ha sido previamente modificado.');
+                                      final double tmpValueDiscount = _valueDiscount;
+                                      _valueDiscount = _valueDiscount - 0.1;
+                                      debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
+                                      if (widget.father.productPrice >= (_valueDiscount * MULTIPLYING_FACTOR).abs()) {
+                                        // the price can't be negative
+                                        setState(() {
+                                          _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        });
+                                      } else {
+                                        _valueDiscount = tmpValueDiscount;
+                                      }
                                     }
                                   },
                                   child: Container (
@@ -4805,7 +6240,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                               child: Form(
                                 key: _formNewPricekey,
                                 child: TextFormField(
-                                  controller: _valueDiscountTextField,
+                                  controller: _valueDiscountTextFieldOnlyForCaseOne,
                                   decoration: InputDecoration (
                                       prefixIcon: Icon(Icons.euro_rounded)
                                   ),
@@ -4838,39 +6273,23 @@ class _LargeScreenState extends State<_LargeScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if ((_valueDiscount * MULTIPLYING_FACTOR) <= widget.father.productPrice - widget.father.discountAmount) {
+                                    debugPrint ('Estoy en el onPressed de +');
+                                    if (widget.father.newProductPrice != -1) {
+                                      // the price has been previously modified
+                                      debugPrint ('Estoy en el onPressed de +. Dentro de la parte de que el precio ha sido previamente modificado.');
+                                      _valueDiscount = _valueDiscount + 0.1;
                                       setState(() {
-                                        _valueDiscount = _valueDiscount + 0.5;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                                       });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if ((_valueDiscount * MULTIPLYING_FACTOR) <= widget.father.productPrice - widget.father.discountAmount) {
+                                    } else {
+                                      // the price has not yet modified
+                                      //debugPrint ('Estoy en el que el precio aún no ha sido modificado nunca');
+                                      debugPrint ('Estoy en el onPressed de +. Dentro de la parte de que el precio nunca ha sido previamente modificado.');
+                                      _valueDiscount = _valueDiscount + 0.1;
+                                      debugPrint ('El valor de _valueDiscount es: ' + _valueDiscount.toString());
                                       setState(() {
-                                        _valueDiscount = _valueDiscount + 1.0;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
+                                        _valueDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse(_valueDiscount.toString()));
                                       });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased *(widget.father.productPrice*(1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = (widget.father.productPrice - (_valueDiscount * MULTIPLYING_FACTOR)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * _valueDiscount * MULTIPLYING_FACTOR;
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
                                     }
                                   },
                                   child: Container(
@@ -4925,40 +6344,19 @@ class _LargeScreenState extends State<_LargeScreen> {
                               flex: 1,
                               child: TextButton(
                                   onPressed: () {
-                                    if (_percentDiscount > 0) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount - 0.5;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_percentDiscount > 0) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount - 1;
-                                        _valueDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
+                                    setState(() {
+                                      _percentDiscount = _percentDiscount - 0.5;
+                                      _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
+                                    });
+                                    // There is a change in the price
+                                    _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
+                                    _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
+                                    final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
+                                    _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
+                                    _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax + _discountAmount;
+                                    final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
+                                    _taxAmount = widget.productItem.purchased * taxAmountByProduct;
+                                    _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
                                   },
                                   child: Container (
                                     alignment: Alignment.center,
@@ -4994,7 +6392,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                               child: Form(
                                 key: _formPercentKey,
                                 child: TextFormField(
-                                  controller: _percentDiscountTextField,
+                                  controller: _percentDiscountTextFieldOnlyForCaseOne,
                                   decoration: InputDecoration (
                                     prefixText: '  %  ',
                                     prefixStyle: TextStyle (
@@ -5037,31 +6435,12 @@ class _LargeScreenState extends State<_LargeScreen> {
                                     if (_percentDiscount <= 100) {
                                       setState(() {
                                         _percentDiscount = _percentDiscount + 0.5;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
+                                        _percentDiscountTextFieldOnlyForCaseOne.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
                                       });
                                       // There is a change in the price
                                       _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
                                       _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
                                       final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
-                                      _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
-                                      _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
-                                      final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);
-                                      _taxAmount = widget.productItem.purchased * taxAmountByProduct;
-                                      _totalAmount = _totalAfterDiscountWithoutTax + _taxAmount;
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    if (_percentDiscount <= 100) {
-                                      setState(() {
-                                        _percentDiscount = _percentDiscount + 1;
-                                        _percentDiscountTextField.text = NumberFormat('##0.00', 'es_ES').format(double.parse((_percentDiscount).toString()));
-                                      });
-                                      // There is a change in the price
-                                      _totalBeforeDiscountWithoutTax = widget.productItem.purchased * widget.father.productPrice;
-                                      _totalBeforeDiscount = widget.productItem.purchased * (widget.father.productPrice * (1+widget.productItem.taxApply/100));
-                                      final double productPriceDiscounted = widget.father.productPrice * (1-(_percentDiscount/100)); // product price minus discount
-                                      _newPrice = productPriceDiscounted;
                                       _discountAmount = widget.productItem.purchased * (widget.father.productPrice * (_percentDiscount/100));
                                       _totalAfterDiscountWithoutTax = _totalBeforeDiscountWithoutTax - _discountAmount;
                                       final double taxAmountByProduct = productPriceDiscounted * (widget.productItem.taxApply/100);

@@ -1,6 +1,9 @@
-const SERVER_IP = 'https://192.168.2.106:9010/server';  // DEVELOPMENT
-//const SERVER_IP = 'https://52.55.223.20:9010/server';   // CERTIFICATION
-//const SERVER_IP = 'https://52.55.223.20:9000/server';     // PRODUCTION
+//const SERVER_IP = 'https://192.168.2.106:9010/server';  // DEVELOPMENT
+const SERVER_IP = 'http://192.168.2.106:9010/server';  // DEVELOPMENT
+//const SERVER_IP = 'https://localhost/server';  // DEVELOPMENT
+//const SERVER_IP = 'https://3.92.229.110:9000/server';   // PRUEBA
+//const SERVER_IP = 'https://54.87.206.162:9000/server';     // PRODUCTION
+//const SERVER_IP = 'http://54.87.206.162:9000/server';     // PRODUCTION
 //const SERVER_IP = 'https://192.168.1.134:9010/server';
 //const SERVER_IP = 'https://192.168.1.6:9010/server';
 //const SERVER_IP = 'https://ec2-52-55-250-28.compute-1.amazonaws.com:9000/server';

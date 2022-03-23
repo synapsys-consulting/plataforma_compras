@@ -18,9 +18,10 @@ import 'package:plataforma_compras/models/defaultAddressList.model.dart';
 import 'package:plataforma_compras/models/addressesList.model.dart';
 
 class DetailAddressView extends StatefulWidget {
-  DetailAddressView({Key key, @required this.address, @required this.personeId, @required this.fromWhereCalledIs}) : super(key: key);
+  DetailAddressView({Key key, @required this.address, @required this.personeId, @required this.userId, @required this.fromWhereCalledIs}) : super(key: key);
   final AddressGeoLocation address;
   final String personeId;
+  final String userId;
   final int fromWhereCalledIs;  // 2: ist called from purchase management; 1: ist called from the Drawer option
   @override
   _DetailAddressViewState createState() {
@@ -83,7 +84,8 @@ class _DetailAddressViewState extends State<DetailAddressView> {
                   'locality': _addressOut.locality,
                   'country': _addressOut.country,
                   'optional': _addressOut.optional,
-                  'persone_id': widget.personeId
+                  'persone_id': widget.personeId,
+                  'user_id': widget.userId
                 })
             ).timeout(TIMEOUT);
             if (res.statusCode == 200) {

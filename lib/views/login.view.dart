@@ -23,7 +23,7 @@ class LoginView extends StatelessWidget {
         leading: IconButton (
           icon: Image.asset('assets/images/leftArrow.png'),
           onPressed: () {
-            Navigator.pop (context);
+            Navigator.popUntil(context, ModalRoute.withName('/'));
           },
         ),
         actions: <Widget>[

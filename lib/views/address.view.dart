@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
@@ -12,8 +13,9 @@ import 'package:plataforma_compras/models/addressGeoLocation.dart';
 
 class AddressView extends StatefulWidget {
   final String personeId;
+  final String userId;
   final int fromWhereCalledIs;  // 2: ist called from purchase management; 1: ist called from the Drawer option
-  AddressView (this.personeId, this.fromWhereCalledIs);
+  AddressView (this.personeId, this.userId, this.fromWhereCalledIs);
   @override
   _AddressViewState createState() => _AddressViewState();
 }
@@ -131,6 +133,7 @@ class _AddressViewState extends State<AddressView> {
     // Test if location services are enabled.
     debugPrint ('Comienzo con _determinePosition');
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    debugPrint ('Después de acceder al localizador del móvil');
     if (!serviceEnabled) {
       debugPrint ('Paso al If serviceEnabled');
       // Location services are not enabled don't continue
@@ -139,14 +142,21 @@ class _AddressViewState extends State<AddressView> {
       //return Future.error('Location services are disabled.');
       return Future.error('El servicio de geolocalización no está abilitado en el aparato. Actívalo.');
     }
+    debugPrint ('Antes del checkPermission');
     permission = await Geolocator.checkPermission();
+    debugPrint ('Después del checkPermission');
     if (permission == LocationPermission.denied) {
+      debugPrint("El permiso está denegado");
       permission = await Geolocator.requestPermission();
+      debugPrint("El permiso esta denegado con el valor: ");
+      debugPrint("El permiso ha sido solicitado.");
       if (permission == LocationPermission.deniedForever) {
         // Permissions are denied forever, handle appropriately.
         //return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+        debugPrint("Los permisos han sido revocados para simepre.");
         return Future.error('Los permisos de geolocalización para la aplicación han sido denegados. Da permisos a la aplicación para usar la geolocalización.');
       }
+      debugPrint("Antes de volver a consultar los permisos.");
       if (permission == LocationPermission.denied) {
         // Permissions are denied, next time you could try
         // requesting permissions again (this is also where
@@ -156,6 +166,7 @@ class _AddressViewState extends State<AddressView> {
         return Future.error ('Has desautorizado a la aplicación para usar la geolocalización. Autorizala de nuevo en la configuración del teléfono.');
       }
     }
+    debugPrint ('Después del LocationPermission.denied');
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     final myPosition = await Geolocator.getCurrentPosition();
@@ -208,31 +219,29 @@ class _AddressViewState extends State<AddressView> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return Scaffold (
+      appBar: AppBar (
         elevation: 0.0,
         //automaticallyImplyLeading: false,   //if false and leading is null, leading space is given to title.
         //leading: null,
         backgroundColor: tanteLadenBackgroundWhite,
-        title: SafeArea (
-          child: _AccentColorOverride(
-            color: tanteLadenOnPrimary,
-            child: TextField (
-              controller: _searchController,
-              decoration: InputDecoration (
-                prefixIcon: Icon(Icons.youtube_searched_for_outlined),
-                labelText: 'Buscar calle',
-                //helperText: 'Teclea el nombre de la calle que quieres buscar',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _placeList.clear();
-                    });
-                  }
-                )
-              ),
+        title: _AccentColorOverride (
+          color: tanteLadenOnPrimary,
+          child: TextField (
+            controller: _searchController,
+            decoration: InputDecoration (
+              prefixIcon: Icon(Icons.youtube_searched_for_outlined),
+              labelText: 'Buscar calle',
+              //helperText: 'Teclea el nombre de la calle que quieres buscar',
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () {
+                  setState(() {
+                    _searchController.clear();
+                    _placeList.clear();
+                  });
+                }
+              )
             ),
           ),
         ),
@@ -273,7 +282,7 @@ class _AddressViewState extends State<AddressView> {
               Navigator.push (
                   context,
                   MaterialPageRoute (
-                      builder: (context) => DetailAddressView (address: address, personeId: widget.personeId, fromWhereCalledIs: widget.fromWhereCalledIs,)
+                      builder: (context) => DetailAddressView (address: address, personeId: widget.personeId, userId: widget.userId, fromWhereCalledIs: widget.fromWhereCalledIs,)
                   )
               );
             } catch (err) {
@@ -323,7 +332,7 @@ class _AddressViewState extends State<AddressView> {
           Navigator.push (
               context,
               MaterialPageRoute(
-                  builder: (context) => DetailAddressView(address: _addressList[index], personeId: widget.personeId, fromWhereCalledIs: widget.fromWhereCalledIs)
+                  builder: (context) => DetailAddressView(address: _addressList[index], personeId: widget.personeId, userId: widget.userId, fromWhereCalledIs: widget.fromWhereCalledIs)
               )
           );
         },
@@ -344,7 +353,7 @@ class _AccentColorOverride extends StatelessWidget {
     return Theme(
       child: child,
       data: Theme.of(context).copyWith(
-        accentColor: color,
+        colorScheme: Theme.of(context).colorScheme.copyWith(secondary: color),
         brightness: Brightness.dark,
       ),
     );

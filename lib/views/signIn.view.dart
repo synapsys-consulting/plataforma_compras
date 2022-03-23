@@ -12,7 +12,6 @@ import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/views/signUp.view.dart';
-import 'package:plataforma_compras/views/address.view.dart';
 import 'package:plataforma_compras/models/address.model.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
 import 'package:plataforma_compras/views/confirmPurchase.view.dart';
@@ -97,7 +96,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
               if (_formKey.currentState.validate()) {
                 try {
                   _showPleaseWait(true);
-                  final Uri url = Uri.parse('$SERVER_IP/login');
+                  final Uri url = Uri.parse ('$SERVER_IP/login');
                   final http.Response res = await http.post (
                       url,
                       headers: <String, String>{
@@ -136,23 +135,27 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                           }
                       );
                       debugPrint('After the http call.');
+                      debugPrint('COMENTARIO INTRODUCIDO DE MANERA RECIENTE.');
                       if (resProducts.statusCode == 200) {
                         debugPrint ('The Rest API has responsed.');
                         final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
                         debugPrint ('Entre medias de la api RESPONSE.');
                         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                        debugPrint ('Después de guardar los ProductAvail.');
                         final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
                         int tmpProductCategoryIdPrevious;
                         String tmpPersonNamePrevious;
                         resultListProducts.forEach((element) {
+                          //debugPrint ('El producto que cargo es: ' + element.productName);
+                          //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
                           if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
                             // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento principal');
                             debugPrint ('El product_description retornado desde el API es: ' + element.productName);
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             final item = new MultiPricesProductAvail(
                                 productId: element.productId,
+                                productCode: element.productCode,
                                 productName: element.productName,
                                 productNameLong: element.productNameLong,
                                 productDescription: element.productDescription,
@@ -186,17 +189,16 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             resultListMultiPriceProducts.add(item);
                           } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
                             // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento secundario');
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             resultListMultiPriceProducts.last.add(element);
                           } else {
                             // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento terciario');
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             final item = new MultiPricesProductAvail(
                                 productId: element.productId,
+                                productCode: element.productCode,
                                 productName: element.productName,
                                 productNameLong: element.productNameLong,
                                 productDescription: element.productDescription,
@@ -271,7 +273,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             Navigator.push (
                                 context,
                                 MaterialPageRoute (
-                                    builder: (context) => (AddressView(payload['persone_id'].toString(), COME_FROM_ANOTHER))
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                                 )
                             );
                           }
@@ -281,7 +283,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                           Navigator.push (
                               context,
                               MaterialPageRoute (
-                                  builder: (context) => (AddressView(payload['persone_id'].toString(), COME_FROM_ANOTHER))
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                               )
                           );
                         } else {
@@ -291,7 +293,9 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                       } else {
                         // 1 the call comes from the drawer. 2 the call comes from cart.view.dart
                         // The call comes from the drawer.
-                        Navigator.popUntil(context, ModalRoute.withName('/'));
+                        // const COME_FROM_ANOTHER = 2
+                        // const COME_FROM_DRAWER = 1
+                        Navigator.popUntil(context, ModalRoute.withName('/'));  // come from the drawer
                       }
                     }
                   } else if (res.statusCode == 404) {
@@ -574,12 +578,12 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                           resultListProducts.forEach((element) {
                             if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
                               // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-                              debugPrint ('He pasado por el elemento principal');
                               debugPrint ('El product_description retornado desde el API es: ' + element.productName);
                               tmpProductCategoryIdPrevious = element.productCategoryId;
                               tmpPersonNamePrevious = element.personeName;
                               final item = new MultiPricesProductAvail(
                                   productId: element.productId,
+                                  productCode: element.productCode,
                                   productName: element.productName,
                                   productNameLong: element.productNameLong,
                                   productDescription: element.productDescription,
@@ -613,17 +617,16 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               resultListMultiPriceProducts.add(item);
                             } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
                               // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-                              debugPrint ('He pasado por el elemento secundario');
                               tmpProductCategoryIdPrevious = element.productCategoryId;
                               tmpPersonNamePrevious = element.personeName;
                               resultListMultiPriceProducts.last.add(element);
                             } else {
-                              // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-                              debugPrint ('He pasado por el elemento terciario');
+                              // We consider this case impossible, but if it is, we consider it as a new MultiPriceProductAvail
                               tmpProductCategoryIdPrevious = element.productCategoryId;
                               tmpPersonNamePrevious = element.personeName;
                               final item = new MultiPricesProductAvail(
                                   productId: element.productId,
+                                  productCode: element.productCode,
                                   productName: element.productName,
                                   productNameLong: element.productNameLong,
                                   productDescription: element.productDescription,
@@ -698,7 +701,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                               Navigator.push (
                                   context,
                                   MaterialPageRoute (
-                                      builder: (context) => (AddAddressView(payload['persone_id'].toString(),))
+                                      builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                                   )
                               );
                             }
@@ -708,7 +711,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             Navigator.push (
                                 context,
                                 MaterialPageRoute (
-                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(),))
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                                 )
                             );
                           } else {

@@ -88,9 +88,9 @@ class _SmallScreenState extends State<_SmallScreen> {
             var catalog = context.read<Catalog>();
             final List<String> listImagesProduct = [];
             for (var i = 0; i < currentProduct.numImages; i++){
-              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_' + i.toString() + '.gif');
+              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productCode.toString() + '_' + i.toString() + '.gif');
             }
-            return ListView(
+            return ListView (
               children: [
                 currentProduct.numImages > 1
                 ? Column(
@@ -147,13 +147,12 @@ class _SmallScreenState extends State<_SmallScreen> {
                     aspectRatio: 3.0 / 2.0,
                     child: CachedNetworkImage(
                       placeholder: (context, url) => CircularProgressIndicator(),
-                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
+                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productCode.toString() + '_0.gif',
                       fit: BoxFit.scaleDown,
                       errorWidget: (context, url, error) => Icon(Icons.error),
                     ),
                   ),
                 ),
-                //SizedBox(height: 20.0),
                 SizedBox (height: constraints.maxHeight * HeightInDpis_2),
                 Padding(
                   padding: const EdgeInsets.fromLTRB (15.0, 0.0, 15.0, 0.0),
@@ -239,7 +238,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                     Container (
                       padding: const EdgeInsets.only(left: 24),
                       child: Text(
-                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString(),
+                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString() + ' ' + ((currentProduct.minQuantitySell > 1) ? currentProduct.idUnit.toString() + 's.' : currentProduct.idUnit.toString() + '.'),
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 12.0,
@@ -417,7 +416,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                       padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
                       child: Text(
-                        currentProduct.purchased.toString(),
+                        currentProduct.purchased > 1 ? currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + 's.' : currentProduct.purchased == 0 ? currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + 's.' : currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + '.',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 24.0,
@@ -514,7 +513,7 @@ class _LargeScreenState extends State<_LargeScreen> {
             var catalog = context.read<Catalog>();
             final List<String> listImagesProduct = [];
             for (var i = 0; i < currentProduct.numImages; i++){
-              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_' + i.toString() + '.gif');
+              listImagesProduct.add(SERVER_IP + IMAGES_DIRECTORY + currentProduct.productCode.toString() + '_' + i.toString() + '.gif');
             }
             return ListView(
               children: [
@@ -573,7 +572,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     aspectRatio: 3.0 / 2.0,
                     child: CachedNetworkImage(
                       placeholder: (context, url) => CircularProgressIndicator(),
-                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productId.toString() + '_0.gif',
+                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + currentProduct.productCode.toString() + '_0.gif',
                       fit: BoxFit.scaleDown,
                       errorWidget: (context, url, error) => Icon(Icons.error),
                     ),
@@ -665,7 +664,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     Container (
                       padding: const EdgeInsets.only(left: 24),
                       child: Text(
-                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString(),
+                        'Unids. mínim. venta: ' + currentProduct.minQuantitySell.toString() + ' ' + ((currentProduct.minQuantitySell > 1) ? currentProduct.idUnit.toString() + 's.' : currentProduct.idUnit.toString() + '.'),
                         style: TextStyle(
                           fontWeight: FontWeight.w300,
                           fontSize: 12.0,
@@ -843,7 +842,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       //padding: const EdgeInsets.only(left: 20.0, right: 20.0),
                       padding: const EdgeInsets.only(left: WithInDpis_20, right: WithInDpis_20),
                       child: Text(
-                        currentProduct.purchased.toString(),
+                        currentProduct.purchased > 1 ? currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + 's.' : currentProduct.purchased == 0 ? currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + 's.' : currentProduct.purchased.toString() + ' ' + currentProduct.idUnit.toString() + '.',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 24.0,

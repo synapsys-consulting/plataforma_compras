@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:plataforma_compras/models/catalog.model.dart';
-import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
+import 'package:plataforma_compras/views/purchase.view.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:shared_preferences/shared_preferences.dart';
 
-
+import 'package:plataforma_compras/models/catalog.model.dart';
+import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 import 'package:plataforma_compras/models/productAvail.model.dart';
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
@@ -77,7 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final String token = prefs.get ('token') ?? '';
     if (token == '') {
       final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
-
+      debugPrint('La URL con la que llamo al inicio de todo es: ' + '$SERVER_IP/getProductsAvailWithOutPartnerId');
+      debugPrint('La URL con la que llamo al inicio de todo es: ' + url.host + url.path);
       final http.Response res = await http.get (
           url,
           headers: <String, String>{
@@ -95,14 +96,15 @@ class _MyHomePageState extends State<MyHomePage> {
         int tmpProductCategoryIdPrevious;
         String tmpPersonNamePrevious;
         resultListProducts.forEach((element) {
+          //debugPrint ('El producto que cargo es: ' + element.productName);
+          //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
           if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
             // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento principal');
-            debugPrint ('El product_description retornado desde el API es: ' + element.productName);
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
             final item = new MultiPricesProductAvail(
                 productId: element.productId,
+                productCode: element.productCode,
                 productName: element.productName,
                 productNameLong: element.productNameLong,
                 productDescription: element.productDescription,
@@ -137,20 +139,17 @@ class _MyHomePageState extends State<MyHomePage> {
             //Provider.of<Catalog>(context, listen: false).add(element);
           } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
             // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento secundario');
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
-            debugPrint('Antes de añadir al elemento secundario.');
             resultListMultiPriceProducts.last.add(element);
-            debugPrint('He añadido el elemento secundario a: ' + resultListMultiPriceProducts.last.productId.toString());
             //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
           } else {
             // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento terciario');
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
             final item = new MultiPricesProductAvail(
                 productId: element.productId,
+                productCode: element.productCode,
                 productName: element.productName,
                 productNameLong: element.productNameLong,
                 productDescription: element.productDescription,
@@ -186,12 +185,6 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         });
         resultListMultiPriceProducts.forEach((element) {
-          debugPrint('Estoy en el bucle que se recorre la lista resultListMultiPriceProducts');
-          debugPrint ('El valor de Product_id es: ' + element.productId.toString());
-          debugPrint ('El valor de Product_id es: ' + element.totalAmount.toString());
-          element.items.forEach((element) {
-            debugPrint ('El valor de Product_id del producto hijo es: ' + element.productId.toString());
-          });
           Provider.of<Catalog>(context, listen: false).add(element);
         });
         debugPrint ('Antes de terminar de responder la API.');
@@ -208,7 +201,10 @@ class _MyHomePageState extends State<MyHomePage> {
           )
       );
       debugPrint('El partner_id es: ' + payload['partner_id'].toString());
+      debugPrint('La URL con la que llamo al inicio de todo es: ' + '$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+
       final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+      debugPrint('La URL con la que llamo al inicio de todo es: ' + url.host + url.path);
 
       final http.Response res = await http.get (
           url,
@@ -222,19 +218,21 @@ class _MyHomePageState extends State<MyHomePage> {
         debugPrint ('The Rest API has responsed.');
         final List<Map<String, dynamic>> resultListJson = json.decode(res.body)['products'].cast<Map<String, dynamic>>();
         debugPrint ('Entre medias de la api RESPONSE.');
+        debugPrint ('Aquí estoy yo');
         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
         final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
         int tmpProductCategoryIdPrevious;
         String tmpPersonNamePrevious;
         resultListProducts.forEach((element) {
+          //debugPrint ('El producto que cargo es: ' + element.productName);
+          //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
           if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
             // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento principal');
-            debugPrint ('El product_description retornado desde el API es: ' + element.productId.toString());
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
             final item = new MultiPricesProductAvail(
               productId: element.productId,
+              productCode: element.productCode,
               productName: element.productName,
               productNameLong: element.productNameLong,
               productDescription: element.productDescription,
@@ -268,21 +266,16 @@ class _MyHomePageState extends State<MyHomePage> {
             resultListMultiPriceProducts.add(item);
           } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
             // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento secundario');
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
-            debugPrint('Antes de añadir al elemento secundario.');
             resultListMultiPriceProducts.last.add(element);
-            debugPrint('El elemento secundario es: ' + element.productId.toString());
-            debugPrint('He añadido el elemento secundario a: ' + resultListMultiPriceProducts.last.productId.toString());
           } else {
             // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-            debugPrint ('He pasado por el elemento terciario');
             tmpProductCategoryIdPrevious = element.productCategoryId;
             tmpPersonNamePrevious = element.personeName;
-            debugPrint('Antes de añadir al elemento primario.');
             final item = new MultiPricesProductAvail(
                 productId: element.productId,
+                productCode: element.productCode,
                 productName: element.productName,
                 productNameLong: element.productNameLong,
                 productDescription: element.productDescription,
@@ -317,12 +310,6 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         });
         resultListMultiPriceProducts.forEach((element) {
-          debugPrint('Estoy en el bucle que se recorre la lista resultListMultiPriceProducts');
-          debugPrint ('El valor de Product_id es: ' + element.productId.toString());
-          debugPrint ('El valor de totalAmount es: ' + element.totalAmount.toString());
-          element.items.forEach((element) {
-            debugPrint ('El valor de Product_id HIJO es: ' + element.productId.toString());
-          });
           Provider.of<Catalog>(context, listen: false).add(element);
         });
         debugPrint ('Antes de terminar de responder la API.');
@@ -397,7 +384,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                 );
                 Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => ManageAddresses(payload['persone_id'].toString())
+                    builder: (context) => ManageAddresses(payload['persone_id'].toString(), payload['user_id'].toString())
                 ));
               },
             ),
@@ -430,6 +417,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     fontWeight: FontWeight.normal
                 ),
               ),
+              onTap: () {
+                Map<String, dynamic> payload;
+                payload = json.decode(
+                    utf8.decode(
+                        base64.decode (base64.normalize(_token.split(".")[1]))
+                    )
+                );
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => PurchaseView(payload['user_id'], payload['partner_id'], payload['role'])
+                ));
+              },
             ),
             Divider(),
             ListTile (
@@ -476,44 +474,140 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               onTap: () async {
-                debugPrint('Estoy en el salir.');
-                //debugPrint('Después de watch y read.');
-                final SharedPreferences prefs = await _prefs;
-                prefs.setString ('token', '');
-                final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
-                final http.Response resProducts = await http.get (
-                    url,
-                    headers: <String, String>{
-                      'Content-Type': 'application/json; charset=UTF-8',
-                      //'Authorization': jwt
-                    }
-                );
-                debugPrint('After the http call.');
-                if (resProducts.statusCode == 200) {
-                  debugPrint ('The Rest API has responsed.');
-                  final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
-                  debugPrint ('Entre medias de la api RESPONSE.');
-                  final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-                  debugPrint ('Entre medias de la api RESPONSE.');
-                  //Provider.of<Catalog>(context, listen: false).clearCatalog();
-                  catalog.removeCatalog();
-                  resultListProducts.forEach((element) {
-                    //Provider.of<Catalog>(context, listen: false).add(element);
-                    catalog.add(element);
-                  });
-                  debugPrint ('Antes de terminar de responder la API.');
-                  if (cart.numItems > 0) {
-                    //Add the elements which are in the cart to the catalog
-                    debugPrint('El numero de items es:' + cart.numItems.toString());
-                    cart.items.forEach((element) {
-                      debugPrint('El valor de product_name es: ' + element.productName);
-                      if (element.partnerId != DEFAULT_PARTNER_ID) {
-                        cart.remove(element);
+                try {
+                  debugPrint('Estoy en el salir.');
+                  //debugPrint('Después de watch y read.');
+                  final SharedPreferences prefs = await _prefs;
+                  prefs.setString ('token', '');
+                  final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
+                  final http.Response resProducts = await http.get (
+                      url,
+                      headers: <String, String>{
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        //'Authorization': jwt
+                      }
+                  );
+                  debugPrint('After the http call.');
+                  if (resProducts.statusCode == 200) {
+                    debugPrint ('The Rest API has responsed.');
+                    final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                    debugPrint ('Entre medias de la api RESPONSE.');
+                    final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                    final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                    int tmpProductCategoryIdPrevious;
+                    String tmpPersonNamePrevious;
+                    debugPrint ('Entre medias de la api RESPONSE.');
+                    //Provider.of<Catalog>(context, listen: false).clearCatalog();
+                    catalog.removeCatalog();
+                    resultListProducts.forEach((element) {
+                      //debugPrint ('El producto que cargo es: ' + element.productName);
+                      //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
+                      if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                        // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                        tmpProductCategoryIdPrevious = element.productCategoryId;
+                        tmpPersonNamePrevious = element.personeName;
+                        final item = new MultiPricesProductAvail(
+                            productId: element.productId,
+                            productCode: element.productCode,
+                            productName: element.productName,
+                            productNameLong: element.productNameLong,
+                            productDescription: element.productDescription,
+                            productType: element.productType,
+                            brand: element.brand,
+                            numImages: element.numImages,
+                            numVideos: element.numVideos,
+                            purchased: element.purchased,
+                            productPrice: element.productPrice,
+                            totalBeforeDiscount: element.totalBeforeDiscount,
+                            taxAmount: element.taxAmount,
+                            personeId: element.personeId,
+                            personeName: element.personeName,
+                            businessName: element.businessName,
+                            email: element.email,
+                            taxId: element.taxId,
+                            taxApply: element.taxApply,
+                            productPriceDiscounted: element.productPriceDiscounted,
+                            totalAmount: element.totalAmount,
+                            discountAmount: element.discountAmount,
+                            idUnit: element.idUnit,
+                            remark: element.remark,
+                            minQuantitySell: element.minQuantitySell,
+                            partnerId: element.partnerId,
+                            partnerName: element.partnerName,
+                            quantityMinPrice: element.quantityMinPrice,
+                            quantityMaxPrice: element.quantityMaxPrice,
+                            productCategoryId: element.productCategoryId,
+                            rn: element.rn
+                        );
+                        resultListMultiPriceProducts.add(item);
+                        //Provider.of<Catalog>(context, listen: false).add(element);
+                      } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                        // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                        tmpProductCategoryIdPrevious = element.productCategoryId;
+                        tmpPersonNamePrevious = element.personeName;
+                        resultListMultiPriceProducts.last.add(element);
+                        //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
+                      } else {
+                        // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                        tmpProductCategoryIdPrevious = element.productCategoryId;
+                        tmpPersonNamePrevious = element.personeName;
+                        final item = new MultiPricesProductAvail(
+                            productId: element.productId,
+                            productCode: element.productCode,
+                            productName: element.productName,
+                            productNameLong: element.productNameLong,
+                            productDescription: element.productDescription,
+                            productType: element.productType,
+                            brand: element.brand,
+                            numImages: element.numImages,
+                            numVideos: element.numVideos,
+                            purchased: element.purchased,
+                            productPrice: element.productPrice,
+                            totalBeforeDiscount: element.totalBeforeDiscount,
+                            taxAmount: element.taxAmount,
+                            personeId: element.personeId,
+                            personeName: element.personeName,
+                            businessName: element.businessName,
+                            email: element.email,
+                            taxId: element.taxId,
+                            taxApply: element.taxApply,
+                            productPriceDiscounted: element.productPriceDiscounted,
+                            totalAmount: element.totalAmount,
+                            discountAmount: element.discountAmount,
+                            idUnit: element.idUnit,
+                            remark: element.remark,
+                            minQuantitySell: element.minQuantitySell,
+                            partnerId: element.partnerId,
+                            partnerName: element.partnerName,
+                            quantityMinPrice: element.quantityMinPrice,
+                            quantityMaxPrice: element.quantityMaxPrice,
+                            productCategoryId: element.productCategoryId,
+                            rn: element.rn
+                        );
+                        resultListMultiPriceProducts.add(item);
+                        //Provider.of<Catalog>(context, listen: false).add(element);
                       }
                     });
+                    resultListMultiPriceProducts.forEach((element) {
+                      Provider.of<Catalog>(context, listen: false).add(element);
+                    });
+                    debugPrint ('Antes de terminar de responder la API.');
+                    if (cart.numItems > 0) {
+                      //Add the elements which are in the cart to the catalog
+                      debugPrint('El numero de items es:' + cart.numItems.toString());
+                      cart.items.forEach((element) {
+                        debugPrint('El valor de product_name es: ' + element.productName);
+                        if (element.partnerId != DEFAULT_PARTNER_ID) {
+                          cart.remove(element);
+                        }
+                      });
+                    }
+                    debugPrint ('Despues de terminar de responder la API.');
                   }
+                  Navigator.pop(context);
+                } catch (err) {
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
               },
             ),
             Divider(),
@@ -692,10 +786,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     return Scaffold(
       key: _scaffoldKey,
-      appBar: AppBar(
+      appBar: AppBar (
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        leading: Builder(
+        leading: Builder (
             builder: (BuildContext context) {
               return Container (
                 alignment: Alignment.centerRight,
@@ -707,7 +801,7 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             }
         ),
-        title: SizedBox(
+        title: SizedBox (
           height: kToolbarHeight,
           child: Row (
             children: [
@@ -732,13 +826,53 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Flexible(
                 flex: 1,
-                child: IconButton(
-                  icon: Image.asset('assets/images/shopping_cart.png'),
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => CartView()
-                    ));
-                  }
+                child: Consumer <Cart>(
+                  builder: (context, cart, child) => cart.numItems > 0 ?
+                  Stack (
+                    alignment: AlignmentDirectional.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                        alignment: AlignmentDirectional.center,
+                        child: Text(
+                          cart.numItems.toString(),
+                          style: TextStyle (
+                              fontWeight: FontWeight.normal,
+                              fontSize: 10.0,
+                              fontFamily: 'SF Pro Display',
+                              fontStyle: FontStyle.normal,
+                              color: Colors.black
+                          ),
+                        ),
+                      ),
+                      Container(
+                        child: IconButton(
+                            icon: Image.asset('assets/images/shopping_cart.png'),
+                            onPressed: (){
+                              Navigator.push(context, MaterialPageRoute(
+                                  builder: (context) => CartView()
+                              ));
+                            }
+                        ),
+                      )
+                    ],
+                  ):
+                  Stack (
+                    alignment: AlignmentDirectional.center,
+                    children: [
+                      Container(
+                        alignment: AlignmentDirectional.center,
+                        child: IconButton(
+                            icon: Image.asset('assets/images/shopping_cart.png'),
+                            onPressed: (){
+                              Navigator.push(context, MaterialPageRoute(
+                                  builder: (context) => CartView()
+                              ));
+                            }
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             ],
@@ -756,7 +890,7 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 0.0,
       ),
       endDrawer: _createEndDrawer (context, _isUserLogged,_name),
-      body: FutureBuilder <List<MultiPricesProductAvail>>(
+      body: FutureBuilder <List<MultiPricesProductAvail>> (
           future: itemsProductsAvailable,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -805,8 +939,8 @@ class _SmallScreenState extends State<_SmallScreen> {
   Widget build(BuildContext context) {
     var catalog = context.watch<Catalog>();
     var cart = context.read<Cart>();
-    return SafeArea(
-      child: Padding(
+    return SafeArea (
+      child: Padding (
           padding: const EdgeInsets.only(top: 5.0),
           child: GridView.builder (
               itemCount: catalog.numItems,
@@ -823,14 +957,14 @@ class _SmallScreenState extends State<_SmallScreen> {
                   ),
                   child: LayoutBuilder (
                     builder: (context, constraints) {
-                      return Column(
+                      return Column (
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          Row (
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              GestureDetector(
+                              GestureDetector (
                                 onTap: () {
                                   Navigator.push (
                                       context,
@@ -847,8 +981,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     aspectRatio: 3.0 / 2.0,
                                     child: CachedNetworkImage(
                                       placeholder: (context, url) => CircularProgressIndicator(),
-                                      //imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productId.toString() + '_0.gif',
+                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productCode.toString() + '_0.gif',
                                       fit: BoxFit.scaleDown,
                                       errorWidget: (context, url, error) => Icon(Icons.error),
                                     ),
@@ -863,23 +996,39 @@ class _SmallScreenState extends State<_SmallScreen> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Container(
+                                Container (
                                   child: Image.asset('assets/images/00001.png'),
                                   padding: EdgeInsets.only(right: 8.0),
                                 ),
-                                Container(
+                                Container (
                                   padding: const EdgeInsets.only(right: 8.0),
-                                  child: Text(
-                                      new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 24.0,
-                                        fontFamily: 'SF Pro Display',
-                                      ),
-                                      textAlign: TextAlign.start
+                                  child: Text.rich (
+                                    TextSpan (
+                                      text: new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
+                                        style: TextStyle (
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 24.0,
+                                          fontFamily: 'SF Pro Display',
+                                        ),
+                                        //textAlign: TextAlign.start
+                                      children: <TextSpan>[
+                                        TextSpan (
+                                          text: catalog.items[index].totalAmountAccordingQuantity == catalog.items[index].totalAmount
+                                              ? ''
+                                              : ' (' + new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())) + ')',
+                                          style: TextStyle (
+                                            fontWeight: FontWeight.w300,
+                                            fontSize: 11.0,
+                                            fontFamily: 'SF Pro Display',
+                                            color: Color(0xFF6C6D77),
+                                          ),
+                                        )
+                                      ]
+                                    ),
+                                    textAlign: TextAlign.start,
                                   ),
                                 ),
-                                catalog.items[index].quantityMaxPrice != 999999 ? Container(
+                                catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE ? Container (
                                   padding: EdgeInsets.zero,
                                   width: 20.0,
                                   height: 20.0,
@@ -895,7 +1044,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     iconSize: 20.0,
                                     onPressed: () {
                                       final List<MultiPriceListElement> listMultiPriceListElement = [];
-                                      if (catalog.items[index].quantityMaxPrice != 999999) {
+                                      if (catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE) {
                                         // There is multiprice for this product
                                         final item = new MultiPriceListElement(catalog.items[index].quantityMinPrice, catalog.items[index].quantityMaxPrice, catalog.items[index].totalAmount);
                                         listMultiPriceListElement.add(item);
@@ -918,7 +1067,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                               Container (
                                 padding: EdgeInsets.only(left: 15.0, right: 15.0),
                                 width: constraints.maxWidth,
-                                child: Text(
+                                child: Text (
                                   catalog.items[index].productName,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
@@ -928,7 +1077,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     color: Colors.black,
                                   ),
                                   textAlign: TextAlign.start,
-                                  overflow: TextOverflow.ellipsis,
+                                  overflow: TextOverflow.fade,
                                   maxLines: 1,
                                   softWrap: false,
                                 ),
@@ -968,10 +1117,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text (
-                                            'Unids. mínim. venta: ' + catalog.items[index].minQuantitySell.toString(),
+                                            'Unids. mín. venta: ' + catalog.items[index].minQuantitySell.toString() + ' ' + ((catalog.items[index].minQuantitySell > 1) ? catalog.items[index].idUnit.toString() + 's.' : catalog.items[index].idUnit.toString() + '.'),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
-                                              fontSize: 12.0,
+                                              fontSize: 11.0,
                                               fontFamily: 'SF Pro Display',
                                               fontStyle: FontStyle.normal,
                                               color: Color(0xFF6C6D77),
@@ -1211,7 +1360,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
+                          Row (
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1232,7 +1381,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                                     aspectRatio: 3.0 / 2.0,
                                     child: CachedNetworkImage(
                                       placeholder: (context, url) => CircularProgressIndicator(),
-                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productId.toString() + '_0.gif',
+                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productCode.toString() + '_0.gif',
                                       fit: BoxFit.scaleDown,
                                       errorWidget: (context, url, error) => Icon(Icons.error),
                                     ),
@@ -1247,23 +1396,39 @@ class _LargeScreenState extends State<_LargeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Container(
+                                Container (
                                   child: Image.asset('assets/images/00001.png'),
                                   padding: EdgeInsets.only(right: 8.0),
                                 ),
-                                Container(
+                                Container (
                                   padding: const EdgeInsets.only(right: 8.0),
-                                  child: Text(
-                                      new NumberFormat.currency(locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 24.0,
-                                        fontFamily: 'SF Pro Display',
-                                      ),
-                                      textAlign: TextAlign.start
+                                  child: Text.rich (
+                                    TextSpan (
+                                        text: new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
+                                        style: TextStyle (
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 24.0,
+                                          fontFamily: 'SF Pro Display',
+                                        ),
+                                        //textAlign: TextAlign.start
+                                        children: <TextSpan>[
+                                          TextSpan (
+                                            text: catalog.items[index].totalAmountAccordingQuantity == catalog.items[index].totalAmount
+                                                ? ''
+                                                : ' (' + new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())) + ')',
+                                            style: TextStyle (
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 11.0,
+                                              fontFamily: 'SF Pro Display',
+                                              color: Color(0xFF6C6D77),
+                                            ),
+                                          )
+                                        ]
+                                    ),
+                                    textAlign: TextAlign.start,
                                   ),
                                 ),
-                                catalog.items[index].quantityMaxPrice != 999999 ? Container(
+                                catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE ? Container(
                                   padding: EdgeInsets.zero,
                                   width: 20.0,
                                   height: 20.0,
@@ -1279,8 +1444,8 @@ class _LargeScreenState extends State<_LargeScreen> {
                                     iconSize: 20.0,
                                     onPressed: () {
                                       final List<MultiPriceListElement> listMultiPriceListElement = [];
-                                      if (catalog.items[index].quantityMaxPrice != 999999) {
-                                        // There is multiprice for this product
+                                      if (catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE) {
+                                        // There is multi-price for this product
                                         final item = new MultiPriceListElement(catalog.items[index].quantityMinPrice, catalog.items[index].quantityMaxPrice, catalog.items[index].totalAmount);
                                         listMultiPriceListElement.add(item);
                                         catalog.items[index].items.where((element) => element.partnerId != 1)
@@ -1350,7 +1515,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                               Container(
                                 padding: EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
                                 child: Text(
-                                    'Unidades mínimas de venta: ' + catalog.items[index].minQuantitySell.toString(),
+                                    'Unidades mínimas de venta: ' + catalog.items[index].minQuantitySell.toString() + ' ' + ((catalog.items[index].minQuantitySell > 1) ? catalog.items[index].idUnit.toString() + 's.' : catalog.items[index].idUnit.toString() + '.'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.w300,
                                       fontSize: 12.0,

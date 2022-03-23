@@ -154,15 +154,11 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                     fontWeight: FontWeight.normal
                 ),
               ),
-              onTap: () async {
-                final String email = await Navigator.push (context, MaterialPageRoute(
+              onTap: () {
+                Navigator.push (context, MaterialPageRoute(
                     builder: (context) => UpdatePassword (_userId)
                 ));
-                debugPrint ('He vuelto de UpdateEmail');
-                debugPrint ('El valor devuelto es: ' + email);
-                setState(() {
-                  _email = email;
-                });
+                debugPrint ('He vuelto de UpdatePasswod');
               },
             )
           ],
@@ -294,6 +290,12 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                     fontWeight: FontWeight.normal
                 ),
               ),
+              onTap: () {
+                Navigator.push (context, MaterialPageRoute(
+                    builder: (context) => UpdatePassword (_userId)
+                ));
+                debugPrint ('He vuelto de UpdateEmail');
+              },
             )
           ],
         )

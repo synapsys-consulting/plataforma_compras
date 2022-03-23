@@ -201,8 +201,9 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 key: _formKey,
                 child: Column (
                   children: [
-                    TextFormField(
+                    TextFormField (
                       controller: _newPasswordController,
+                      obscureText: _passwordNoVisible,
                       decoration: InputDecoration (
                         labelText: 'Nueva password',
                         labelStyle: TextStyle (
@@ -317,6 +318,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                         children: [
                           TextFormField(
                             controller: _newPasswordController,
+                            obscureText: _passwordNoVisible,
                             decoration: InputDecoration (
                               labelText: 'Nueva password',
                               labelStyle: TextStyle (

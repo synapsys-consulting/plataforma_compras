@@ -106,8 +106,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                         aspectRatio: 3.0 / 2.0,
                                         child: CachedNetworkImage(
                                           placeholder: (context, url) => CircularProgressIndicator(),
-                                          //imageUrl: SERVER_IP + '/image/products/burger_king.png',
-                                          imageUrl: SERVER_IP + IMAGES_DIRECTORY + _productList[index].productId.toString() + '_0.gif',
+                                          imageUrl: SERVER_IP + IMAGES_DIRECTORY + _productList[index].productCode.toString() + '_0.gif',
                                           fit: BoxFit.scaleDown,
                                           errorWidget: (context, url, error) => Icon(Icons.error),
                                         ),
@@ -125,19 +124,35 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                         child: Image.asset('assets/images/00001.png'),
                                         padding: EdgeInsets.only(right: 8.0),
                                       ),
-                                      Container(
+                                      Container (
                                         padding: const EdgeInsets.only(right: 8.0),
-                                        child: Text(
-                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 24.0,
-                                              fontFamily: 'SF Pro Display',
-                                            ),
-                                            textAlign: TextAlign.start
+                                        child: Text.rich (
+                                          TextSpan (
+                                              text: new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
+                                              style: TextStyle (
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 24.0,
+                                                fontFamily: 'SF Pro Display',
+                                              ),
+                                              //textAlign: TextAlign.start
+                                              children: <TextSpan>[
+                                                TextSpan (
+                                                  text: _productList[index].totalAmountAccordingQuantity == _productList[index].totalAmount
+                                                      ? ''
+                                                      : ' (' + new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((_productList[index].totalAmount/MULTIPLYING_FACTOR).toString())) + ')',
+                                                  style: TextStyle (
+                                                    fontWeight: FontWeight.w300,
+                                                    fontSize: 11.0,
+                                                    fontFamily: 'SF Pro Display',
+                                                    color: Color(0xFF6C6D77),
+                                                  ),
+                                                )
+                                              ]
+                                          ),
+                                          textAlign: TextAlign.start,
                                         ),
                                       ),
-                                      _productList[index].quantityMaxPrice != 999999 ? Container(
+                                      _productList[index].quantityMaxPrice != QUANTITY_MAX_PRICE ? Container (
                                         padding: EdgeInsets.zero,
                                         width: 20.0,
                                         height: 20.0,
@@ -153,7 +168,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                           iconSize: 20.0,
                                           onPressed: () {
                                             final List<MultiPriceListElement> listMultiPriceListElement = [];
-                                            if (_productList[index].quantityMaxPrice != 999999) {
+                                            if (_productList[index].quantityMaxPrice != QUANTITY_MAX_PRICE) {
                                               // There is multiprice for this product
                                               final item = new MultiPriceListElement(_productList[index].quantityMinPrice, _productList[index].quantityMaxPrice, _productList[index].totalAmount);
                                               listMultiPriceListElement.add(item);
@@ -186,7 +201,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                           color: Colors.black,
                                         ),
                                         textAlign: TextAlign.start,
-                                        overflow: TextOverflow.ellipsis,
+                                        overflow: TextOverflow.fade,
                                         maxLines: 1,
                                         softWrap: false,
                                       ),
@@ -226,7 +241,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
                                           children: [
                                             Container(
                                               child: Text(
-                                                  'Unids. mínim. venta: ' + _productList[index].minQuantitySell.toString(),
+                                                  'Unids. mín. venta: ' + _productList[index].minQuantitySell.toString() + ' ' + ((_productList[index].minQuantitySell > 1) ? _productList[index].idUnit.toString() + 's.' : _productList[index].idUnit.toString() + '.'),
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.w300,
                                                     fontSize: 12.0,
@@ -454,6 +469,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
         // Add the catalog element to the temporal list
         final itemCatalog = new MultiPricesProductAvail (
           productId: catalog.getItem(i).productId,
+          productCode: catalog.getItem(i).productCode,
           productName: catalog.getItem(i).productName,
           productNameLong: catalog.getItem(i).productNameLong,
           productDescription: catalog.getItem(i).productDescription,
@@ -510,7 +526,7 @@ class _AccentColorOverride extends StatelessWidget {
     return Theme(
       child: child,
       data: Theme.of(context).copyWith(
-        accentColor: color,
+        colorScheme: Theme.of(context).colorScheme.copyWith(secondary: color),
         brightness: Brightness.dark,
       ),
     );

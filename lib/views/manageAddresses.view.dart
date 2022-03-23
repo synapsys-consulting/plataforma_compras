@@ -16,7 +16,8 @@ import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
 
 class ManageAddresses extends StatefulWidget {
   final String personeId;
-  ManageAddresses (this.personeId);
+  final String userId;
+  ManageAddresses (this.personeId, this.userId);
   @override
   ManageAddressesState createState() {
     return ManageAddressesState();
@@ -101,7 +102,7 @@ class ManageAddressesState extends State<ManageAddresses> {
               ),
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(
-                  builder: (context) => AddressView(widget.personeId, COME_FROM_DRAWER)
+                  builder: (context) => AddressView(widget.personeId, widget.userId, COME_FROM_DRAWER)
                   // const COME_FROM_DRAWER = 1;
                   // const COME_FROM_ANOTHER = 2;
                   // 2: ist called from purchase management; 1: ist called from the Drawer option
@@ -115,9 +116,9 @@ class ManageAddressesState extends State<ManageAddresses> {
         future: itemsAdress,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return ResponsiveWidget(
-              smallScreen: _SmallScreenView(snapshot.data, widget.personeId),
-              largeScreen: _LargeScreenView(snapshot.data, widget.personeId),
+            return ResponsiveWidget (
+              smallScreen: _SmallScreenView(snapshot.data, widget.personeId, widget.userId),
+              largeScreen: _LargeScreenView(snapshot.data, widget.personeId, widget.userId),
             );
           } else if (snapshot.hasError) {
             return Center(
@@ -145,7 +146,8 @@ class ManageAddressesState extends State<ManageAddresses> {
 class _SmallScreenView extends StatefulWidget {
   final List<Address> itemsAddress;
   final String personeId;
-  _SmallScreenView (this.itemsAddress, this.personeId);
+  final String userId;
+  _SmallScreenView (this.itemsAddress, this.personeId, this.userId);
   @override
   _SmallScreenViewState createState() {
     return _SmallScreenViewState();
@@ -170,7 +172,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     super.dispose();
   }
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     var addressesList = context.watch<AddressesList>();
     var defaultAddressList = context.watch<DefaultAddressList>();
     return (defaultAddressList.numItems + addressesList.numItems > 0)
@@ -320,7 +322,8 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                                     },
                                     body: jsonEncode(<String, String>{
                                       'status_id': 'D',
-                                      'addr_id_default': defaultAddressList.getItem(0).addrId.toString()  //defaultAddressList has always one element (0)
+                                      'addr_id_default': defaultAddressList.getItem(0).addrId.toString(), //defaultAddressList has always one element (0)
+                                      'user_id': widget.userId
                                     })
                                 ).timeout(TIMEOUT);
                                 if (res.statusCode == 200) {
@@ -491,7 +494,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                   child: TextButton(
                       onPressed: () {
                         Navigator.push(context, MaterialPageRoute(
-                            builder: (context) => AddressView(widget.personeId, COME_FROM_DRAWER)
+                            builder: (context) => AddressView(widget.personeId, widget.userId, COME_FROM_DRAWER)
                           // const COME_FROM_DRAWER = 1;
                           // const COME_FROM_ANOTHER = 2;
                           // 2: ist called from purchase management; 1: ist called from the Drawer option
@@ -550,7 +553,8 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
 class _LargeScreenView extends StatefulWidget {
   final List<Address> itemsAddress;
   final String personeId;
-  _LargeScreenView (this.itemsAddress, this.personeId);
+  final String userId;
+  _LargeScreenView (this.itemsAddress, this.personeId, this.userId);
   @override
   _LargeScreenViewState createState() {
     return _LargeScreenViewState();
@@ -734,7 +738,8 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                           },
                                           body: jsonEncode(<String, String>{
                                             'status_id': 'D',
-                                            'addr_id_default': defaultAddressList.getItem(0).addrId.toString()  //defaultAddressList has always one element (0)
+                                            'addr_id_default': defaultAddressList.getItem(0).addrId.toString(),  //defaultAddressList has always one element (0)
+                                            'user_id': widget.userId
                                           })
                                       ).timeout(TIMEOUT);
                                       if (res.statusCode == 200) {
@@ -919,7 +924,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                     child: TextButton(
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(
-                              builder: (context) => AddressView(widget.personeId, COME_FROM_DRAWER)
+                              builder: (context) => AddressView(widget.personeId, widget.userId, COME_FROM_DRAWER)
                             // const COME_FROM_DRAWER = 1;
                             // const COME_FROM_ANOTHER = 2;
                             // 2: ist called from purchase management; 1: ist called from the Drawer option
