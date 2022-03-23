@@ -123,168 +123,172 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             base64.decode(base64.normalize(token.split(".")[1]))
                         )
                     );
-                    // RELOAD THE PRODUCTS WHICH THE USER CAN BUY
-                    final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
-                    final http.Response resProducts = await http.get (
-                        url,
-                        headers: <String, String>{
-                          'Content-Type': 'application/json; charset=UTF-8',
-                          //'Authorization': jwt
-                        }
-                    );
-                    debugPrint('After the http call.');
-                    if (resProducts.statusCode == 200) {
-                      debugPrint ('The Rest API has responsed.');
-                      final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
-                      final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-                      final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-                      int tmpProductCategoryIdPrevious;
-                      String tmpPersonNamePrevious;
-                      resultListProducts.forEach((element) {
-                        if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
-                          // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-                          debugPrint ('He pasado por el elemento principal');
-                          debugPrint ('El product_description retornado desde el API es: ' + element.productName);
-                          tmpProductCategoryIdPrevious = element.productCategoryId;
-                          tmpPersonNamePrevious = element.personeName;
-                          final item = new MultiPricesProductAvail(
-                              productId: element.productId,
-                              productName: element.productName,
-                              productNameLong: element.productNameLong,
-                              productDescription: element.productDescription,
-                              productType: element.productType,
-                              brand: element.brand,
-                              numImages: element.numImages,
-                              numVideos: element.numVideos,
-                              purchased: element.purchased,
-                              productPrice: element.productPrice,
-                              totalBeforeDiscount: element.totalBeforeDiscount,
-                              taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
-                              businessName: element.businessName,
-                              email: element.email,
-                              taxId: element.taxId,
-                              taxApply: element.taxApply,
-                              productPriceDiscounted: element.productPriceDiscounted,
-                              totalAmount: element.totalAmount,
-                              discountAmount: element.discountAmount,
-                              idUnit: element.idUnit,
-                              remark: element.remark,
-                              minQuantitySell: element.minQuantitySell,
-                              partnerId: element.partnerId,
-                              partnerName: element.partnerName,
-                              quantityMinPrice: element.quantityMinPrice,
-                              quantityMaxPrice: element.quantityMaxPrice,
-                              productCategoryId: element.productCategoryId,
-                              rn: element.rn
-                          );
-                          resultListMultiPriceProducts.add(item);
-                        } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
-                          // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-                          debugPrint ('He pasado por el elemento secundario');
-                          tmpProductCategoryIdPrevious = element.productCategoryId;
-                          tmpPersonNamePrevious = element.personeName;
-                          resultListMultiPriceProducts.last.add(element);
-                        } else {
-                          // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-                          debugPrint ('He pasado por el elemento terciario');
-                          tmpProductCategoryIdPrevious = element.productCategoryId;
-                          tmpPersonNamePrevious = element.personeName;
-                          final item = new MultiPricesProductAvail(
-                              productId: element.productId,
-                              productName: element.productName,
-                              productNameLong: element.productNameLong,
-                              productDescription: element.productDescription,
-                              productType: element.productType,
-                              brand: element.brand,
-                              numImages: element.numImages,
-                              numVideos: element.numVideos,
-                              purchased: element.purchased,
-                              productPrice: element.productPrice,
-                              totalBeforeDiscount: element.totalBeforeDiscount,
-                              taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
-                              businessName: element.businessName,
-                              email: element.email,
-                              taxId: element.taxId,
-                              taxApply: element.taxApply,
-                              productPriceDiscounted: element.productPriceDiscounted,
-                              totalAmount: element.totalAmount,
-                              discountAmount: element.discountAmount,
-                              idUnit: element.idUnit,
-                              remark: element.remark,
-                              minQuantitySell: element.minQuantitySell,
-                              partnerId: element.partnerId,
-                              partnerName: element.partnerName,
-                              quantityMinPrice: element.quantityMinPrice,
-                              quantityMaxPrice: element.quantityMaxPrice,
-                              productCategoryId: element.productCategoryId,
-                              rn: element.rn
-                          );
-                          resultListMultiPriceProducts.add(item);
-                        }
-                      });
-                      debugPrint ('Entre medias de la api RESPONSE.');
-                      Provider.of<Catalog>(context, listen: false).clearCatalog();
-                      resultListMultiPriceProducts.forEach((element) {
-                        Provider.of<Catalog>(context, listen: false).add(element);
-                        //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
-                      });
-                      debugPrint ('Antes de terminar de responder la API.');
-                    }
-                    if (widget.reason == COME_FROM_ANOTHER) {
-                      //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
-                      final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
-                      final http.Response resAddress = await http.get (
-                          urlAddress,
+                    if (payload['partner_id'] != DEFAULT_PARTNER_ID) {
+                      // RELOAD THE PRODUCTS WHICH THE USER CAN BUY
+                      final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithPartnerId/' + payload['partner_id'].toString());
+                      final http.Response resProducts = await http.get (
+                          url,
                           headers: <String, String>{
                             'Content-Type': 'application/json; charset=UTF-8',
                             //'Authorization': jwt
                           }
                       );
-                      if (resAddress.statusCode == 200) {
-                        // exists an address for the user
-                        final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
-                        final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
-                        if (resultListAddress.length > 0) {
-                          // if exists address
-                          _showPleaseWait(false);
-                          Navigator.push (
-                              context,
-                              MaterialPageRoute (
-                                  builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
-                              )
-                          );
-                        } else {
+                      debugPrint('After the http call.');
+                      if (resProducts.statusCode == 200) {
+                        debugPrint ('The Rest API has responsed.');
+                        final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                        final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                        final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                        int tmpProductCategoryIdPrevious;
+                        String tmpPersonNamePrevious;
+                        resultListProducts.forEach((element) {
+                          if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                            // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                            debugPrint ('El product_description retornado desde el API es: ' + element.productName);
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            final item = new MultiPricesProductAvail (
+                                productId: element.productId,
+                                productCode: element.productCode,
+                                productName: element.productName,
+                                productNameLong: element.productNameLong,
+                                productDescription: element.productDescription,
+                                productType: element.productType,
+                                brand: element.brand,
+                                numImages: element.numImages,
+                                numVideos: element.numVideos,
+                                purchased: element.purchased,
+                                productPrice: element.productPrice,
+                                totalBeforeDiscount: element.totalBeforeDiscount,
+                                taxAmount: element.taxAmount,
+                                personeId: element.personeId,
+                                personeName: element.personeName,
+                                businessName: element.businessName,
+                                email: element.email,
+                                taxId: element.taxId,
+                                taxApply: element.taxApply,
+                                productPriceDiscounted: element.productPriceDiscounted,
+                                totalAmount: element.totalAmount,
+                                discountAmount: element.discountAmount,
+                                idUnit: element.idUnit,
+                                remark: element.remark,
+                                minQuantitySell: element.minQuantitySell,
+                                partnerId: element.partnerId,
+                                partnerName: element.partnerName,
+                                quantityMinPrice: element.quantityMinPrice,
+                                quantityMaxPrice: element.quantityMaxPrice,
+                                productCategoryId: element.productCategoryId,
+                                rn: element.rn
+                            );
+                            resultListMultiPriceProducts.add(item);
+                          } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                            // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            resultListMultiPriceProducts.last.add(element);
+                          } else {
+                            // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                            tmpProductCategoryIdPrevious = element.productCategoryId;
+                            tmpPersonNamePrevious = element.personeName;
+                            final item = new MultiPricesProductAvail(
+                                productId: element.productId,
+                                productCode: element.productCode,
+                                productName: element.productName,
+                                productNameLong: element.productNameLong,
+                                productDescription: element.productDescription,
+                                productType: element.productType,
+                                brand: element.brand,
+                                numImages: element.numImages,
+                                numVideos: element.numVideos,
+                                purchased: element.purchased,
+                                productPrice: element.productPrice,
+                                totalBeforeDiscount: element.totalBeforeDiscount,
+                                taxAmount: element.taxAmount,
+                                personeId: element.personeId,
+                                personeName: element.personeName,
+                                businessName: element.businessName,
+                                email: element.email,
+                                taxId: element.taxId,
+                                taxApply: element.taxApply,
+                                productPriceDiscounted: element.productPriceDiscounted,
+                                totalAmount: element.totalAmount,
+                                discountAmount: element.discountAmount,
+                                idUnit: element.idUnit,
+                                remark: element.remark,
+                                minQuantitySell: element.minQuantitySell,
+                                partnerId: element.partnerId,
+                                partnerName: element.partnerName,
+                                quantityMinPrice: element.quantityMinPrice,
+                                quantityMaxPrice: element.quantityMaxPrice,
+                                productCategoryId: element.productCategoryId,
+                                rn: element.rn
+                            );
+                            resultListMultiPriceProducts.add(item);
+                          }
+                        });
+                        debugPrint ('Entre medias de la api RESPONSE.');
+                        cart.removeCart();
+                        Provider.of<Catalog>(context, listen: false).removeCatalog();
+                        resultListMultiPriceProducts.forEach((element) {
+                          Provider.of<Catalog>(context, listen: false).add(element);
+                          //Provider.of<VisibleButtonToPurchase>(context, listen: false).add(true);
+                        });
+                        debugPrint ('Antes de terminar de responder la API.');
+                        Navigator.popUntil(context, ModalRoute.withName('/'));
+                      }
+                    } else {
+                      if (widget.reason == COME_FROM_ANOTHER) {
+                        //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                        final Uri urlAddress = Uri.parse('$SERVER_IP/getDefaultLogisticAddress/' + payload['user_id'].toString());
+                        final http.Response resAddress = await http.get (
+                            urlAddress,
+                            headers: <String, String>{
+                              'Content-Type': 'application/json; charset=UTF-8',
+                              //'Authorization': jwt
+                            }
+                        );
+                        if (resAddress.statusCode == 200) {
+                          // exists an address for the user
+                          final List<Map<String, dynamic>> resultListJson = json.decode(resAddress.body)['data'].cast<Map<String, dynamic>>();
+                          final List<Address> resultListAddress = resultListJson.map<Address>((json) => Address.fromJson(json)).toList();
+                          if (resultListAddress.length > 0) {
+                            // if exists address
+                            _showPleaseWait(false);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (ConfirmPurchaseView(resultListAddress, payload['phone_number'].toString(), payload['user_id'].toString()))
+                                )
+                            );
+                          } else {
+                            // if not exists address
+                            _showPleaseWait(false);
+                            Navigator.push (
+                                context,
+                                MaterialPageRoute (
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
+                                )
+                            );
+                          }
+                        } else if (resAddress.statusCode == 404) {
                           // if not exists address
                           _showPleaseWait(false);
                           Navigator.push (
                               context,
                               MaterialPageRoute (
-                                  builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                               )
                           );
+                        } else {
+                          // Error
+                          _showPleaseWait(false);
+                          ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
                         }
-                      } else if (resAddress.statusCode == 404) {
-                        // if not exists address
-                        _showPleaseWait(false);
-                        Navigator.push (
-                            context,
-                            MaterialPageRoute (
-                                builder: (context) => (AddAddressView(payload['persone_id'].toString()))
-                            )
-                        );
                       } else {
-                        // Error
-                        _showPleaseWait(false);
-                        ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
+                        //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                        // The call comes from the drawer.
+                        Navigator.popUntil(context, ModalRoute.withName('/'));
                       }
-                    } else {
-                      //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
-                      // The call comes from the drawer.
-                      Navigator.popUntil(context, ModalRoute.withName('/'));
                     }
                   } else {
                     // Error
@@ -574,12 +578,12 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                         resultListProducts.forEach((element) {
                           if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
                             // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento principal');
                             debugPrint ('El product_description retornado desde el API es: ' + element.productName);
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             final item = new MultiPricesProductAvail(
                                 productId: element.productId,
+                                productCode: element.productCode,
                                 productName: element.productName,
                                 productNameLong: element.productNameLong,
                                 productDescription: element.productDescription,
@@ -613,17 +617,16 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             resultListMultiPriceProducts.add(item);
                           } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
                             // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento secundario');
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             resultListMultiPriceProducts.last.add(element);
                           } else {
                             // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-                            debugPrint ('He pasado por el elemento terciario');
                             tmpProductCategoryIdPrevious = element.productCategoryId;
                             tmpPersonNamePrevious = element.personeName;
                             final item = new MultiPricesProductAvail(
                                 productId: element.productId,
+                                productCode: element.productCode,
                                 productName: element.productName,
                                 productNameLong: element.productNameLong,
                                 productDescription: element.productDescription,
@@ -693,7 +696,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             Navigator.push (
                                 context,
                                 MaterialPageRoute (
-                                    builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                                    builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                                 )
                             );
                           }
@@ -703,7 +706,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                           Navigator.push (
                               context,
                               MaterialPageRoute (
-                                  builder: (context) => (AddAddressView(payload['persone_id'].toString()))
+                                  builder: (context) => (AddAddressView(payload['persone_id'].toString(), payload['user_id'].toString()))
                               )
                           );
                         } else {
