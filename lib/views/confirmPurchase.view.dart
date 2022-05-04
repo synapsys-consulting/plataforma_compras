@@ -97,7 +97,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
       final List<ProductAvail> productAvailListToSave = [];
       cartPurchased.items.forEach((element) {
         if (element.getIndexElementAmongQuantity() == -1) {
-          final item = new ProductAvail(
+          final item = new ProductAvail (
               productId: element.productId,
               productCode: element.productCode,
               productName: element.productName,
