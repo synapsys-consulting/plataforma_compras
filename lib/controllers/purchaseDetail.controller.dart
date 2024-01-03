@@ -9,6 +9,7 @@ import 'package:plataforma_compras/models/purchaseLine.model.dart';
 class PurchaseDetailController {
   Future<List<PurchaseLine>> getPurchaseLinesByOrderId (int userId, int orderId, String providerName) async {
     final Uri url = Uri.parse('$SERVER_IP/getPurchaseLinesByOrderId/' + userId.toString() + '/' + orderId.toString() + '/' + providerName);
+    debugPrint ("La URI a la que llamamos es: " + '$SERVER_IP/getPurchaseLinesByOrderId/' + userId.toString() + '/' + orderId.toString() + '/' + providerName);
     final http.Response res = await http.get (
         url,
         headers: <String, String>{

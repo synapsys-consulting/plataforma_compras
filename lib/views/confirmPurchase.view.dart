@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:plataforma_compras/models/productAvail.model.dart';
@@ -186,10 +185,10 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 'num_images': e.numImages,
                 'num_videos': e.numVideos,
                 'purchased': e.purchased,
-                'product_price': e.productPrice,
-                'total_before_discount': e.totalBeforeDiscount,
+                'product_price': e.productPriceDiscounted,
+                'total_before_discount': e.totalAmount,
                 'total_amount': e.totalAmount,
-                'discount_amount': e.discountAmount,
+                'discount_amount': 0,
                 'tax_amount': e.taxAmount,
                 'persone_id': e.personeId,
                 'persone_name': e.personeName,
@@ -699,10 +698,10 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                 'num_images': e.numImages,
                 'num_videos': e.numVideos,
                 'purchased': e.purchased,
-                'product_price': e.productPrice,
+                'product_price': e.productPriceDiscounted,
                 'total_before_discount': e.totalBeforeDiscount,
                 'total_amount': e.totalAmount,
-                'discount_amount': e.discountAmount,
+                'discount_amount': 0,
                 'tax_amount': e.taxAmount,
                 'persone_id': e.personeId,
                 'persone_name': e.personeName,

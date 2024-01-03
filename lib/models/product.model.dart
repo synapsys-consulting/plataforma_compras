@@ -15,6 +15,7 @@ class Product {
     @required this.minQuantitySell,
     @required this.languageCode,
     @required this.productPrice,
+    @required this.productPriceFinal,
     @required this.taxId,
     @required this.currencyId,
     @required this.unitId,
@@ -54,6 +55,7 @@ class Product {
   final double minQuantitySell;
   final String languageCode;
   final double productPrice;
+  final double productPriceFinal;
   final int taxId;
   final String currencyId;
   final String unitId;
@@ -95,6 +97,7 @@ class Product {
       minQuantitySell: double.parse(json['MIN_QUANTITY_SELL'].toString()),
       languageCode: json['LANGUAGE_CODE'],
       productPrice: double.parse(json['PRODUCT_PRICE'].toString()),
+      productPriceFinal: double.parse(json['PRODUCT_PRICE_FINAL'].toString()),
       taxId: int.parse(json['TAX_ID'].toString()),
       currencyId: json['CURRENCY_ID'],
       unitId: json['UNIT_ID'],

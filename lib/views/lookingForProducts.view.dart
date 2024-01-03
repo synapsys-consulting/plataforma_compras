@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:plataforma_compras/models/multiPricesProductAvail.model.dart';
 import 'dart:async';

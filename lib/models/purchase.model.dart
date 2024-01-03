@@ -31,7 +31,7 @@ class Purchase {
   String allStatus;
   String statusId;
   int numStatus;
-  final int items;
+  final double items;
   final String situation;
   final double totalAmount;
   final double taxAmount;
@@ -52,7 +52,7 @@ class Purchase {
         allStatus: json['ALL_STATUS'],
         statusId: json['STATUS_ID'],
         numStatus: int.parse(json['NUM_STATUS'].toString()),
-        items: int.parse(json['ITEMS'].toString()),
+        items: double.parse(json['ITEMS'].toString()),
         situation: json['SITUACION'],
         totalAmount: double.parse(json['TOTAL_AMOUNT'].toString()),
         taxAmount: double.parse(json['TAX_AMOUNT'].toString()),

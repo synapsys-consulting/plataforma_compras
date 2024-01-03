@@ -26,14 +26,20 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
-  http: ^0.12.2
-  cached_network_image: ^2.5.0
-  provider: ^4.3.3
+  http: ^0.13.0
+  cached_network_image: ^3.0.0
+  provider: ^6.0.1
+  carousel_slider: ^4.0.0
+  dio: ^4.0.0
+  geocoding: ^2.0.0
+  intl: ^0.17.0
+  geolocator: ^8.2.0
+  shared_preferences: ^2.0.5
+  share_plus: ^4.0.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  http: ^0.12.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -67,11 +73,37 @@ flutter:
     - assets/images/logoPlus.png
     - assets/images/logoMinus.png
     - assets/images/logoDelete.png
+    - assets/images/logoDeleteKlein.png
     - assets/images/logoInfo.png
+    - assets/images/logoInfoLittle.png
     - assets/images/emptyCart.png
     - assets/images/imageDialogBox.png
     - assets/images/weightMessage.png
     - assets/images/infoMessage.png
+    - assets/images/logoCross.png
+    - assets/images/logoQuestion.png
+    - assets/images/addressMessage.png
+    - assets/images/logoGetMyPlace.png
+    - assets/images/logoPlace.png
+    - assets/images/logoDelibery.png
+    - assets/images/logoPhone.png
+    - assets/images/logoPaymentMethod.png
+    - assets/images/logoPaymentMethod1.png
+    - assets/images/logoInformation.png
+    - assets/images/logoHelp.png
+    - assets/images/logoMyPurchases.png
+    - assets/images/logoDirections.png
+    - assets/images/logoPersonalData.png
+    - assets/images/emptyAddress.png
+    - assets/images/logoDefaultAddress.png
+    - assets/images/logoExit.png
+    - assets/images/logoStateTransition.png
+    - assets/images/logoPlay.png
+    - assets/images/logoComment.png
+    - assets/images/logoWhatsapp.png
+    - assets/images/logoUpCatalog.png
+    - assets/images/logoNewProduct.png
+    - assets/images/logoModifyProduct.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

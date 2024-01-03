@@ -8,6 +8,7 @@ class PurchaseLine {
     @required this.orderId,
     @required this.providerName,
     @required this.productId,
+    @required this.productCode,
     @required this.productName,
     @required this.allStatus,
     @required this.statusId,
@@ -35,15 +36,16 @@ class PurchaseLine {
   final int orderId;
   final String providerName;
   final int productId;
+  final int productCode;
   final String productName;
   String allStatus;
   String statusId;
   final int numStatus;
   String banPrice;
   String banQuantity;
-  int items;
+  double items;
   String idUnit;
-  int newQuantity;
+  double newQuantity;
   double newProductPrice;
   String banOfficialPrice;
   final String situation;
@@ -64,15 +66,16 @@ class PurchaseLine {
       orderId: int.parse(json['ORDER_ID'].toString()),
       providerName: json['PROVIDER_NAME'],
       productId: int.parse(json['PRODUCT_ID'].toString()),
+      productCode: int.parse(json['PRODUCT_CODE'].toString()),
       productName: json['PRODUCT_NAME'],
       allStatus: json['ALL_STATUS'],
       statusId: json['STATUS_ID'],
       numStatus: int.parse(json['NUM_STATUS'].toString()),
       banPrice: json['BAN_PRICE'],
       banQuantity: json['BAN_QUANTITY'],
-      items: int.parse(json['ITEMS'].toString()),
+      items: double.parse(json['ITEMS'].toString()),
       idUnit: json['ID_UNIT'],
-      newQuantity: int.parse(json['NEW_QUANTITY'].toString()),
+      newQuantity: double.parse(json['NEW_QUANTITY'].toString()),
       newProductPrice: double.parse(json['NEW_PRODUCT_PRICE_FINAL'].toString()),
       banOfficialPrice: json['BAN_OFICIAL_PRICE'],
       situation: json['SITUACION'],

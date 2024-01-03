@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
+
 
 import 'package:plataforma_compras/models/purchase.model.dart';
 import 'package:plataforma_compras/models/purchaseLine.model.dart';
@@ -28,6 +30,7 @@ class PurchaseDetailView extends StatefulWidget {
   final String userRole;
 
   PurchaseDetailView(this.userId, this.father, this.partnerId, this.userRole);
+
   @override
   PurchaseDetailViewState createState() {
     return PurchaseDetailViewState();
@@ -36,6 +39,8 @@ class PurchaseDetailView extends StatefulWidget {
 class PurchaseDetailViewState extends State<PurchaseDetailView> {
   final PurchaseDetailController _controller = new PurchaseDetailController();
   _StateChanged _stateChangedAttr = new _StateChanged(false);
+  List<PurchaseLine> itemsPurchase;   // (20220517) Angel Ruiz. I need the purchased product to share them
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   @override
   void initState() {
@@ -74,11 +79,48 @@ class PurchaseDetailViewState extends State<PurchaseDetailView> {
             )
           ],
         ),
+        actions: <Widget>[
+          IconButton(
+            icon: Image.asset('assets/images/logoWhatsapp.png'),
+            onPressed: () async {
+              if (itemsPurchase.isNotEmpty) {
+                final SharedPreferences prefs = await _prefs;
+                final String token = prefs.get ('token') ?? "";
+                String fullName;
+                if (token != "") {
+                  Map<String, dynamic> payload;
+                  payload = json.decode(
+                      utf8.decode(
+                          base64.decode (base64.normalize(token.split(".")[1]))
+                      )
+                  );
+                  fullName = payload['partner_name'];
+                } else {
+                  fullName = "usuario no autenticado en el sistema";
+                }
+                final box = context.findRenderObject() as RenderBox;
+                String textToShare = "Pedido de " + fullName + ":\n\n" + "PRODUCT_ID|UNIDADES|DESCRIPCION\n";
+                itemsPurchase.forEach((element) {
+                  textToShare = textToShare + element.productId.toString() + "|" +
+                      (element.newQuantity != -1 ? element.newQuantity.toString() + "(" + element.items.toString() + ")" : element.items.toString()) +
+                      (element.newQuantity != -1 ? (element.newQuantity > 1 ? " " + element.idUnit + "s." : element.idUnit + ".") : element.items > 1 ? " " + element.idUnit + "s." : element.idUnit + ".") +
+                      "|" + element.productName + "\n";
+                });
+                Share.share(
+                    textToShare,
+                    subject: "Pedido de " + fullName + ".",
+                    sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size
+                );
+              }
+            }
+          )
+        ],
       ),
       body: FutureBuilder <List<PurchaseLine>> (
           future: _controller.getPurchaseLinesByOrderId (widget.userId, widget.father.orderId, widget.father.providerName),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
+              itemsPurchase = snapshot.data; // (20220517) Angel Ruiz. I need these data to share them
               return new ResponsiveWidget (
                 smallScreen: _SmallScreen (widget.father, snapshot.data, widget.userId, this._stateChangedAttr, widget.partnerId, widget.userRole),
                 largeScreen: _LargeScreen (widget.father, snapshot.data, widget.userId, this._stateChangedAttr, widget.partnerId, widget.userRole),
@@ -149,7 +191,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                 aspectRatio: 3.0 / 2.0,
                 child: CachedNetworkImage (
                   placeholder: (context, url) => CircularProgressIndicator(),
-                  imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.itemsPurchase[index].productId.toString() + '_0.gif',
+                  imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.itemsPurchase[index].productCode.toString() + '_0.gif',
                   fit: BoxFit.scaleDown,
                   errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
@@ -535,7 +577,7 @@ class _LargeScreenState extends State<_LargeScreen>{
                   aspectRatio: 3.0 / 2.0,
                   child: CachedNetworkImage(
                     placeholder: (context, url) => CircularProgressIndicator(),
-                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.itemsPurchase[index].productId.toString() + '_0.gif',
+                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.itemsPurchase[index].productCode.toString() + '_0.gif',
                     fit: BoxFit.scaleDown,
                     errorWidget: (context, url, error) => Icon(Icons.error),
                   ),

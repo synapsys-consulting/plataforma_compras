@@ -1,5 +1,7 @@
 //const SERVER_IP = 'https://192.168.2.106:9010/server';  // DEVELOPMENT
-const SERVER_IP = 'http://192.168.2.106:9010/server';  // DEVELOPMENT
+//const SERVER_IP = 'http://192.168.2.106:9010/server';  // DEVELOPMENT
+const SERVER_IP = 'http://192.168.1.8:9010/server';  // DEVELOPMENT
+//const SERVER_IP = 'http://192.168.18.101:9010/server';  // DEVELOPMENT
 //const SERVER_IP = 'https://localhost/server';  // DEVELOPMENT
 //const SERVER_IP = 'https://3.92.229.110:9000/server';   // PRUEBA
 //const SERVER_IP = 'https://54.87.206.162:9000/server';     // PRODUCTION
@@ -9,7 +11,7 @@ const SERVER_IP = 'http://192.168.2.106:9010/server';  // DEVELOPMENT
 //const SERVER_IP = 'https://ec2-52-55-250-28.compute-1.amazonaws.com:9000/server';
 //const SERVER_IP = 'http://localhost:9000/server';
 //const SERVER_IP = 'http://127.0.0.1:9000/server';
-//const SERVER_IP = 'http://10.0.2.2:9000/server';
+//const SERVER_IP = 'http://10.0.2.2:9000/server
 //const SERVER_IP = 'http://192.168.1.134:9000/server';
 //const SERVER_IP = 'http://192.168.1.7:9000/server';
 const IMAGES_DIRECTORY = '/image/products/';

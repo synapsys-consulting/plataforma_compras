@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 class _Comment {

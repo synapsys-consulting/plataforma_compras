@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -21,8 +20,8 @@ import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/utils/pleaseWaitWidget.dart';
 import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/views/addComment.view.dart';
+import 'package:plataforma_compras/models/priceChangeType.dart';
 
-enum _PriceChangeType { priceValue, percentValue }
 class _StateChanged {
   bool changed;
   _StateChanged(this.changed);
@@ -136,10 +135,10 @@ class _SmallScreenState extends State<_SmallScreen> {
   double _totalAfterDiscountWithoutTax = 0.0;
   double _taxAmount = 0.0;
   double _totalAmount = 0.0;
-  int _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
+  double _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
   double _newNewProductPriceFinal;  // save the value of the field NEW_PRODUCT_PRICE_FINAL of the KRC_PURCHASE table.
   double _newPrice; // save the value of the field PRODUCT_PRICE of the KRC_PURCHASE table.
-  _PriceChangeType _changeType = _PriceChangeType.priceValue;
+  PriceChangeType _changeType = PriceChangeType.priceValue;
   bool _isOfficial = false;
   String _comment;
 
@@ -672,7 +671,7 @@ class _SmallScreenState extends State<_SmallScreen> {
     super.initState();
     initializeDateFormatting('es_ES');
     _current = 0;
-    _changeType = _PriceChangeType.priceValue;
+    _changeType = PriceChangeType.priceValue;
     _isOfficial = false;
     // fields to save temporal values
     widget.productItem.purchased = widget.father.items;
@@ -1673,7 +1672,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -1828,10 +1827,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                         flex: 1,
                         child: ListTile(
                           title: Text('Valor'),
-                          leading: Radio<_PriceChangeType>(
-                            value: _PriceChangeType.priceValue,
+                          leading: Radio<PriceChangeType>(
+                            value: PriceChangeType.priceValue,
                             groupValue: _changeType,
-                            onChanged: (_PriceChangeType value){
+                            onChanged: (PriceChangeType value){
                               setState(() {
                                 _changeType = value;
                                 _valueDiscount = 0.0;
@@ -1848,10 +1847,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                         flex: 1,
                         child: ListTile(
                           title: Text('Porcentaje'),
-                          leading: Radio<_PriceChangeType>(
-                            value: _PriceChangeType.percentValue,
+                          leading: Radio<PriceChangeType>(
+                            value: PriceChangeType.percentValue,
                             groupValue: _changeType,
-                            onChanged: (_PriceChangeType value){
+                            onChanged: (PriceChangeType value){
                               setState(() {
                                 _changeType = value;
                                 _percentDiscount = 0.0;
@@ -1867,7 +1866,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                     ],
                   ),
                   Divider(thickness: 2.0,),
-                  (_changeType == _PriceChangeType.priceValue) ? Center (
+                  (_changeType == PriceChangeType.priceValue) ? Center (
                     child: Text(
                       'Modificación neta',
                       style: TextStyle(
@@ -1890,7 +1889,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       ),
                     ),
                   ),
-                  (_changeType == _PriceChangeType.priceValue) ? Row (
+                  (_changeType == PriceChangeType.priceValue) ? Row (
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded (
@@ -2381,7 +2380,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -2840,10 +2839,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                           flex: 1,
                           child: ListTile(
                             title: Text('Valor'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.priceValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.priceValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _valueDiscount = 0.0;
@@ -2860,10 +2859,10 @@ class _SmallScreenState extends State<_SmallScreen> {
                           flex: 1,
                           child: ListTile(
                             title: Text('Porcentaje'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.percentValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.percentValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _percentDiscount = 0.0;
@@ -2879,7 +2878,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                     ],
                   ),
                   Divider(thickness: 2.0,),
-                  (_changeType == _PriceChangeType.priceValue) ? Center (
+                  (_changeType == PriceChangeType.priceValue) ? Center (
                     child: Text(
                       'Modificación neta',
                       style: TextStyle(
@@ -2902,7 +2901,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                       ),
                     ),
                   ),
-                  (_changeType == _PriceChangeType.priceValue) ? Row (
+                  (_changeType == PriceChangeType.priceValue) ? Row (
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded (
@@ -3347,10 +3346,10 @@ class _LargeScreenState extends State<_LargeScreen> {
   double _totalAfterDiscountWithoutTax = 0.0;
   double _taxAmount = 0.0;
   double _totalAmount = 0.0;
-  int _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
+  double _newNumItemsPurchased = 0;  // save the value of the field NEW_QUANTITY of the KRC_PURCHASE table.
   double _newNewProductPriceFinal;  // save the value of the field NEW_PRODUCT_PRICE_FINAL of the KRC_PURCHASE table.
   double _newPrice; // save the value of the field PRODUCT_PRICE of the KRC_PURCHASE table.
-  _PriceChangeType _changeType = _PriceChangeType.priceValue;
+  PriceChangeType _changeType = PriceChangeType.priceValue;
   bool _isOfficial = false;
   String _comment;
 
@@ -3882,7 +3881,7 @@ class _LargeScreenState extends State<_LargeScreen> {
     super.initState();
     initializeDateFormatting('es_ES');
     _current = 0;
-    _changeType = _PriceChangeType.priceValue;
+    _changeType = PriceChangeType.priceValue;
     _isOfficial = false;
     // fields to save temporal values
     widget.productItem.purchased = widget.father.items;
@@ -4907,7 +4906,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -5065,10 +5064,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                           flex: 2,
                           child: ListTile(
                             title: Text('Valor'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.priceValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.priceValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _valueDiscount = 0.0;
@@ -5085,10 +5084,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                           flex: 2,
                           child: ListTile(
                             title: Text('Porcentaje'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.percentValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.percentValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _percentDiscount = 0.0;
@@ -5108,7 +5107,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     ],
                   ),
                   Divider(thickness: 2.0,),
-                  (_changeType == _PriceChangeType.priceValue) ? Center (
+                  (_changeType == PriceChangeType.priceValue) ? Center (
                     child: Text(
                       'Modificación neta',
                       style: TextStyle(
@@ -5131,7 +5130,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       ),
                     ),
                   ),
-                  (_changeType == _PriceChangeType.priceValue) ? Row (
+                  (_changeType == PriceChangeType.priceValue) ? Row (
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded (
@@ -5633,7 +5632,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       aspectRatio: 3.0 / 2.0,
                       child: CachedNetworkImage(
                         placeholder: (context, url) => CircularProgressIndicator(),
-                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productId.toString() + '_0.gif',
+                        imageUrl: SERVER_IP + IMAGES_DIRECTORY + widget.productItem.productCode.toString() + '_0.gif',
                         fit: BoxFit.scaleDown,
                         errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
@@ -6094,10 +6093,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                           flex: 2,
                           child: ListTile(
                             title: Text('Valor'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.priceValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.priceValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _valueDiscount = 0.0;
@@ -6114,10 +6113,10 @@ class _LargeScreenState extends State<_LargeScreen> {
                           flex: 2,
                           child: ListTile(
                             title: Text('Porcentaje'),
-                            leading: Radio<_PriceChangeType>(
-                              value: _PriceChangeType.percentValue,
+                            leading: Radio<PriceChangeType>(
+                              value: PriceChangeType.percentValue,
                               groupValue: _changeType,
-                              onChanged: (_PriceChangeType value){
+                              onChanged: (PriceChangeType value){
                                 setState(() {
                                   _changeType = value;
                                   _percentDiscount = 0.0;
@@ -6137,7 +6136,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                     ],
                   ),
                   Divider(thickness: 2.0,),
-                  (_changeType == _PriceChangeType.priceValue) ? Center (
+                  (_changeType == PriceChangeType.priceValue) ? Center (
                     child: Text(
                       'Modificación neta',
                       style: TextStyle(
@@ -6160,7 +6159,7 @@ class _LargeScreenState extends State<_LargeScreen> {
                       ),
                     ),
                   ),
-                  (_changeType == _PriceChangeType.priceValue) ? Row (
+                  (_changeType == PriceChangeType.priceValue) ? Row (
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded (

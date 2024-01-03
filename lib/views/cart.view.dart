@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
@@ -23,8 +23,14 @@ import 'package:plataforma_compras/views/confirmPurchase.view.dart';
 import 'package:plataforma_compras/utils/multiPriceListElement.dart';
 
 
-
-class CartView extends StatelessWidget {
+class CartView extends StatefulWidget {
+  @override
+  _CartViewState createState() {
+    return _CartViewState();
+  }
+}
+class _CartViewState extends State<CartView> {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +42,40 @@ class CartView extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
+        actions: <Widget>[
+          IconButton(
+            icon: Image.asset('assets/images/logoWhatsapp.png'),
+            onPressed: () async {
+              final SharedPreferences prefs = await _prefs;
+              final String token = prefs.get ('token') ?? "";
+              String fullName;
+              if (token != "") {
+                Map<String, dynamic> payload;
+                payload = json.decode(
+                    utf8.decode(
+                        base64.decode (base64.normalize(token.split(".")[1]))
+                    )
+                );
+                fullName = payload['partner_name'];
+              } else {
+                fullName = "usuario no autenticado en el sistema";
+              }
+              final box = context.findRenderObject() as RenderBox;
+              var cart = Provider.of<Cart>(context, listen: false);
+              String textToShare = "Pedido de " + fullName + ":\n\n" + "PRODUCT_ID|UNIDADES|DESCRIPCION\n";
+              if (cart.numItems > 0) {
+                cart.items.forEach((element) {
+                  textToShare = textToShare + element.productId.toString() + "|" +element.purchased.toString() + (element.purchased > 1 ? " " + element.idUnit + "s." : " " + element.idUnit + ".") + "|" + element.productName + "\n";
+                });
+                Share.share(
+                  textToShare,
+                  subject: "Pedido de " + fullName + ".",
+                  sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size
+                );
+              }
+            },
+          )
+        ],
       ),
       body: ResponsiveWidget(
         smallScreen: _SmallScreen(),

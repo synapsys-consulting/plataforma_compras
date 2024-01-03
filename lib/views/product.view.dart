@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:plataforma_compras/models/catalog.model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
@@ -899,8 +898,8 @@ class _LargeScreenState extends State<_LargeScreen> {
 }
 
 class _MultiPriceListElement {
-  final int unitsFrom;
-  final int unitsTo;
+  final double unitsFrom;
+  final double unitsTo;
   final double price;
   _MultiPriceListElement(this.unitsFrom, this.unitsTo, this.price);
 }

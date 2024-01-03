@@ -1,10 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart' show NumberFormat hide TextDirection;
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/models/purchase.model.dart';
@@ -23,7 +21,7 @@ class PurchaseView extends StatelessWidget {
 
   final PurchaseController _controller = new PurchaseController ();
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     return Scaffold (
       appBar: AppBar (
         elevation: 0.0,
@@ -404,6 +402,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                   ],
                 ),
                 onTap: () async {
+                  debugPrint('El partenerId del usuario es: ' + widget.partnerId.toString());
                   final bool purchaseDetailStateChanged = await Navigator.push (context, MaterialPageRoute (
                       builder: (context) => PurchaseDetailView (widget.userId, widget.itemsPurchase[index], widget.partnerId, widget.userRole)
                   ));

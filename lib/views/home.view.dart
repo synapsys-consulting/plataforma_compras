@@ -1,8 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:plataforma_compras/views/purchase.view.dart';
+import 'package:plataforma_compras/views/catalogManagement.view.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
@@ -16,6 +15,8 @@ import 'package:plataforma_compras/utils/responsiveWidget.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/models/cart.model.dart';
 import 'package:plataforma_compras/views/cart.view.dart';
+import 'package:plataforma_compras/views/menu.view.dart';
+import 'package:plataforma_compras/views/purchase.view.dart';
 import 'package:plataforma_compras/utils/colors.util.dart';
 import 'package:plataforma_compras/views/product.view.dart';
 import 'package:plataforma_compras/views/lookingForProducts.view.dart';
@@ -55,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String _name = '';
   bool _pleaseWait = false;
   String _token = '';
+  String _roleId = '';
+  String _role = '';
 
   _showPleaseWait(bool b) {
     setState(() {
@@ -309,6 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
             resultListMultiPriceProducts.add(item);
           }
         });
+        debugPrint ('Después del estoy aquí');
         resultListMultiPriceProducts.forEach((element) {
           Provider.of<Catalog>(context, listen: false).add(element);
         });
@@ -321,301 +325,637 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
   }
-  Drawer _createEndDrawer(BuildContext context, bool isUserLogged, String name) {
+  Drawer _createEndDrawer (BuildContext context, bool isUserLogged, String name) {
     var catalog = context.watch<Catalog>();
     var cart = context.read<Cart>();
+
     if (isUserLogged) {
-      return new Drawer (
-        child: ListView (
-          padding: EdgeInsets.zero,
-          children: [
-            ListTile (
-              title: SafeArea (
-                child: Text (
-                  name,
+      if (_role == "SELLER") {
+        // The user role lets change the product catalog
+        // There is another one menu option
+        return new MenuView (
+          child: ListView (
+            padding: EdgeInsets.zero,
+            children: [
+              ListTile (
+                title: SafeArea (
+                  child: Text (
+                      name,
+                      style: TextStyle (
+                          fontSize: 24.0,
+                          color: tanteLadenIconBrown,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.bold
+                      )
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton(
+                  icon: Image.asset ('assets/images/logoPersonalData.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Datos personales',
+                  style: TextStyle(
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => PersonalData(_token)
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                    icon: Image.asset ('assets/images/logoDirections.png'),
+                    onPressed: null
+                ),
+                title: Text (
+                  'Direcciones',
                   style: TextStyle (
-                    fontSize: 24.0,
-                    color: tanteLadenIconBrown,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.bold
-                  )
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
                 ),
-              ),
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton(
-                icon: Image.asset ('assets/images/logoPersonalData.png'),
-                onPressed: null,
-              ),
-              title: Text(
-                'Datos personales',
-                style: TextStyle(
-                  fontFamily: 'SF Pro Display',
-                  fontSize: 20,
-                  fontWeight: FontWeight.normal
-                ),
-              ),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => PersonalData(_token)
-                ));
-              },
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoDirections.png'),
-                onPressed: null
-              ),
-              title: Text (
-                'Direcciones',
-                style: TextStyle (
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              onTap: () {
-                Map<String, dynamic> payload;
-                payload = json.decode(
-                    utf8.decode(
-                        base64.decode (base64.normalize(_token.split(".")[1]))
-                    )
-                );
-                Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => ManageAddresses(payload['persone_id'].toString(), payload['user_id'].toString())
-                ));
-              },
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoPaymentMethod1.png'),
-                onPressed: null,
-              ),
-              title: Text(
-                'Métodos de pago',
-                style: TextStyle (
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoMyPurchases.png'),
-                onPressed: null,
-              ),
-              title: Text(
-                'Mis pedidos',
-                style: TextStyle (
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              onTap: () {
-                Map<String, dynamic> payload;
-                payload = json.decode(
-                    utf8.decode(
-                        base64.decode (base64.normalize(_token.split(".")[1]))
-                    )
-                );
-                Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => PurchaseView(payload['user_id'], payload['partner_id'], payload['role'])
-                ));
-              },
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoHelp.png'),
-                onPressed: null,
-              ),
-              title: Text(
-                'Ayuda',
-                style: TextStyle (
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoInformation.png'),
-                onPressed: null,
-              ),
-              title: Text (
-                'Información',
-                style: TextStyle(
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-            ),
-            Divider(),
-            ListTile (
-              leading: IconButton (
-                icon: Image.asset ('assets/images/logoExit.png'),
-                onPressed: null,
-              ),
-              title: Text (
-                'Salir',
-                style: TextStyle (
-                    fontFamily: 'SF Pro Display',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal
-                ),
-              ),
-              onTap: () async {
-                try {
-                  debugPrint('Estoy en el salir.');
-                  //debugPrint('Después de watch y read.');
-                  final SharedPreferences prefs = await _prefs;
-                  prefs.setString ('token', '');
-                  final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
-                  final http.Response resProducts = await http.get (
-                      url,
-                      headers: <String, String>{
-                        'Content-Type': 'application/json; charset=UTF-8',
-                        //'Authorization': jwt
-                      }
+                onTap: () {
+                  Map<String, dynamic> payload;
+                  payload = json.decode(
+                      utf8.decode(
+                          base64.decode (base64.normalize(_token.split(".")[1]))
+                      )
                   );
-                  debugPrint('After the http call.');
-                  if (resProducts.statusCode == 200) {
-                    debugPrint ('The Rest API has responsed.');
-                    final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
-                    debugPrint ('Entre medias de la api RESPONSE.');
-                    final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
-                    final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-                    int tmpProductCategoryIdPrevious;
-                    String tmpPersonNamePrevious;
-                    debugPrint ('Entre medias de la api RESPONSE.');
-                    //Provider.of<Catalog>(context, listen: false).clearCatalog();
-                    catalog.removeCatalog();
-                    resultListProducts.forEach((element) {
-                      //debugPrint ('El producto que cargo es: ' + element.productName);
-                      //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
-                      if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
-                        // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
-                        tmpProductCategoryIdPrevious = element.productCategoryId;
-                        tmpPersonNamePrevious = element.personeName;
-                        final item = new MultiPricesProductAvail(
-                            productId: element.productId,
-                            productCode: element.productCode,
-                            productName: element.productName,
-                            productNameLong: element.productNameLong,
-                            productDescription: element.productDescription,
-                            productType: element.productType,
-                            brand: element.brand,
-                            numImages: element.numImages,
-                            numVideos: element.numVideos,
-                            purchased: element.purchased,
-                            productPrice: element.productPrice,
-                            totalBeforeDiscount: element.totalBeforeDiscount,
-                            taxAmount: element.taxAmount,
-                            personeId: element.personeId,
-                            personeName: element.personeName,
-                            businessName: element.businessName,
-                            email: element.email,
-                            taxId: element.taxId,
-                            taxApply: element.taxApply,
-                            productPriceDiscounted: element.productPriceDiscounted,
-                            totalAmount: element.totalAmount,
-                            discountAmount: element.discountAmount,
-                            idUnit: element.idUnit,
-                            remark: element.remark,
-                            minQuantitySell: element.minQuantitySell,
-                            partnerId: element.partnerId,
-                            partnerName: element.partnerName,
-                            quantityMinPrice: element.quantityMinPrice,
-                            quantityMaxPrice: element.quantityMaxPrice,
-                            productCategoryId: element.productCategoryId,
-                            rn: element.rn
-                        );
-                        resultListMultiPriceProducts.add(item);
-                        //Provider.of<Catalog>(context, listen: false).add(element);
-                      } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
-                        // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
-                        tmpProductCategoryIdPrevious = element.productCategoryId;
-                        tmpPersonNamePrevious = element.personeName;
-                        resultListMultiPriceProducts.last.add(element);
-                        //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
-                      } else {
-                        // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
-                        tmpProductCategoryIdPrevious = element.productCategoryId;
-                        tmpPersonNamePrevious = element.personeName;
-                        final item = new MultiPricesProductAvail(
-                            productId: element.productId,
-                            productCode: element.productCode,
-                            productName: element.productName,
-                            productNameLong: element.productNameLong,
-                            productDescription: element.productDescription,
-                            productType: element.productType,
-                            brand: element.brand,
-                            numImages: element.numImages,
-                            numVideos: element.numVideos,
-                            purchased: element.purchased,
-                            productPrice: element.productPrice,
-                            totalBeforeDiscount: element.totalBeforeDiscount,
-                            taxAmount: element.taxAmount,
-                            personeId: element.personeId,
-                            personeName: element.personeName,
-                            businessName: element.businessName,
-                            email: element.email,
-                            taxId: element.taxId,
-                            taxApply: element.taxApply,
-                            productPriceDiscounted: element.productPriceDiscounted,
-                            totalAmount: element.totalAmount,
-                            discountAmount: element.discountAmount,
-                            idUnit: element.idUnit,
-                            remark: element.remark,
-                            minQuantitySell: element.minQuantitySell,
-                            partnerId: element.partnerId,
-                            partnerName: element.partnerName,
-                            quantityMinPrice: element.quantityMinPrice,
-                            quantityMaxPrice: element.quantityMaxPrice,
-                            productCategoryId: element.productCategoryId,
-                            rn: element.rn
-                        );
-                        resultListMultiPriceProducts.add(item);
-                        //Provider.of<Catalog>(context, listen: false).add(element);
-                      }
-                    });
-                    resultListMultiPriceProducts.forEach((element) {
-                      Provider.of<Catalog>(context, listen: false).add(element);
-                    });
-                    debugPrint ('Antes de terminar de responder la API.');
-                    if (cart.numItems > 0) {
-                      //Add the elements which are in the cart to the catalog
-                      debugPrint('El numero de items es:' + cart.numItems.toString());
-                      cart.items.forEach((element) {
-                        debugPrint('El valor de product_name es: ' + element.productName);
-                        if (element.partnerId != DEFAULT_PARTNER_ID) {
-                          cart.remove(element);
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => ManageAddresses(payload['persone_id'].toString(), payload['user_id'].toString())
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoPaymentMethod1.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Métodos de pago',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoMyPurchases.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Mis pedidos',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Map<String, dynamic> payload;
+                  payload = json.decode(
+                      utf8.decode(
+                          base64.decode (base64.normalize(_token.split(".")[1]))
+                      )
+                  );
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => PurchaseView(payload['user_id'], payload['partner_id'], payload['role'])
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset('assets/images/logoHelp.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Catalogo',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => CatalogManagement()
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoHelp.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Ayuda',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoInformation.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Información',
+                  style: TextStyle(
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoExit.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Salir',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () async {
+                  try {
+                    debugPrint('Estoy en el salir.');
+                    //debugPrint('Después de watch y read.');
+                    final SharedPreferences prefs = await _prefs;
+                    prefs.setString ('token', '');
+                    final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
+                    final http.Response resProducts = await http.get (
+                        url,
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                          //'Authorization': jwt
+                        }
+                    );
+                    debugPrint('After the http call.');
+                    if (resProducts.statusCode == 200) {
+                      debugPrint ('The Rest API has responsed.');
+                      final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                      final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                      int tmpProductCategoryIdPrevious;
+                      String tmpPersonNamePrevious;
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      //Provider.of<Catalog>(context, listen: false).clearCatalog();
+                      catalog.removeCatalog();
+                      resultListProducts.forEach((element) {
+                        //debugPrint ('El producto que cargo es: ' + element.productName);
+                        //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
+                        if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                          // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          final item = new MultiPricesProductAvail(
+                              productId: element.productId,
+                              productCode: element.productCode,
+                              productName: element.productName,
+                              productNameLong: element.productNameLong,
+                              productDescription: element.productDescription,
+                              productType: element.productType,
+                              brand: element.brand,
+                              numImages: element.numImages,
+                              numVideos: element.numVideos,
+                              purchased: element.purchased,
+                              productPrice: element.productPrice,
+                              totalBeforeDiscount: element.totalBeforeDiscount,
+                              taxAmount: element.taxAmount,
+                              personeId: element.personeId,
+                              personeName: element.personeName,
+                              businessName: element.businessName,
+                              email: element.email,
+                              taxId: element.taxId,
+                              taxApply: element.taxApply,
+                              productPriceDiscounted: element.productPriceDiscounted,
+                              totalAmount: element.totalAmount,
+                              discountAmount: element.discountAmount,
+                              idUnit: element.idUnit,
+                              remark: element.remark,
+                              minQuantitySell: element.minQuantitySell,
+                              partnerId: element.partnerId,
+                              partnerName: element.partnerName,
+                              quantityMinPrice: element.quantityMinPrice,
+                              quantityMaxPrice: element.quantityMaxPrice,
+                              productCategoryId: element.productCategoryId,
+                              rn: element.rn
+                          );
+                          resultListMultiPriceProducts.add(item);
+                          //Provider.of<Catalog>(context, listen: false).add(element);
+                        } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                          // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          resultListMultiPriceProducts.last.add(element);
+                          //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
+                        } else {
+                          // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          final item = new MultiPricesProductAvail(
+                              productId: element.productId,
+                              productCode: element.productCode,
+                              productName: element.productName,
+                              productNameLong: element.productNameLong,
+                              productDescription: element.productDescription,
+                              productType: element.productType,
+                              brand: element.brand,
+                              numImages: element.numImages,
+                              numVideos: element.numVideos,
+                              purchased: element.purchased,
+                              productPrice: element.productPrice,
+                              totalBeforeDiscount: element.totalBeforeDiscount,
+                              taxAmount: element.taxAmount,
+                              personeId: element.personeId,
+                              personeName: element.personeName,
+                              businessName: element.businessName,
+                              email: element.email,
+                              taxId: element.taxId,
+                              taxApply: element.taxApply,
+                              productPriceDiscounted: element.productPriceDiscounted,
+                              totalAmount: element.totalAmount,
+                              discountAmount: element.discountAmount,
+                              idUnit: element.idUnit,
+                              remark: element.remark,
+                              minQuantitySell: element.minQuantitySell,
+                              partnerId: element.partnerId,
+                              partnerName: element.partnerName,
+                              quantityMinPrice: element.quantityMinPrice,
+                              quantityMaxPrice: element.quantityMaxPrice,
+                              productCategoryId: element.productCategoryId,
+                              rn: element.rn
+                          );
+                          resultListMultiPriceProducts.add(item);
+                          //Provider.of<Catalog>(context, listen: false).add(element);
                         }
                       });
+                      resultListMultiPriceProducts.forEach((element) {
+                        Provider.of<Catalog>(context, listen: false).add(element);
+                      });
+                      debugPrint ('Antes de terminar de responder la API.');
+                      if (cart.numItems > 0) {
+                        //Add the elements which are in the cart to the catalog
+                        debugPrint('El numero de items es:' + cart.numItems.toString());
+                        cart.items.forEach((element) {
+                          debugPrint('El valor de product_name es: ' + element.productName);
+                          if (element.partnerId != DEFAULT_PARTNER_ID) {
+                            cart.remove(element);
+                          }
+                        });
+                      }
+                      debugPrint ('Despues de terminar de responder la API.');
                     }
-                    debugPrint ('Despues de terminar de responder la API.');
+                    Navigator.pop(context);
+                  } catch (err) {
+                    Navigator.pop(context);
                   }
-                  Navigator.pop(context);
-                } catch (err) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            Divider(),
-          ],
-        ),
-      );
+                },
+              ),
+              Divider(),
+            ],
+          ),
+        );
+      } else {
+        // BUYER, PRO_DELIBERY, KRR_DELIBERY
+        return new MenuView (
+          child: ListView (
+            padding: EdgeInsets.zero,
+            children: [
+              ListTile (
+                title: SafeArea (
+                  child: Text (
+                      name,
+                      style: TextStyle (
+                          fontSize: 24.0,
+                          color: tanteLadenIconBrown,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.bold
+                      )
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton(
+                  icon: Image.asset ('assets/images/logoPersonalData.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Datos personales',
+                  style: TextStyle(
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => PersonalData(_token)
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                    icon: Image.asset ('assets/images/logoDirections.png'),
+                    onPressed: null
+                ),
+                title: Text (
+                  'Direcciones',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Map<String, dynamic> payload;
+                  payload = json.decode(
+                      utf8.decode(
+                          base64.decode (base64.normalize(_token.split(".")[1]))
+                      )
+                  );
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => ManageAddresses(payload['persone_id'].toString(), payload['user_id'].toString())
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoPaymentMethod1.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Métodos de pago',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoMyPurchases.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Mis pedidos',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Map<String, dynamic> payload;
+                  payload = json.decode(
+                      utf8.decode(
+                          base64.decode (base64.normalize(_token.split(".")[1]))
+                      )
+                  );
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => PurchaseView(payload['user_id'], payload['partner_id'], payload['role'])
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset('assets/images/logoUpCatalog.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Catalogo',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => CatalogManagement()
+                  ));
+                },
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoHelp.png'),
+                  onPressed: null,
+                ),
+                title: Text(
+                  'Ayuda',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoInformation.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Información',
+                  style: TextStyle(
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+              ),
+              Divider(),
+              ListTile (
+                leading: IconButton (
+                  icon: Image.asset ('assets/images/logoExit.png'),
+                  onPressed: null,
+                ),
+                title: Text (
+                  'Salir',
+                  style: TextStyle (
+                      fontFamily: 'SF Pro Display',
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal
+                  ),
+                ),
+                onTap: () async {
+                  try {
+                    debugPrint('Estoy en el salir.');
+                    //debugPrint('Después de watch y read.');
+                    final SharedPreferences prefs = await _prefs;
+                    prefs.setString ('token', '');
+                    final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
+                    final http.Response resProducts = await http.get (
+                        url,
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                          //'Authorization': jwt
+                        }
+                    );
+                    debugPrint('After the http call.');
+                    if (resProducts.statusCode == 200) {
+                      debugPrint ('The Rest API has responsed.');
+                      final List<Map<String, dynamic>> resultListJson = json.decode(resProducts.body)['products'].cast<Map<String, dynamic>>();
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
+                      final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
+                      int tmpProductCategoryIdPrevious;
+                      String tmpPersonNamePrevious;
+                      debugPrint ('Entre medias de la api RESPONSE.');
+                      //Provider.of<Catalog>(context, listen: false).clearCatalog();
+                      catalog.removeCatalog();
+                      resultListProducts.forEach((element) {
+                        //debugPrint ('El producto que cargo es: ' + element.productName);
+                        //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
+                        if (element.productCategoryId != tmpProductCategoryIdPrevious && element.personeName != tmpPersonNamePrevious && element.rn == 1) {
+                          // Change the productCategoryId and the rn = 1, so start a new MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          final item = new MultiPricesProductAvail(
+                              productId: element.productId,
+                              productCode: element.productCode,
+                              productName: element.productName,
+                              productNameLong: element.productNameLong,
+                              productDescription: element.productDescription,
+                              productType: element.productType,
+                              brand: element.brand,
+                              numImages: element.numImages,
+                              numVideos: element.numVideos,
+                              purchased: element.purchased,
+                              productPrice: element.productPrice,
+                              totalBeforeDiscount: element.totalBeforeDiscount,
+                              taxAmount: element.taxAmount,
+                              personeId: element.personeId,
+                              personeName: element.personeName,
+                              businessName: element.businessName,
+                              email: element.email,
+                              taxId: element.taxId,
+                              taxApply: element.taxApply,
+                              productPriceDiscounted: element.productPriceDiscounted,
+                              totalAmount: element.totalAmount,
+                              discountAmount: element.discountAmount,
+                              idUnit: element.idUnit,
+                              remark: element.remark,
+                              minQuantitySell: element.minQuantitySell,
+                              partnerId: element.partnerId,
+                              partnerName: element.partnerName,
+                              quantityMinPrice: element.quantityMinPrice,
+                              quantityMaxPrice: element.quantityMaxPrice,
+                              productCategoryId: element.productCategoryId,
+                              rn: element.rn
+                          );
+                          resultListMultiPriceProducts.add(item);
+                          //Provider.of<Catalog>(context, listen: false).add(element);
+                        } else if (element.productCategoryId == tmpProductCategoryIdPrevious && element.personeName == tmpPersonNamePrevious && element.rn > 1) {
+                          // The same ProductCategoryId and the same PersoneName, so it is another price of the same MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          resultListMultiPriceProducts.last.add(element);
+                          //Provider.of<Catalog>(context, listen: false).addChildrenToFatherElement(tmpProductIdFather, element);
+                        } else {
+                          // We consider tis case imposible, but if it is, we consider it as a new MultiPriceProductAvail
+                          tmpProductCategoryIdPrevious = element.productCategoryId;
+                          tmpPersonNamePrevious = element.personeName;
+                          final item = new MultiPricesProductAvail(
+                              productId: element.productId,
+                              productCode: element.productCode,
+                              productName: element.productName,
+                              productNameLong: element.productNameLong,
+                              productDescription: element.productDescription,
+                              productType: element.productType,
+                              brand: element.brand,
+                              numImages: element.numImages,
+                              numVideos: element.numVideos,
+                              purchased: element.purchased,
+                              productPrice: element.productPrice,
+                              totalBeforeDiscount: element.totalBeforeDiscount,
+                              taxAmount: element.taxAmount,
+                              personeId: element.personeId,
+                              personeName: element.personeName,
+                              businessName: element.businessName,
+                              email: element.email,
+                              taxId: element.taxId,
+                              taxApply: element.taxApply,
+                              productPriceDiscounted: element.productPriceDiscounted,
+                              totalAmount: element.totalAmount,
+                              discountAmount: element.discountAmount,
+                              idUnit: element.idUnit,
+                              remark: element.remark,
+                              minQuantitySell: element.minQuantitySell,
+                              partnerId: element.partnerId,
+                              partnerName: element.partnerName,
+                              quantityMinPrice: element.quantityMinPrice,
+                              quantityMaxPrice: element.quantityMaxPrice,
+                              productCategoryId: element.productCategoryId,
+                              rn: element.rn
+                          );
+                          resultListMultiPriceProducts.add(item);
+                          //Provider.of<Catalog>(context, listen: false).add(element);
+                        }
+                      });
+                      resultListMultiPriceProducts.forEach((element) {
+                        Provider.of<Catalog>(context, listen: false).add(element);
+                      });
+                      debugPrint ('Antes de terminar de responder la API.');
+                      if (cart.numItems > 0) {
+                        //Add the elements which are in the cart to the catalog
+                        debugPrint('El numero de items es:' + cart.numItems.toString());
+                        cart.items.forEach((element) {
+                          debugPrint('El valor de product_name es: ' + element.productName);
+                          if (element.partnerId != DEFAULT_PARTNER_ID) {
+                            cart.remove(element);
+                          }
+                        });
+                      }
+                      debugPrint ('Despues de terminar de responder la API.');
+                    }
+                    Navigator.pop(context);
+                  } catch (err) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              Divider(),
+            ],
+          ),
+        );
+      }
     } else {
-      return new Drawer (
+      return new MenuView (
         child: ListView (
           padding: EdgeInsets.zero,
           children: [
@@ -760,7 +1100,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _showPleaseWait(true);
           final SharedPreferences prefs = await _prefs;
           final String token = prefs.get ('token') ?? '';
-          debugPrint ('el token es: ' + token);
+          debugPrint ('El token es: ' + token);
           if (token == '') {
             _isUserLogged = false;
             _name = '';
@@ -775,6 +1115,8 @@ class _MyHomePageState extends State<MyHomePage> {
             _token = token;
             _isUserLogged = true;
             _name = payload['user_firstname'] + ' ' + payload['user_lastname'];
+            _roleId = payload['rid'];
+            _role = payload['role'];
           }
           _showPleaseWait(false);
 
@@ -784,7 +1126,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
     );
-    return Scaffold(
+    return Scaffold (
       key: _scaffoldKey,
       appBar: AppBar (
         // Here we take the value from the MyHomePage object that was created by
@@ -837,7 +1179,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: Text(
                           cart.numItems.toString(),
                           style: TextStyle (
-                              fontWeight: FontWeight.normal,
+                              fontWeight: FontWeight.bold,
+                              backgroundColor: Colors.white,
                               fontSize: 10.0,
                               fontFamily: 'SF Pro Display',
                               fontStyle: FontStyle.normal,
@@ -848,7 +1191,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       Container(
                         child: IconButton(
                             icon: Image.asset('assets/images/shopping_cart.png'),
-                            onPressed: (){
+                            onPressed: () async {
                               Navigator.push(context, MaterialPageRoute(
                                   builder: (context) => CartView()
                               ));
@@ -1117,7 +1460,7 @@ class _SmallScreenState extends State<_SmallScreen> {
                                     children: [
                                       Container(
                                         child: Text (
-                                            'Unids. mín. venta: ' + catalog.items[index].minQuantitySell.toString() + ' ' + ((catalog.items[index].minQuantitySell > 1) ? catalog.items[index].idUnit.toString() + 's.' : catalog.items[index].idUnit.toString() + '.'),
+                                            'Unids. mín. venta: ' +  catalog.items[index].minQuantitySell.toString() + ' ' + ((catalog.items[index].minQuantitySell > 1) ? catalog.items[index].idUnit.toString() + 's.' : catalog.items[index].idUnit.toString() + '.'),
                                             style: TextStyle(
                                               fontWeight: FontWeight.w300,
                                               fontSize: 11.0,

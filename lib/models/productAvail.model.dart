@@ -44,7 +44,7 @@ class ProductAvail {
   final String brand;
   final int numImages;
   final int numVideos;
-  int purchased;
+  double purchased;
   final double productPrice;
   final double totalBeforeDiscount;
   final double taxAmount;
@@ -59,11 +59,11 @@ class ProductAvail {
   final int discountAmount;           // PRODUCT_PRICE - PRODUCT_PRICE_DISCOUNTED
   final String idUnit;
   final String remark;
-  final int minQuantitySell;
+  final double minQuantitySell;
   final int partnerId;
   final String partnerName;
-  final int quantityMinPrice;
-  final int quantityMaxPrice;
+  final double quantityMinPrice;
+  final double quantityMaxPrice;
   final int productCategoryId;
   final int rn;
 
@@ -91,7 +91,7 @@ class ProductAvail {
       brand: json['BRAND'] ?? '',
       numImages: int.parse((json['NUM_IMAGES'] ?? '0').toString()),
       numVideos: int.parse((json['NUM_VIDEOS'] ?? '0').toString()),
-      purchased: 0,
+      purchased: 0.0,
       productPrice: double.parse((json['PRODUCT_PRICE'] ?? '0').toString()),
       totalBeforeDiscount: double.parse((json['PRODUCT_PRICE'] ?? '0').toString()),
       taxAmount: double.parse((json['TAX_AMOUNT'] ?? '0').toString()),
@@ -106,11 +106,11 @@ class ProductAvail {
       discountAmount: int.parse((json['DISCOUNT_AMOUNT'] ?? '0').toString()),
       idUnit: json['ID_UNIT'] ?? '',
       remark: json['REMARK'] ?? '',
-      minQuantitySell: int.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString()),
+      minQuantitySell: double.parse((json['MIN_QUANTITY_SELL'] ?? '0').toString()),
       partnerId: int.parse((json['PARTNER_ID'] ?? '1').toString()),
       partnerName: json['PARTNER_NAME'] ?? '',
-      quantityMinPrice: int.parse((json['QUANTITY_MIN_PRICE'] ?? '0').toString()),
-      quantityMaxPrice: int.parse((json['QUANTITY_MAX_PRICE'] ?? '99999').toString()),
+      quantityMinPrice: double.parse((json['QUANTITY_MIN_PRICE'] ?? '0').toString()),
+      quantityMaxPrice: double.parse((json['QUANTITY_MAX_PRICE'] ?? '99999').toString()),
       productCategoryId: int.parse((json['PRODUCT_CATEGORY_ID'] ?? '0').toString()),
       rn: int.parse((json['RN'] ?? '1').toString()),
     );

@@ -29,7 +29,7 @@ class Catalog with ChangeNotifier {
         brand: item.brand,
         numImages: item.numImages,
         numVideos: item.numVideos,
-        purchased: 0,
+        purchased: 0.0,
         productPrice: item.productPrice,
         totalBeforeDiscount: item.totalBeforeDiscount,
         taxAmount: item.taxAmount,
