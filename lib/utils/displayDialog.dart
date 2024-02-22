@@ -148,7 +148,7 @@ class DisplayDialog {
       }
     );
   }
-  static Future<bool> displayDialogConfirmCancel (BuildContext context, Widget image, String title, String message) async {
+  static Future<bool?> displayDialogConfirmCancel (BuildContext context, Widget image, String title, String message) async {
     var heightScreen = MediaQuery.of(context).size.height;
     return await showDialog<bool>(
         context: context,

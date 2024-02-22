@@ -1,41 +1,38 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-
 import 'package:plataforma_compras/models/productAvail.model.dart';
 
 class MultiPricesProductAvail extends ProductAvail {
   MultiPricesProductAvail({
-    @required productId,
-    @required productCode,
-    @required productName,
-    @required productNameLong,
-    @required productDescription,
-    @required productType,
-    @required brand,
-    @required numImages,
-    @required numVideos,
-    @required purchased,
-    @required productPrice,
-    @required totalBeforeDiscount, // PRICE WITH TAX INCLUDED
-    @required taxAmount,
-    @required personeId,
-    @required personeName,
-    @required businessName,
-    @required email,
-    @required taxId,
-    @required taxApply,
-    @required productPriceDiscounted,
-    @required totalAmount,
-    @required discountAmount,
-    @required idUnit,
-    @required remark,
-    @required minQuantitySell,
-    @required partnerId,
-    @required partnerName,
-    @required quantityMinPrice,
-    @required quantityMaxPrice,
-    @required productCategoryId,
-    @required rn
+    required productId,
+    required productCode,
+    required productName,
+    required productNameLong,
+    required productDescription,
+    required productType,
+    required brand,
+    required numImages,
+    required numVideos,
+    required purchased,
+    required productPrice,
+    required totalBeforeDiscount, // PRICE WITH TAX INCLUDED
+    required taxAmount,
+    required personId,
+    required personName,
+    required businessName,
+    required email,
+    required taxId,
+    required taxApply,
+    required productPriceDiscounted,
+    required totalAmount,
+    required discountAmount,
+    required idUnit,
+    required remark,
+    required minQuantitySell,
+    required partnerId,
+    required partnerName,
+    required quantityMinPrice,
+    required quantityMaxPrice,
+    required productCategoryId,
+    required rn
   }): super (
     productId: productId,
     productCode: productCode,
@@ -50,8 +47,8 @@ class MultiPricesProductAvail extends ProductAvail {
     productPrice: productPrice,
     totalBeforeDiscount: totalBeforeDiscount,
     taxAmount: taxAmount,
-    personeId: personeId,
-    personeName: personeName,
+    personeId: personId,
+    personeName: personName,
     businessName: businessName,
     email: email,
     taxId: taxId,
@@ -87,9 +84,9 @@ class MultiPricesProductAvail extends ProductAvail {
         productPrice: double.parse(json['PRODUCT_PRICE'].toString()),
         totalBeforeDiscount: double.parse(json['TOTAL_BEFORE_DISCOUNT'].toString()),
         taxAmount: double.parse(json['TAX_AMOUNT'].toString()),
-        personeId: int.parse((json['PERSONE_ID'] ?? '0').toString()),
-        personeName: json['PERSONE_NAME'] ?? '',
-        businessName: json['BUSINESS_NAME'].toString() ?? '',
+        personId: int.parse((json['PERSONE_ID'] ?? '0').toString()),
+        personName: json['PERSONE_NAME'] ?? '',
+        businessName: json['BUSINESS_NAME'].toString() ,
         email: json['EMAIL'] ?? '',
         taxId: int.parse(json['TAX_ID'].toString()),
         taxApply: double.parse(json['TAX_APPLY'].toString()),
@@ -110,7 +107,7 @@ class MultiPricesProductAvail extends ProductAvail {
 
   final List<ProductAvail> _items = [];   // Save the registers which have the different prices depending the amount
   int _indexElementAmongQuantity = -1;    // Save the element according quantity. Default = -1. It is the father element
-  double totalAmountAccordingQuantity;    // Save the field totalAmount according the quantity of the product purchased
+  double totalAmountAccordingQuantity = 0;    // Save the field totalAmount according the quantity of the product purchased
 
   List<ProductAvail> get items => this._items;
 
@@ -172,7 +169,7 @@ class MultiPricesProductAvail extends ProductAvail {
     return this._indexElementAmongQuantity;
   }
   double getTotalAmountAccordingQuantity () {
-    double totalAmountAccordingQuantity;
+    double totalAmountAccordingQuantity = 0;
     if (this._items.length > 0) {
       // The product hast multi-prices according quantity
       //debugPrint ('Estoy en el totalAmountAccordingQuantity. Dentro de _items > 0');
@@ -202,7 +199,7 @@ class MultiPricesProductAvail extends ProductAvail {
     return totalAmountAccordingQuantity;
   }
   double productPriceDiscountedAccordingQuantity () {
-    double productPriceDiscountedAccordingQuantity;
+    double productPriceDiscountedAccordingQuantity = 0;
     if (this._items.length > 0) {
       // The product hast multi-prices according quantity
       if (this.purchased < this.quantityMaxPrice) {

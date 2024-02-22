@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 class _Comment {
-  String temporalComment;
+  late String temporalComment;
 }
 class AddComment extends StatefulWidget {
   final String comment;
@@ -33,6 +33,7 @@ class AddCommentState extends State<AddComment> {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreen (widget.comment, _commentOut),
+        mediumScreen: _MediumScreen (widget.comment, _commentOut),
         largeScreen: _LargeScreen (widget.comment, _commentOut),
       ),
     );
@@ -93,6 +94,64 @@ class _SmallScreenState extends State<_SmallScreen> {
           );
         },
       )
+    );
+  }
+}
+class _MediumScreen extends StatefulWidget {
+  final String comment;
+  final _Comment commentOut;
+  _MediumScreen(this.comment, this.commentOut);
+  @override
+  _MediumScreenState createState() {
+    return _MediumScreenState();
+  }
+}
+class _MediumScreenState extends State<_MediumScreen> {
+  final TextEditingController _textCommentIntroducedByUser = TextEditingController();
+  int _numCharacters = 0;
+  @override
+  void initState() {
+    super.initState();
+    _textCommentIntroducedByUser.text = widget.comment;
+    _numCharacters = _textCommentIntroducedByUser.text.length;
+    // Start listening to changes.
+    _textCommentIntroducedByUser.addListener(_textFieldContentProcessor);
+  }
+  void _textFieldContentProcessor() {
+    setState(() {
+      _numCharacters = _textCommentIntroducedByUser.text.length;
+    });
+    widget.commentOut.temporalComment = _textCommentIntroducedByUser.text;
+  }
+  @override
+  void dispose() {
+    _textCommentIntroducedByUser.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea (
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Container (
+              width: constraints.maxWidth,
+              height: constraints.maxHeight / 2,
+              padding: EdgeInsets.fromLTRB (24.0, 24.0, 24.0, 24.0),
+              child: TextField (
+                controller: _textCommentIntroducedByUser,
+                textInputAction: TextInputAction.newline,
+                keyboardType: TextInputType.multiline,
+                minLines: null,
+                maxLines: null,
+                expands: true,
+                decoration: InputDecoration (
+                  hintText: 'Introduce tu comentario',
+                  counterText: _numCharacters.toString() + ' caracteres',
+                ),
+              ),
+            );
+          },
+        )
     );
   }
 }

@@ -47,7 +47,7 @@ class _CartViewState extends State<CartView> {
             icon: Image.asset('assets/images/logoWhatsapp.png'),
             onPressed: () async {
               final SharedPreferences prefs = await _prefs;
-              final String token = prefs.get ('token') ?? "";
+              final String token = prefs.get ('token').toString();
               String fullName;
               if (token != "") {
                 Map<String, dynamic> payload;
@@ -79,6 +79,7 @@ class _CartViewState extends State<CartView> {
       ),
       body: ResponsiveWidget(
         smallScreen: _SmallScreen(),
+        mediumScreen: _MediumScreen(),
         largeScreen: _LargeScreen(),
       ),
       bottomNavigationBar: _BottonNavigatorBar(),
@@ -402,6 +403,321 @@ class _SmallScreenState extends State<_SmallScreen> {
   }
 }
 
+class _MediumScreen extends StatefulWidget {
+  _MediumScreenState createState() => _MediumScreenState();
+}
+class _MediumScreenState extends State<_MediumScreen> {
+  @override
+  Widget build(BuildContext context) {
+    var cart = context.watch<Cart>();
+    var catalog = context.read<Catalog>();
+    return SafeArea (
+      child: LayoutBuilder (
+          builder: (context, constraints) {
+            if (cart.numItems > 0) {
+              return ListView.builder(
+                  itemCount: cart.numItems,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+                      decoration: BoxDecoration(
+                          border: Border (
+                              bottom: BorderSide(
+                                color: tanteLadenBrown500,
+                                width: 1.0,
+                                style: BorderStyle.solid,
+                              )
+                          )
+                      ),
+                      child: Row (
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                              flex: 1,
+                              child: Container(
+                                padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
+                                child: AspectRatio(
+                                  aspectRatio: 3.0 / 2.0,
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => CircularProgressIndicator(),
+                                    //imageUrl: SERVER_IP + '/image/products/burger_king.png',
+                                    imageUrl: SERVER_IP + IMAGES_DIRECTORY + cart.getItem(index).productCode.toString() + '_0.gif',
+                                    fit: BoxFit.scaleDown,
+                                    errorWidget: (context, url, error) => Icon(Icons.error),
+                                  ),
+                                ),
+                              )
+                          ),
+                          Expanded(
+                              flex: 2,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 15.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      cart.getItem(index).productName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16.0,
+                                        fontFamily: 'SF Pro Display',
+                                        fontStyle: FontStyle.normal,
+                                        color: Colors.black,
+                                      ),
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 3,
+                                      softWrap: false,
+                                    ),
+                                    SizedBox(height: 2.0,),
+                                    Text(
+                                      cart.getItem(index).businessName,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: 12.0,
+                                        fontFamily: 'SF Pro Display',
+                                        fontStyle: FontStyle.normal,
+                                        color: Colors.black,
+                                      ),
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: false,
+                                    ),
+                                    SizedBox(height: 2.0),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          child: Text(
+                                              'Unids. mínim. venta: ' + cart.getItem(index).minQuantitySell.toString() + ' ' + ((cart.getItem(index).minQuantitySell > 1) ? cart.getItem(index).idUnit.toString() + 's.' : cart.getItem(index).idUnit.toString() + '.'),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w300,
+                                                fontSize: 10.0,
+                                                fontFamily: 'SF Pro Display',
+                                                fontStyle: FontStyle.normal,
+                                                color: Color(0xFF6C6D77),
+                                              ),
+                                              textAlign: TextAlign.start
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    //SizedBox(height: 2.0),
+                                    Container(
+                                      child: Row (
+                                        children: [
+                                          Text (
+                                            new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format((cart.getItem(index).totalAmountAccordingQuantity/MULTIPLYING_FACTOR)),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 16.0,
+                                              fontFamily: 'SF Pro Display',
+                                              fontStyle: FontStyle.italic,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                            softWrap: false,
+                                          ),
+                                          Text (
+                                            '/' + cart.getItem(index).idUnit + '.',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 16.0,
+                                              fontFamily: 'SF Pro Display',
+                                              fontStyle: FontStyle.italic,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                          cart.getItem(index).quantityMaxPrice != 999999 ? IconButton (
+                                            icon: Image.asset (
+                                              'assets/images/logoInfo.png',
+                                              //fit: BoxFit.fill,
+                                              width: 20.0,
+                                              height: 20.0,
+                                            ),
+                                            iconSize: 20.0,
+                                            onPressed: () {
+                                              final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                              if (cart.getItem(index).quantityMaxPrice != 999999) {
+                                                // There is multiprice for this product
+                                                final item = new MultiPriceListElement(cart.getItem(index).quantityMinPrice, cart.getItem(index).quantityMaxPrice, cart.getItem(index).totalAmount);
+                                                listMultiPriceListElement.add(item);
+                                                cart.getItem(index).items.where((element) => element.partnerId != 1)
+                                                    .forEach((element) {
+                                                  final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                                  listMultiPriceListElement.add(item);
+                                                });
+                                              }
+                                              DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                            },
+                                          ) : Container()
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                          ),
+                          Expanded(
+                              flex: 1,
+                              child: Container(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        child: Text(
+                                          (cart.getItem(index).purchased > 1) ? cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + 's.' : cart.getItem(index).purchased.toString() + ' ' + cart.getItem(index).idUnit + '.',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 24.0,
+                                            fontFamily: 'SF Pro Display',
+                                            fontStyle: FontStyle.normal,
+                                            color: tanteLadenIconBrown,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      SizedBox(height: 5.0,),
+                                      Container(
+                                        child: Row (
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Visibility(
+                                                visible: (cart.getItem(index).purchased > 1) ? true : false,
+                                                child: TextButton(
+                                                  child: Container (
+                                                      alignment: Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.rectangle,
+                                                        borderRadius: BorderRadius.circular(18.0),
+                                                        color: tanteLadenAmber500,
+                                                      ),
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                      child: Text(
+                                                        '-',
+                                                        style: TextStyle(
+                                                            fontFamily: 'SF Pro Display',
+                                                            fontSize: 24,
+                                                            fontWeight: FontWeight.w900,
+                                                            color: tanteLadenIconBrown
+                                                        ),
+                                                      )
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      catalog.remove(cart.getItem(index));
+                                                      cart.remove(cart.getItem(index));
+                                                    });
+                                                  },
+                                                ),
+                                                replacement: TextButton(
+                                                  child: Container (
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.rectangle,
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      color: tanteLadenAmber500,
+                                                    ),
+                                                    padding: EdgeInsets.zero,
+                                                    child: IconButton(
+                                                      icon: Image.asset(
+                                                        'assets/images/logoDelete.png',
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      onPressed: null,
+                                                      iconSize: 20.0,
+                                                      padding: EdgeInsets.zero,
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      catalog.remove (cart.getItem(index));
+                                                      cart.remove (cart.getItem(index));
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              flex: 3,
+                                            ),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              flex: 1,
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: TextButton(
+                                                child: Container (
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius: BorderRadius.circular(18.0),
+                                                    //color: colorFondo,
+                                                    color: tanteLadenAmber500,
+                                                  ),
+                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  child: Text (
+                                                    '+',
+                                                    style: TextStyle (
+                                                      fontFamily: 'SF Pro Display',
+                                                      fontSize: 24,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: tanteLadenIconBrown,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    catalog.add(cart.getItem(index));
+                                                    cart.add(cart.getItem(index));
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                              )
+                          )
+                        ],
+                      ),
+                    );
+                  }
+              );
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/images/emptyCart.png'),
+                    Text(
+                      'Aún no has añadido productos a tu carro',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
+      ),
+    );
+  }
+}
 class _LargeScreen extends StatefulWidget {
   _LargeScreenState createState() => _LargeScreenState();
 }
@@ -865,7 +1181,7 @@ class _BottonNavigatorBarState extends State<_BottonNavigatorBar> {
                                       debugPrint ('Comienzo el tramitar pedido');
                                       _showPleaseWait(true);
                                       final SharedPreferences prefs = await _prefs;
-                                      final String token = prefs.get ('token') ?? '';
+                                      final String token = prefs.get ('token').toString();
                                       debugPrint ('el token es: ' + token);
                                       _showPleaseWait(false);
                                       if (token == '') {

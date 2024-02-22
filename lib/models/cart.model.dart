@@ -35,8 +35,8 @@ class Cart with ChangeNotifier {
         productPrice: item.productPrice,
         totalBeforeDiscount: item.totalBeforeDiscount,
         taxAmount: item.taxAmount,
-        personeId: item.productId,
-        personeName: item.personeName,
+        personId: item.productId,
+        personName: item.personeName,
         businessName: item.businessName,
         email: item.email,
         taxId: item.taxId,
@@ -66,7 +66,7 @@ class Cart with ChangeNotifier {
   }
   void remove (MultiPricesProductAvail item) {
     bool founded = false;
-    MultiPricesProductAvail tmpElement;
+    MultiPricesProductAvail? tmpElement;
     if (this._items.length > 0) {
       this._items.forEach((element) {
         if (element.productId == item.productId) {

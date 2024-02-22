@@ -1,14 +1,12 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 class PurchaseStatus {
   PurchaseStatus ({
-    @required this.destinationStateId,
-    @required this.statusName,
-    @required this.banPrice,
-    @required this.banQuantity,
-    @required this.priority,
-    @required this.roleName
+    required this.destinationStateId,
+    required this.statusName,
+    required this.banPrice,
+    required this.banQuantity,
+    required this.priority,
+    required this.roleName
   });
   final String destinationStateId;
   final String statusName;

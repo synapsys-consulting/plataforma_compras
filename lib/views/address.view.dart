@@ -22,9 +22,9 @@ class AddressView extends StatefulWidget {
 class _AddressViewState extends State<AddressView> {
 
   final TextEditingController _searchController = TextEditingController();
-  Timer _throttle;
-  List<String> _placeList;
-  List<AddressGeoLocation> _addressList;
+  late Timer _throttle;
+  List<String> _placeList = [];
+  List<AddressGeoLocation> _addressList = [];
   bool _pleaseWait = false;
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
 
@@ -43,12 +43,12 @@ class _AddressViewState extends State<AddressView> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    if (_placeList != null) _placeList.clear();
-    if (_addressList != null) _addressList.clear();
+    _placeList.clear();
+    _addressList.clear();
     super.dispose();
   }
   _onSearchChanged() {
-    if (_throttle?.isActive ?? false) _throttle.cancel();
+    if (_throttle.isActive) _throttle.cancel();
     _throttle = Timer (const Duration(microseconds: 100), () {
       _getLocationResults(_searchController.text);
     });
@@ -181,7 +181,7 @@ class _AddressViewState extends State<AddressView> {
     if (status == 'OK') {
       final List<Map<String, dynamic>> results = response.data['results'].cast<Map<String, dynamic>>(); // Query returns the results
       final List<Map<String, dynamic>> addressComponents = results[0]['address_components'].cast<Map<String, dynamic>>(); // Take the first element [0] because is the most accurated result
-      for (var i = 0; i < addressComponents?.length; i++) {
+      for (var i = 0; i < addressComponents.length; i++) {
         debugPrint ('El valor de address_components es: ' + addressComponents[i]['types'][0] + '. Con valor: ' + addressComponents[i]['long_name']);
         if (addressComponents[i]['types'][0] == 'street_number') {
           address.streetNumber = addressComponents[i]['long_name'];
@@ -277,7 +277,7 @@ class _AddressViewState extends State<AddressView> {
               _showPleaseWait(true);
               final AddressGeoLocation address = await _determinePosition();
               _showPleaseWait(false);
-              debugPrint ('Antes del Push. Imprimo el valor de la ciudad: ' + address.locality);
+              debugPrint ('Antes del Push. Imprimo el valor de la ciudad: ');
               Navigator.push (
                   context,
                   MaterialPageRoute (
@@ -286,8 +286,8 @@ class _AddressViewState extends State<AddressView> {
               );
             } catch (err) {
               _showPleaseWait(false);
-              ShowSnackBar.showSnackBar(context, err);
-              debugPrint ('El error es: ' + err);
+              ShowSnackBar.showSnackBar(context, err.toString());
+              debugPrint ('El error es: ' + err.toString());
 
               //Navigator.push (
               //    context,
@@ -303,10 +303,10 @@ class _AddressViewState extends State<AddressView> {
     Widget buildStack = _pleaseWait
       ? Stack(key: ObjectKey("stack"), children: [_pleaseWaitWidget, builder])
       : Stack(key: ObjectKey("stack"), children: [builder]);
-    return (_placeList == null || _placeList?.length == 0) ?
+    return (_placeList.length == 0) ?
     buildStack:
     ListView.builder (
-        itemCount: _placeList?.length ?? 0,
+        itemCount: _placeList.length,
         itemBuilder: (BuildContext context, int index) => buildPlaceCard(context, index)
     );
   }
@@ -341,7 +341,7 @@ class _AddressViewState extends State<AddressView> {
 }
 
 class _AccentColorOverride extends StatelessWidget {
-  const _AccentColorOverride ({Key key, this.color, this.child})
+  const _AccentColorOverride ({Key? key, required this.color, required this.child})
       : super(key: key);
 
   final Color color;

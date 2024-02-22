@@ -11,13 +11,13 @@ import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 
 class _Phone {
-  String number;
+  late String number;
 }
 
 class AddPhone extends StatefulWidget {
   final String phoneNumber;
   final String userId;
-  AddPhone(this.phoneNumber, this.userId);
+  AddPhone (this.phoneNumber, this.userId);
   @override
   _AddPhoneState createState() {
     return _AddPhoneState();
@@ -28,7 +28,7 @@ class _AddPhoneState extends State<AddPhone> {
   _Phone _phoneOut = new _Phone();
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  String _phoneIn;  // Save the phone that come as the input parameter
+  late String _phoneIn;  // Save the phone that come as the input parameter
 
   _showPleaseWait(bool b) {
     setState(() {
@@ -94,7 +94,7 @@ class _AddPhoneState extends State<AddPhone> {
           } catch (e) {
             _showPleaseWait (false);
             debugPrint ('El error es: ' + e.toString());
-            ShowSnackBar.showSnackBar(context, e, error: true);
+            ShowSnackBar.showSnackBar (context, e.toString(), error: true);
           }
         },
       ),
@@ -131,6 +131,7 @@ class _AddPhoneState extends State<AddPhone> {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView (widget.phoneNumber, _phoneOut),
+        mediumScreen: _MediumScreenView (widget.phoneNumber, _phoneOut),
         largeScreen: _LargeScreenView (widget.phoneNumber, _phoneOut),
       ),
     );
@@ -146,6 +147,145 @@ class _SmallScreenView extends StatefulWidget {
   }
 }
 class _SmallScreenViewState extends State<_SmallScreenView> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _phoneNumberController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.phoneNumber == 'null') {  // True: The user has still a phone number. False: The user don't have a phone number yet.
+      _phoneNumberController.text = '';
+    } else {
+      _phoneNumberController.text = widget.phoneNumber;
+    }
+    widget.phoneOut.number = _phoneNumberController.text;
+    _phoneNumberController.addListener(_onPhoneNumberChanged);
+  }
+  _onPhoneNumberChanged() {
+    widget.phoneOut.number = _phoneNumberController.text;
+  }
+  @override
+  void dispose() {
+    _phoneNumberController.removeListener(_onPhoneNumberChanged);
+    _phoneNumberController.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea (
+        child: Center (
+          child: ListView (
+            padding: EdgeInsets.all(20.0),
+            children: <Widget>[
+              SizedBox (height: 30.0,),
+              Row (
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text (
+                      'Número de teléfono',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox (height: 15.0,),
+              Row (
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded (
+                    child: Text (
+                      'Sólo lo utilizaremos si necesitamos contactar contigo en relación a tu pedido.',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black54,
+                      ),
+                      textAlign: TextAlign.justify,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                ],
+              ),
+              SizedBox (height: 20.0,),
+              Form (
+                autovalidateMode: AutovalidateMode.always,
+                key: _formKey,
+                child: Column (
+                  children: [
+                    TextFormField (
+                      controller: _phoneNumberController,
+                      decoration: InputDecoration (
+                        labelText: 'Teléfono',
+                        labelStyle: TextStyle (
+                          color: tanteLadenIconBrown,
+                        ),
+                        suffixIcon: IconButton (
+                            icon: Icon(Icons.clear),
+                            onPressed: () {
+                              _phoneNumberController.clear();
+                            }
+                        ),
+                      ),
+                      validator: (String? value) {
+                        Pattern pattern = r"(^[0-9+]{9}$)";
+                        RegExp regexp = new RegExp (pattern.toString());
+                        if (!regexp.hasMatch(value!)) {
+                          return 'Introduce un teléfono válido';
+                        } else {
+                          return null;
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox (height: 30.0,),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text (
+                      'Se guardará este teléfono para futuros pedidos.',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black38,
+                      ),
+                      textAlign: TextAlign.justify,
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
+        )
+    );
+  }
+}
+class _MediumScreenView extends StatefulWidget {
+  final String phoneNumber;
+  final _Phone phoneOut;
+  _MediumScreenView (this.phoneNumber, this.phoneOut);
+  @override
+  _MediumScreenViewState createState() {
+    return _MediumScreenViewState();
+  }
+}
+class _MediumScreenViewState extends State<_MediumScreenView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _phoneNumberController = TextEditingController();
 
@@ -236,10 +376,10 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             }
                         ),
                       ),
-                      validator: (String value) {
+                      validator: (String? value) {
                         Pattern pattern = r"(^[0-9+]{9}$)";
-                        RegExp regexp = new RegExp(pattern);
-                        if (!regexp.hasMatch(value) || value == null) {
+                        RegExp regexp = new RegExp(pattern.toString());
+                        if (!regexp.hasMatch(value!)) {
                           return 'Introduce un teléfono válido';
                         } else {
                           return null;
@@ -380,10 +520,10 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                   }
                               ),
                             ),
-                            validator: (String value) {
+                            validator: (String? value) {
                               Pattern pattern = r"(^[0-9]{9}$)";
-                              RegExp regexp = new RegExp(pattern);
-                              if (!regexp.hasMatch(value) || value == null) {
+                              RegExp regexp = new RegExp(pattern.toString());
+                              if (!regexp.hasMatch(value!)) {
                                 return 'Introduce un teléfono válido';
                               } else {
                                 return null;

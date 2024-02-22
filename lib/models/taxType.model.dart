@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 
 class TaxType {
   TaxType({
-    @required this.taxType
+    required this.taxType
   });
   final String taxType;
   factory TaxType.fromJson (Map<String, dynamic> json) {

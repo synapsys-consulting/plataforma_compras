@@ -10,10 +10,10 @@ import 'package:plataforma_compras/utils/configuration.util.dart';
 import 'package:plataforma_compras/utils/responsiveWidget.dart';
 
 class _Name {
-  String name;
+  late String name;
 }
 class _Surname {
-  String surNames;
+  late String surNames;
 }
 class UpdateNameSurnameUser extends StatefulWidget {
   final String firstName;
@@ -31,8 +31,8 @@ class _UpdateNameSurnameUserState extends State<UpdateNameSurnameUser> {
   _Name _nameOut = new _Name();
   _Surname _surnameOut = new _Surname();
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
-  String _firstNameIn;  // Save the name that come as the input parameter
-  String _lastNameIn; // Save the surname that come as the input parameter
+  late String _firstNameIn;  // Save the name that come as the input parameter
+  late String _lastNameIn; // Save the surname that come as the input parameter
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   _showPleaseWait(bool b) {
@@ -96,7 +96,7 @@ class _UpdateNameSurnameUserState extends State<UpdateNameSurnameUser> {
           } catch (e) {
             _showPleaseWait (false);
             debugPrint ('El error es: ' + e.toString());
-            ShowSnackBar.showSnackBar(context, e, error: true);
+            ShowSnackBar.showSnackBar(context, e.toString(), error: true);
           }
         },
       ),
@@ -131,6 +131,7 @@ class _UpdateNameSurnameUserState extends State<UpdateNameSurnameUser> {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView (widget.firstName, widget.lastName, _nameOut, _surnameOut),
+        mediumScreen: _MediumScreenView(widget.firstName, widget.lastName, _nameOut, _surnameOut),
         largeScreen: _LargeScreenView (widget.firstName, widget.lastName, _nameOut, _surnameOut),
       ),
     );
@@ -231,7 +232,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 key: _formKey,
                 child: Column (
                   children: [
-                    TextFormField(
+                    TextFormField (
                       controller: _nameController,
                       decoration: InputDecoration (
                         labelText: 'Nombre',
@@ -245,8 +246,8 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             }
                         ),
                       ),
-                      validator: (String value) {
-                        if (value.isEmpty) {
+                      validator: (String? value) {
+                        if (value == null) {
                           return 'Introduce un nombre válido';
                         } else {
                           return null;
@@ -268,7 +269,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             }
                         ),
                       ),
-                      validator: (String value) {
+                      validator: (String? value) {
                         if (value == null) {
                           return 'Introduce apellidos válidos';
                         } else {
@@ -282,6 +283,155 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
           ],
         ),
       )
+    );
+  }
+}
+class _MediumScreenView extends StatefulWidget {
+  _MediumScreenView (this.name, this.surNames, this.nameOut, this.surnameOut);
+  final String name;
+  final String surNames;
+  final _Name nameOut;
+  final _Surname surnameOut;
+
+  @override
+  _MediumScreenViewState createState() {
+    return _MediumScreenViewState();
+  }
+}
+class _MediumScreenViewState extends State<_MediumScreenView> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _surNamesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.name == 'null') {
+      _nameController.text = '';
+    } else {
+      _nameController.text = widget.name;
+    }
+    if (widget.surNames == 'null') {
+      _surNamesController.text = '';
+    } else {
+      _surNamesController.text = widget.surNames;
+    }
+    widget.nameOut.name = _nameController.text;
+    widget.surnameOut.surNames = _surNamesController.text;
+    _nameController.addListener(_onNameChanged);
+    _surNamesController.addListener(_onSurnamesChanged);
+  }
+  _onNameChanged(){
+    debugPrint ('Antes de la asignación');
+    widget.nameOut.name = _nameController.text;
+    debugPrint ('Después de la asignación');
+  }
+  _onSurnamesChanged(){
+    widget.surnameOut.surNames = _surNamesController.text;
+  }
+  @override
+  void dispose() {
+    _nameController.removeListener(_onNameChanged);
+    _nameController.dispose();
+    _surNamesController.removeListener(_onSurnamesChanged);
+    _surNamesController.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: Center(
+          child: ListView(
+            padding: EdgeInsets.all(20.0),
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text (
+                      'Nombre',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox (height: 15.0),
+              Text(
+                'Indícanos tu nombre y apellidos para localizarte en relación a tu pedido.',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.normal,
+                  color: tanteLadenOnPrimary,
+                ),
+                textAlign: TextAlign.justify,
+                maxLines: 2,
+                softWrap: true,
+              ),
+              SizedBox(height: 20.0),
+              Form(
+                  autovalidateMode: AutovalidateMode.always,
+                  key: _formKey,
+                  child: Column (
+                    children: [
+                      TextFormField (
+                        controller: _nameController,
+                        decoration: InputDecoration (
+                          labelText: 'Nombre',
+                          labelStyle: TextStyle (
+                            color: tanteLadenIconBrown,
+                          ),
+                          suffixIcon: IconButton (
+                              icon: Icon(Icons.clear),
+                              onPressed: () {
+                                _nameController.clear();
+                              }
+                          ),
+                        ),
+                        validator: (String? value) {
+                          if (value == null) {
+                            return 'Introduce un nombre válido';
+                          } else {
+                            return null;
+                          }
+                        },
+                      ),
+                      SizedBox (height: 15.0,),
+                      TextFormField(
+                        controller: _surNamesController,
+                        decoration: InputDecoration (
+                          labelText: 'Apellidos',
+                          labelStyle: TextStyle (
+                            color: tanteLadenIconBrown,
+                          ),
+                          suffixIcon: IconButton (
+                              icon: Icon(Icons.clear),
+                              onPressed: () {
+                                _surNamesController.clear();
+                              }
+                          ),
+                        ),
+                        validator: (String? value) {
+                          if (value == null) {
+                            return 'Introduce apellidos válidos';
+                          } else {
+                            return null;
+                          }
+                        },
+                      ),
+                    ],
+                  )
+              ),
+            ],
+          ),
+        )
     );
   }
 }
@@ -399,8 +549,8 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                     }
                                 ),
                               ),
-                              validator: (String value) {
-                                if (value.isEmpty) {
+                              validator: (String? value) {
+                                if (value!.isEmpty) {
                                   return 'Introduce un nombre válido';
                                 } else {
                                   return null;
@@ -422,8 +572,8 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                     }
                                 ),
                               ),
-                              validator: (String value) {
-                                if (value == null) {
+                              validator: (String? value) {
+                                if (value!.isEmpty) {
                                   return 'Introduce apellidos válidos';
                                 } else {
                                   return null;

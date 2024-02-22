@@ -29,7 +29,7 @@ class AddressesList extends ChangeNotifier {
   }
   void remove (Address item) {
     bool founded = false;
-    int indexTmp;
+    int indexTmp = 0;
     if (this._items.length > 0) {
       for (int j = 0; j < this._items.length; j++) {
         if (this._items[j].addrId == item.addrId) {

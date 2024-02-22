@@ -1,37 +1,34 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-
 import 'package:plataforma_compras/models/purchaseStatus.model.dart';
 
 class PurchaseLine {
   PurchaseLine ({
-    @required this.orderId,
-    @required this.providerName,
-    @required this.productId,
-    @required this.productCode,
-    @required this.productName,
-    @required this.allStatus,
-    @required this.statusId,
-    @required this.numStatus,
-    @required this.banPrice,
-    @required this.banQuantity,
-    @required this.items,
-    @required this.idUnit,
-    @required this.newQuantity,
-    @required this.newProductPrice,
-    @required this.banOfficialPrice,
-    @required this.situation,
-    @required this.totalAmount,
-    @required this.taxAmount,
-    @required this.discountAmount,
-    @required this.productPriceFinal,
-    @required this.productPrice,
-    @required this.totalBeforeDiscountWithoutTax,
-    @required this.totalAfterDiscountWithoutTax,
-    @required this.orderDate,
-    @required this.remarkSeller,
-    @required this.remarkBuyer,
-    @required this.possibleStatusToTransitionTo
+    required this.orderId,
+    required this.providerName,
+    required this.productId,
+    required this.productCode,
+    required this.productName,
+    required this.allStatus,
+    required this.statusId,
+    required this.numStatus,
+    required this.banPrice,
+    required this.banQuantity,
+    required this.items,
+    required this.idUnit,
+    required this.newQuantity,
+    required this.newProductPrice,
+    required this.banOfficialPrice,
+    required this.situation,
+    required this.totalAmount,
+    required this.taxAmount,
+    required this.discountAmount,
+    required this.productPriceFinal,
+    required this.productPrice,
+    required this.totalBeforeDiscountWithoutTax,
+    required this.totalAfterDiscountWithoutTax,
+    required this.orderDate,
+    required this.remarkSeller,
+    required this.remarkBuyer,
+    required this.possibleStatusToTransitionTo
   });
   final int orderId;
   final String providerName;

@@ -9,7 +9,6 @@ import 'package:plataforma_compras/models/unitType.mode.dart';
 import 'package:plataforma_compras/models/taxType.model.dart';
 import 'package:plataforma_compras/models/provider.model.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
-import 'package:plataforma_compras/views/newProduct.view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:plataforma_compras/models/priceChangeType.dart';
 
@@ -21,11 +20,11 @@ class NewProductService {
     NewProductData temp = new NewProductData();
 
     final SharedPreferences prefs = await _prefs;
-    final String token = prefs.get ('token') ?? '';
+    final String? token = prefs.getString ('token') ?? '';
     Map<String, dynamic> payload;
     payload = json.decode(
         utf8.decode(
-            base64.decode (base64.normalize(token.split(".")[1]))
+            base64.decode (base64.normalize(token!.split(".")[1]))
         )
     );
     final String partnerId = payload['partner_id'].toString();
@@ -117,25 +116,25 @@ class NewProductService {
     return temp;
   }
   void saveProduct({
-    int categoryId,
-    String productName,
-    int minQuantitySell,
-    double productPrice,
-    PriceChangeType discountType,
-    double discountValue,
-    String taxType,
-    String idUnit,
-    int weeksWarning,
-    double quantityMinPrice,
-    double quantityMaxPrice,
-    String productType,
-    String personeName,
-    int partnerId,
-    String partnerName,
-    int userCreateId
+    required int categoryId,
+    required String productName,
+    required int minQuantitySell,
+    required double productPrice,
+    required PriceChangeType discountType,
+    required double discountValue,
+    required String taxType,
+    required String idUnit,
+    required int weeksWarning,
+    required double quantityMinPrice,
+    required double quantityMaxPrice,
+    required String productType,
+    required String personeName,
+    required int partnerId,
+    required String partnerName,
+    required int userCreateId
   }) async {
     final Uri url = Uri.parse('$SERVER_IP/saveNewProduct');
-    final http.Response res = await http.post (
+    await http.post (
         url,
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -161,5 +160,4 @@ class NewProductService {
         })
     ).timeout(TIMEOUT);
   }
-
 }

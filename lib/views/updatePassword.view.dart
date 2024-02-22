@@ -10,7 +10,7 @@ import 'package:plataforma_compras/utils/showSnackBar.dart';
 import 'package:plataforma_compras/utils/configuration.util.dart';
 
 class _Password {
-  String password;
+  late String password;
 }
 class UpdatePassword extends StatefulWidget {
   final int userId;
@@ -88,7 +88,7 @@ class UpdatePasswordState extends State<UpdatePassword> {
           } catch (e) {
             _showPleaseWait (false);
             debugPrint ('El error es: ' + e.toString());
-            ShowSnackBar.showSnackBar(context, e, error: true);
+            ShowSnackBar.showSnackBar(context, e.toString(), error: true);
           }
         },
       ),
@@ -124,6 +124,7 @@ class UpdatePasswordState extends State<UpdatePassword> {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView (widget.userId, _passwordOut),
+        mediumScreen: _MediumScreenView(widget.userId, _passwordOut),
         largeScreen: _LargeScreenView (widget.userId, _passwordOut),
       ),
     );
@@ -218,8 +219,118 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             }
                         ),
                       ),
-                      validator: (String value) {
-                        if (value.isEmpty) {
+                      validator: (String? value) {
+                        if (value!.isEmpty) {
+                          return 'Introduce una nueva contraseña.';
+                        } else {
+                          if (value.length < 5) {
+                            return 'La contraseña debe tener al menos 5 caracteres o números';
+                          } else {
+                            return null;
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                )
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+class _MediumScreenView extends StatefulWidget {
+  final int userId;
+  final _Password passwordOut;
+  _MediumScreenView (this.userId, this.passwordOut);
+  @override
+  _MediumScreenViewState createState() {
+    return _MediumScreenViewState();
+  }
+}
+class _MediumScreenViewState extends State<_MediumScreenView> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _newPasswordController = TextEditingController();
+  bool _passwordNoVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordNoVisible = true;
+    widget.passwordOut.password = _newPasswordController.text;
+    _newPasswordController.addListener(_onNewPasswordChanged);
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+  _onNewPasswordChanged() {
+    widget.passwordOut.password = _newPasswordController.text;
+  }
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Center (
+        child: ListView (
+          padding: EdgeInsets.all(20.0),
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text (
+                    'Cambio de contraseña',
+                    style: TextStyle (
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20.0,
+                      fontFamily: 'SF Pro Display',
+                      fontStyle: FontStyle.normal,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox (height: 15.0),
+            Text(
+              'Introduzca su nueva contraseña.',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.normal,
+                color: tanteLadenOnPrimary,
+              ),
+              textAlign: TextAlign.justify,
+              maxLines: 2,
+              softWrap: true,
+            ),
+            SizedBox (height: 20.0,),
+            Form(
+                autovalidateMode: AutovalidateMode.always,
+                key: _formKey,
+                child: Column (
+                  children: [
+                    TextFormField (
+                      controller: _newPasswordController,
+                      obscureText: _passwordNoVisible,
+                      decoration: InputDecoration (
+                        labelText: 'Nueva password',
+                        labelStyle: TextStyle (
+                          color: tanteLadenIconBrown,
+                        ),
+                        suffixIcon: IconButton (
+                            icon: Icon(_passwordNoVisible ? Icons.visibility_off : Icons.visibility),
+                            onPressed: () {
+                              setState(() {
+                                _passwordNoVisible = ! _passwordNoVisible;
+                              });
+                            }
+                        ),
+                      ),
+                      validator: (String? value) {
+                        if (value!.isEmpty) {
                           return 'Introduce una nueva contraseña.';
                         } else {
                           if (value.length < 5) {
@@ -333,8 +444,8 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                   }
                               ),
                             ),
-                            validator: (String value) {
-                              if (value.isEmpty) {
+                            validator: (String? value) {
+                              if (value!.isEmpty) {
                                 return 'Introduce una nueva contraseña.';
                               } else {
                                 if (value.length < 5) {

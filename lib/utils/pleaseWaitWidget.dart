@@ -4,7 +4,7 @@ import 'package:plataforma_compras/utils/colors.util.dart';
 
 class PleaseWaitWidget extends StatelessWidget {
   PleaseWaitWidget({
-    Key key,
+    required Key key,
   }) : super(key: key);
 
   // This widget is the root of your application.

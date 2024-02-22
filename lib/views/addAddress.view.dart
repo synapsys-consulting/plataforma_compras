@@ -38,6 +38,7 @@ class AddAddressView extends StatelessWidget {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView(personeId: this.personeId, userId: this.userId),
+        mediumScreen: _MediumScreenView(personeId: personeId, userId: userId),
         largeScreen: _LargeScreenView(personeId: this.personeId, userId: this.userId),
       ),
     );
@@ -46,7 +47,7 @@ class AddAddressView extends StatelessWidget {
 class _SmallScreenView extends StatelessWidget {
   final String personeId;
   final String userId;
-  _SmallScreenView ({@required this.personeId, @required this.userId});
+  _SmallScreenView ({required this.personeId, required this.userId});
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -143,10 +144,110 @@ class _SmallScreenView extends StatelessWidget {
     );
   }
 }
+class _MediumScreenView extends StatelessWidget {
+  final String personeId;
+  final String userId;
+  _MediumScreenView ({required this.personeId, required this.userId});
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding (
+        padding: const EdgeInsets.all(20.0),
+        child: Column (
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container (
+                child: Image.asset('assets/images/addressMessage.png')
+            ),
+            Text(
+              'Añade',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 24.0,
+                fontFamily: 'SF Pro Display',
+                fontStyle: FontStyle.normal,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              'tu dirección',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 24.0,
+                fontFamily: 'SF Pro Display',
+                fontStyle: FontStyle.normal,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 20.0,),
+            Text(
+              'Indícanos dónde quieres recibir tu pedido para continuar.',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 16.0,
+                fontFamily: 'SF Pro Display',
+                fontStyle: FontStyle.normal,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 40.0,),
+            Container(
+              child: GestureDetector (
+                onTap: () async {
+                  Navigator.push (
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AddressView(this.personeId, this.userId, COME_FROM_ANOTHER)
+                      )
+                  );
+                },
+                child: Container (
+                  height: 64.0,
+                  decoration: BoxDecoration (
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(8.0),
+                      gradient: LinearGradient(
+                          colors: <Color>[
+                            Color (0xFF833C26),
+                            //Color (0XFF863F25),
+                            //Color (0xFF8E4723),
+                            Color (0xFF9A541F),
+                            //Color (0xFFB16D1A),
+                            //Color (0xFFDE9C0D),
+                            Color (0xFFF9B806),
+                            Color (0XFFFFC107),
+                          ]
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black26,
+                            offset: Offset (5,5),
+                            blurRadius: 10
+                        )
+                      ]
+                  ),
+                  child: Center (
+                    child: const Text (
+                      'Añadir dirección',
+                      style: TextStyle(
+                          fontSize: 24.0,
+                          color: tanteLadenBackgroundWhite
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 class _LargeScreenView extends StatelessWidget {
   final String personeId;
   final String userId;
-  _LargeScreenView ({@required this.personeId, @required this.userId});
+  _LargeScreenView ({required this.personeId, required this.userId});
   @override
   Widget build(BuildContext context) {
     return Center(

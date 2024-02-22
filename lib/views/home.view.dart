@@ -29,7 +29,7 @@ import 'package:plataforma_compras/utils/displayDialog.dart';
 import 'package:plataforma_compras/utils/multiPriceListElement.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -48,16 +48,16 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  Future<List<MultiPricesProductAvail>> itemsProductsAvailable;
+  late Future<List<MultiPricesProductAvail>> itemsProductsAvailable;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool _isUserLogged = false;
-  String _name = '';
+  String _name = "";
   bool _pleaseWait = false;
-  String _token = '';
-  String _roleId = '';
-  String _role = '';
+  String _token = "";
+  String _roleId = "";
+  String _role = "";
 
   _showPleaseWait(bool b) {
     setState(() {
@@ -70,14 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
     // TODO: implement initState
     super.initState();
     _isUserLogged = false;
-    _name = '';
-    _token = '';
+    _name = "";
+    _token = "";
     itemsProductsAvailable = _getProductsAvailable();
   }
   // Private method which get the available products from the database
   Future<List<MultiPricesProductAvail>> _getProductsAvailable () async {
     final SharedPreferences prefs = await _prefs;
-    final String token = prefs.get ('token') ?? '';
+    final String token = prefs.get ('token').toString();
     if (token == '') {
       final Uri url = Uri.parse('$SERVER_IP/getProductsAvailWithOutPartnerId');
       debugPrint('La URL con la que llamo al inicio de todo es: ' + '$SERVER_IP/getProductsAvailWithOutPartnerId');
@@ -96,8 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
         debugPrint ('Entre medias de la api RESPONSE.');
         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
         final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-        int tmpProductCategoryIdPrevious;
-        String tmpPersonNamePrevious;
+        int tmpProductCategoryIdPrevious = -20; // -20 is a negative value to initialize this var
+        String tmpPersonNamePrevious = "";
         resultListProducts.forEach((element) {
           //debugPrint ('El producto que cargo es: ' + element.productName);
           //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
@@ -119,8 +119,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 productPrice: element.productPrice,
                 totalBeforeDiscount: element.totalBeforeDiscount,
                 taxAmount: element.taxAmount,
-                personeId: element.personeId,
-                personeName: element.personeName,
+                personId: element.personeId,
+                personName: element.personeName,
                 businessName: element.businessName,
                 email: element.email,
                 taxId: element.taxId,
@@ -164,8 +164,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 productPrice: element.productPrice,
                 totalBeforeDiscount: element.totalBeforeDiscount,
                 taxAmount: element.taxAmount,
-                personeId: element.personeId,
-                personeName: element.personeName,
+                personId: element.personeId,
+                personName: element.personeName,
                 businessName: element.businessName,
                 email: element.email,
                 taxId: element.taxId,
@@ -224,8 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
         debugPrint ('Aquí estoy yo');
         final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
         final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-        int tmpProductCategoryIdPrevious;
-        String tmpPersonNamePrevious;
+        int tmpProductCategoryIdPrevious = -20; // -20 is a negative value to initialize this var
+        String tmpPersonNamePrevious = "";
         resultListProducts.forEach((element) {
           //debugPrint ('El producto que cargo es: ' + element.productName);
           //debugPrint ('El producto_code que cargo es: ' + element.productCode.toString());
@@ -247,8 +247,8 @@ class _MyHomePageState extends State<MyHomePage> {
               productPrice: element.productPrice,
               totalBeforeDiscount: element.totalBeforeDiscount,
               taxAmount: element.taxAmount,
-              personeId: element.personeId,
-              personeName: element.personeName,
+              personId: element.personeId,
+              personName: element.personeName,
               businessName: element.businessName,
               email: element.email,
               taxId: element.taxId,
@@ -290,8 +290,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 productPrice: element.productPrice,
                 totalBeforeDiscount: element.totalBeforeDiscount,
                 taxAmount: element.taxAmount,
-                personeId: element.personeId,
-                personeName: element.personeName,
+                personId: element.personeId,
+                personName: element.personeName,
                 businessName: element.businessName,
                 email: element.email,
                 taxId: element.taxId,
@@ -522,8 +522,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       debugPrint ('Entre medias de la api RESPONSE.');
                       final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
                       final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-                      int tmpProductCategoryIdPrevious;
-                      String tmpPersonNamePrevious;
+                      int tmpProductCategoryIdPrevious = -20;   // -20 is a negative value to initialize this var
+                      String tmpPersonNamePrevious = "";
                       debugPrint ('Entre medias de la api RESPONSE.');
                       //Provider.of<Catalog>(context, listen: false).clearCatalog();
                       catalog.removeCatalog();
@@ -548,8 +548,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               productPrice: element.productPrice,
                               totalBeforeDiscount: element.totalBeforeDiscount,
                               taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
+                              personId: element.personeId,
+                              personName: element.personeName,
                               businessName: element.businessName,
                               email: element.email,
                               taxId: element.taxId,
@@ -593,8 +593,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               productPrice: element.productPrice,
                               totalBeforeDiscount: element.totalBeforeDiscount,
                               taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
+                              personId: element.personeId,
+                              personName: element.personeName,
                               businessName: element.businessName,
                               email: element.email,
                               taxId: element.taxId,
@@ -833,8 +833,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       debugPrint ('Entre medias de la api RESPONSE.');
                       final List<ProductAvail> resultListProducts = resultListJson.map<ProductAvail>((json) => ProductAvail.fromJson(json)).toList();
                       final List<MultiPricesProductAvail> resultListMultiPriceProducts = [];
-                      int tmpProductCategoryIdPrevious;
-                      String tmpPersonNamePrevious;
+                      int tmpProductCategoryIdPrevious = -20; // -20 is a negative value to initialize this var
+                      String tmpPersonNamePrevious = "";
                       debugPrint ('Entre medias de la api RESPONSE.');
                       //Provider.of<Catalog>(context, listen: false).clearCatalog();
                       catalog.removeCatalog();
@@ -859,8 +859,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               productPrice: element.productPrice,
                               totalBeforeDiscount: element.totalBeforeDiscount,
                               taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
+                              personId: element.personeId,
+                              personName: element.personeName,
                               businessName: element.businessName,
                               email: element.email,
                               taxId: element.taxId,
@@ -904,8 +904,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               productPrice: element.productPrice,
                               totalBeforeDiscount: element.totalBeforeDiscount,
                               taxAmount: element.taxAmount,
-                              personeId: element.personeId,
-                              personeName: element.personeName,
+                              personId: element.personeId,
+                              personName: element.personeName,
                               businessName: element.businessName,
                               email: element.email,
                               taxId: element.taxId,
@@ -1099,7 +1099,7 @@ class _MyHomePageState extends State<MyHomePage> {
         try {
           _showPleaseWait(true);
           final SharedPreferences prefs = await _prefs;
-          final String token = prefs.get ('token') ?? '';
+          final String token = prefs.get ('token').toString();
           debugPrint ('El token es: ' + token);
           if (token == '') {
             _isUserLogged = false;
@@ -1120,9 +1120,9 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           _showPleaseWait(false);
 
-          _scaffoldKey.currentState.openEndDrawer();
+          _scaffoldKey.currentState?.openEndDrawer();
         } catch (e) {
-          ShowSnackBar.showSnackBar(context, e, error: true);
+          ShowSnackBar.showSnackBar(context, e.toString(), error: true);
         }
       }
     );
@@ -1240,6 +1240,7 @@ class _MyHomePageState extends State<MyHomePage> {
               //final List<ProductAvail>listProductsAvail = snapshot.data;
               return new ResponsiveWidget(
                 largeScreen: _LargeScreen(),
+                mediumScreen: _MediumScreen(),
                 smallScreen: _SmallScreen(),
               );
             } else if (snapshot.hasError) {
@@ -1367,6 +1368,401 @@ class _SmallScreenState extends State<_SmallScreen> {
                                           ),
                                         )
                                       ]
+                                    ),
+                                    textAlign: TextAlign.start,
+                                  ),
+                                ),
+                                catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE ? Container (
+                                  padding: EdgeInsets.zero,
+                                  width: 20.0,
+                                  height: 20.0,
+                                  child: IconButton (
+                                    alignment: Alignment.centerRight,
+                                    padding: EdgeInsets.zero,
+                                    icon: Image.asset (
+                                      'assets/images/logoInfo.png',
+                                      //fit: BoxFit.fill,
+                                      width: 20.0,
+                                      height: 20.0,
+                                    ),
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      final List<MultiPriceListElement> listMultiPriceListElement = [];
+                                      if (catalog.items[index].quantityMaxPrice != QUANTITY_MAX_PRICE) {
+                                        // There is multiprice for this product
+                                        final item = new MultiPriceListElement(catalog.items[index].quantityMinPrice, catalog.items[index].quantityMaxPrice, catalog.items[index].totalAmount);
+                                        listMultiPriceListElement.add(item);
+                                        catalog.items[index].items.where((element) => element.partnerId != 1)
+                                            .forEach((element) {
+                                          final item = new MultiPriceListElement(element.quantityMinPrice, element.quantityMaxPrice, element.totalAmount);
+                                          listMultiPriceListElement.add(item);
+                                        });
+                                      }
+                                      DisplayDialog.displayInformationAsATable (context, 'Descuentos por cantidad comprada:', listMultiPriceListElement);
+                                    },
+                                  ),
+                                ) : Container()
+                              ],
+                            ),
+                          ),
+                          Row (
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container (
+                                padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                width: constraints.maxWidth,
+                                child: Text (
+                                  catalog.items[index].productName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14.0,
+                                    fontFamily: 'SF Pro Display',
+                                    fontStyle: FontStyle.normal,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                  overflow: TextOverflow.fade,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                              )
+                            ],
+                          ),
+                          Row (
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container (
+                                padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                                child: Text (
+                                  catalog.items[index].businessName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 12.0,
+                                    fontFamily: 'SF Pro Display',
+                                    fontStyle: FontStyle.normal,
+                                    color: Color(0xFF6C6D77),
+                                  ),
+                                  textAlign: TextAlign.start,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: false,
+                                ),
+                              )
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(15.0, 0.0, 15.0, 0.0),
+                            child: Visibility(
+                              visible : catalog.items[index].purchased == 0,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        child: Text (
+                                            'Unids. mín. venta: ' +  catalog.items[index].minQuantitySell.toString() + ' ' + ((catalog.items[index].minQuantitySell > 1) ? catalog.items[index].idUnit.toString() + 's.' : catalog.items[index].idUnit.toString() + '.'),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 11.0,
+                                              fontFamily: 'SF Pro Display',
+                                              fontStyle: FontStyle.normal,
+                                              color: Color(0xFF6C6D77),
+                                            ),
+                                            textAlign: TextAlign.start
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  TextButton (
+                                      onPressed: () {
+                                        setState(() {
+                                          catalog.add(catalog.getItem(index));
+                                          cart.add(catalog.getItem(index));
+                                        });
+                                      },
+                                      child: Container(
+                                        alignment: Alignment.centerLeft,
+                                        padding: EdgeInsets.all(2.0),
+                                        decoration: BoxDecoration (
+                                            shape: BoxShape.rectangle,
+                                            borderRadius: BorderRadius.circular(4.0),
+                                            color: tanteLadenBrown500,
+                                            gradient: LinearGradient(
+                                              colors: <Color>[
+                                                Color (0xFF833C26),
+                                                Color (0xFF9A541F),
+                                                Color (0xFFF9B806),
+                                                Color (0XFFFFC107),
+                                              ],
+                                            )
+                                        ),
+                                        child: Container(
+                                          //padding: EdgeInsets.all(3.0),
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                              shape: BoxShape.rectangle,
+                                              borderRadius: BorderRadius.circular(4.0),
+                                              //color: colorFondo,
+                                              color: tanteLadenBackgroundWhite
+                                          ),
+                                          child: Text (
+                                            'Añadir',
+                                            style: TextStyle (
+                                              fontFamily: 'SF Pro Display',
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.black,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          //height: 38,
+                                        ),
+                                        height: 40,
+                                      )
+                                  ),
+                                ],
+                              ),
+                              replacement: Container(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        child: Text(
+                                          (catalog.items[index].purchased > 1) ? catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + 's.' : catalog.items[index].purchased.toString() + ' ' + catalog.items[index].idUnit + '.',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 24.0,
+                                            fontFamily: 'SF Pro Display',
+                                            fontStyle: FontStyle.normal,
+                                            color: tanteLadenIconBrown,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      Container(
+                                        child: Row (
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Visibility(
+                                                visible: (catalog.items[index].purchased > 1) ? true : false,
+                                                child: TextButton(
+                                                  child: Container (
+                                                      alignment: Alignment.center,
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.rectangle,
+                                                        borderRadius: BorderRadius.circular(18.0),
+                                                        color: tanteLadenAmber500,
+                                                      ),
+                                                      padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                      child: Text(
+                                                        '-',
+                                                        style: TextStyle(
+                                                            fontFamily: 'SF Pro Display',
+                                                            fontSize: 24,
+                                                            fontWeight: FontWeight.w900,
+                                                            color: tanteLadenIconBrown
+                                                        ),
+                                                      )
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      if (catalog.items[index].purchased > 1) {
+                                                        cart.remove(catalog.items[index]);
+                                                        catalog.remove(catalog.items[index]);
+                                                      }
+                                                    });
+                                                  },
+                                                ),
+                                                replacement: TextButton(
+                                                  child: Container (
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.rectangle,
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      color: tanteLadenAmber500,
+                                                    ),
+                                                    padding: EdgeInsets.zero,
+                                                    child: IconButton(
+                                                      onPressed: null,
+                                                      icon: Image.asset(
+                                                        'assets/images/logoDeleteKlein.png',
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                      iconSize: 20.0,
+                                                      padding: EdgeInsets.all(8.0),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      cart.remove(catalog.items[index]);
+                                                      catalog.remove(catalog.items[index]);
+                                                    });
+                                                  },
+                                                ),
+                                              ),
+                                              flex: 3,
+                                            ),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: 10.0,
+                                              ),
+                                              flex: 1,
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: TextButton(
+                                                child: Container (
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius: BorderRadius.circular(18.0),
+                                                    //color: colorFondo,
+                                                    color: tanteLadenAmber500,
+                                                  ),
+                                                  padding: EdgeInsets.symmetric(vertical: 2.0),
+                                                  child: Text (
+                                                    '+',
+                                                    style: TextStyle (
+                                                      fontFamily: 'SF Pro Display',
+                                                      fontSize: 24,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: tanteLadenIconBrown,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    cart.add(catalog.items[index]);
+                                                    catalog.add(catalog.items[index]);
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              }
+          )
+      ),
+    );
+  }
+}
+class _MediumScreen extends StatefulWidget {
+  _MediumScreenState createState() => _MediumScreenState();
+}
+class _MediumScreenState extends State<_MediumScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    var catalog = context.watch<Catalog>();
+    var cart = context.read<Cart>();
+    return SafeArea (
+      child: Padding (
+          padding: const EdgeInsets.only(top: 5.0),
+          child: GridView.builder (
+              itemCount: catalog.numItems,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 200.0 / 303.0
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                return Card (
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 0,
+                  shape: ContinuousRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0)
+                  ),
+                  child: LayoutBuilder (
+                    builder: (context, constraints) {
+                      return Column (
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row (
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              GestureDetector (
+                                onTap: () {
+                                  Navigator.push (
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => ProductView(catalog.items[index])
+                                      )
+                                  );
+                                },
+                                child: Container(
+                                  //padding: EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 0.0),
+                                  alignment: Alignment.center,
+                                  width: constraints.maxWidth,
+                                  child: AspectRatio(
+                                    aspectRatio: 3.0 / 2.0,
+                                    child: CachedNetworkImage(
+                                      placeholder: (context, url) => CircularProgressIndicator(),
+                                      imageUrl: SERVER_IP + IMAGES_DIRECTORY + catalog.items[index].productCode.toString() + '_0.gif',
+                                      fit: BoxFit.scaleDown,
+                                      errorWidget: (context, url, error) => Icon(Icons.error),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                          Container (
+                            padding: const EdgeInsets.fromLTRB (15.0, 0.0, 0.0, 0.0),
+                            child: Row (
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Container (
+                                  child: Image.asset('assets/images/00001.png'),
+                                  padding: EdgeInsets.only(right: 8.0),
+                                ),
+                                Container (
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: Text.rich (
+                                    TextSpan (
+                                        text: new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmountAccordingQuantity/MULTIPLYING_FACTOR).toString())),
+                                        style: TextStyle (
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 24.0,
+                                          fontFamily: 'SF Pro Display',
+                                        ),
+                                        //textAlign: TextAlign.start
+                                        children: <TextSpan>[
+                                          TextSpan (
+                                            text: catalog.items[index].totalAmountAccordingQuantity == catalog.items[index].totalAmount
+                                                ? ''
+                                                : ' (' + new NumberFormat.currency (locale:'es_ES', symbol: '€', decimalDigits:2).format(double.parse((catalog.items[index].totalAmount/MULTIPLYING_FACTOR).toString())) + ')',
+                                            style: TextStyle (
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 11.0,
+                                              fontFamily: 'SF Pro Display',
+                                              color: Color(0xFF6C6D77),
+                                            ),
+                                          )
+                                        ]
                                     ),
                                     textAlign: TextAlign.start,
                                   ),

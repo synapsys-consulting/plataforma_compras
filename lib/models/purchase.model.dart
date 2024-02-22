@@ -1,28 +1,26 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import 'package:plataforma_compras/models/purchaseStatus.model.dart';
 
 class Purchase {
   Purchase ({
-    @required this.orderId,
-    @required this.providerName,
-    @required this.buyerName,
-    @required this.showName,
-    @required this.allStatus,
-    @required this.statusId,
-    @required this.numStatus,
-    @required this.items,
-    @required this.situation,
-    @required this.totalAmount,
-    @required this.taxAmount,
-    @required this.discountAmount,
-    @required this.productPriceFinal,
-    @required this.productPrice,
-    @required this.totalBeforeDiscountWithoutTax,
-    @required this.totalAfterDiscountWithoutTax,
-    @required this.orderDate,
-    @required this.possibleStatusToTransitionTo
+    required this.orderId,
+    required this.providerName,
+    required this.buyerName,
+    required this.showName,
+    required this.allStatus,
+    required this.statusId,
+    required this.numStatus,
+    required this.items,
+    required this.situation,
+    required this.totalAmount,
+    required this.taxAmount,
+    required this.discountAmount,
+    required this.productPriceFinal,
+    required this.productPrice,
+    required this.totalBeforeDiscountWithoutTax,
+    required this.totalAfterDiscountWithoutTax,
+    required this.orderDate,
+    required this.possibleStatusToTransitionTo
   });
   final int orderId;
   final String providerName;

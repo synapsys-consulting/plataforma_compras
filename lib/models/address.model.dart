@@ -1,20 +1,18 @@
-import 'package:flutter/cupertino.dart';
-
 class Address {
   Address ({
-    @required this.addrId,
-    @required this.streetName,
-    @required this.streetNumber,
-    @required this.flatDoor,
-    @required this.postalCode,
-    @required this.locality,
-    @required this.province,
-    @required this.country,
-    @required this.state,
-    @required this.optional,
-    @required this.district,
-    @required this.suburb,
-    @required this.statusId
+    required this.addrId,
+    required this.streetName,
+    required this.streetNumber,
+    required this.flatDoor,
+    required this.postalCode,
+    required this.locality,
+    required this.province,
+    required this.country,
+    required this.state,
+    required this.optional,
+    required this.district,
+    required this.suburb,
+    required this.statusId
   });
   int addrId;
   String streetName;

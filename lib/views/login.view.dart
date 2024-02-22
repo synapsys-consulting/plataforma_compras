@@ -34,6 +34,7 @@ class LoginView extends StatelessWidget {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView (this.reason),
+        mediumScreen: _MediumScreenView(this.reason),
         largeScreen: _LargeScreenView (this.reason),
       ),
     );
@@ -75,7 +76,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     final Widget tmpBuilder = Container (
       child: GestureDetector (
         onTap: () async {
-          if (_formKey.currentState.validate()) {
+          if (_formKey.currentState!.validate()) {
             try {
               _showPleaseWait(true);
               final Uri url = Uri.parse('$SERVER_IP/loginWithoutPass');
@@ -115,7 +116,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                 ShowSnackBar.showSnackBar (context, json.decode(res.body)['message'].toString());
               }
             } catch (e) {
-              ShowSnackBar.showSnackBar(context, e, error: true);
+              ShowSnackBar.showSnackBar(context, e.toString(), error: true);
             }
           }
         },
@@ -218,13 +219,13 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                         }
                       ),
                     ),
-                    validator: (String value) {
+                    validator: (String? value) {
                       Pattern pattern =
                           r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
                           r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
                           r"{0,253}[a-zA-Z0-9])?)*$";
-                      RegExp regexp = new RegExp(pattern);
-                      if (!regexp.hasMatch(value) || value == null) {
+                      RegExp regexp = new RegExp(pattern.toString());
+                      if (!regexp.hasMatch(value ?? "") || value == null) {
                         return 'Introduce un email válido';
                       } else {
                         return null;
@@ -248,7 +249,213 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
     );
   }
 }
+class _MediumScreenView extends StatefulWidget {
+  final int reason;           //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+  _MediumScreenView (this.reason);
+  @override
+  _MediumScreenViewState createState() {
+    return _MediumScreenViewState();
+  }
+}
+class _MediumScreenViewState extends State<_MediumScreenView> {
+  bool _pleaseWait = false;
+  final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _email = TextEditingController();
 
+  _showPleaseWait(bool b) {
+    setState(() {
+      _pleaseWait = b;
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+    _pleaseWait = false;
+  }
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    final Widget tmpBuilder = Container (
+      child: GestureDetector (
+        onTap: () async {
+          if (_formKey.currentState!.validate()) {
+            try {
+              _showPleaseWait(true);
+              final Uri url = Uri.parse('$SERVER_IP/loginWithoutPass');
+              final http.Response res = await http.post (
+                  url,
+                  headers: <String, String>{
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    //'Authorization': jwt
+                  },
+                  body: jsonEncode(<String, String>{
+                    'user_name': _email.text
+                  })
+              );
+              _showPleaseWait(false);
+              if (res.statusCode == 200) {
+                // Sign in
+                debugPrint ('El valor de _email.text es: ' + _email.text);
+                debugPrint ('El valor de res.body[user_name] es: ' + json.decode(res.body)['user_name'].toString());
+                Navigator.push (
+                    context,
+                    MaterialPageRoute (
+                        builder: (context) => (SigInView(_email.text, widget.reason))
+                    )
+                );
+              } else if (res.statusCode == 404) {
+                // Sign up
+                debugPrint ('El valor de _email.text es: ' + _email.text);
+                debugPrint ('El valor de res.body[user_name] es: ' + json.decode(res.body)['user_name'].toString());
+                Navigator.push (
+                    context,
+                    MaterialPageRoute (
+                        builder: (context) => (SignUpView(_email.text, widget.reason))  //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
+                    )
+                );
+              } else {
+                // Error
+                ShowSnackBar.showSnackBar (context, json.decode(res.body)['message'].toString());
+              }
+            } catch (e) {
+              ShowSnackBar.showSnackBar(context, e.toString(), error: true);
+            }
+          }
+        },
+        child: Container (
+          height: 64.0,
+          decoration: BoxDecoration (
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8.0),
+              gradient: LinearGradient(
+                  colors: <Color>[
+                    Color (0xFF833C26),
+                    //Color (0XFF863F25),
+                    //Color (0xFF8E4723),
+                    Color (0xFF9A541F),
+                    //Color (0xFFB16D1A),
+                    //Color (0xFFDE9C0D),
+                    Color (0xFFF9B806),
+                    Color (0XFFFFC107),
+                  ]
+              ),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black26,
+                    offset: Offset (5,5),
+                    blurRadius: 10
+                )
+              ]
+          ),
+          child: Center (
+            child: const Text (
+              'Entrar',
+              style: TextStyle(
+                  fontSize: 24.0,
+                  color: tanteLadenBackgroundWhite
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return SafeArea(
+        child: Center(
+          child: ListView(
+            padding: EdgeInsets.all(20.0),
+            children: <Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text (
+                      'Identifícate',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w900,
+                        fontSize: 36.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox (height: 30.0,),
+              Container (
+                padding: EdgeInsets.zero,
+                child: Center (
+                  child: Text (
+                      'Introduce tu email para continuar con tu pedido.',
+                      style: TextStyle (
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0,
+                        fontFamily: 'SF Pro Display',
+                        fontStyle: FontStyle.normal,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.justify,
+                      maxLines: 2,
+                      softWrap: true
+                  ),
+                ),
+              ),
+              SizedBox (height: 20.0,),
+              Form (
+                autovalidateMode: AutovalidateMode.always,
+                key: _formKey,
+                child: Column (
+                  children: [
+                    TextFormField(
+                      controller: _email,
+                      decoration: InputDecoration (
+                        labelText: 'Email',
+                        labelStyle: TextStyle (
+                          color: tanteLadenIconBrown,
+                        ),
+                        suffixIcon: IconButton (
+                            icon: Icon(Icons.clear),
+                            onPressed: () {
+                              _email.clear();
+                            }
+                        ),
+                      ),
+                      validator: (String? value) {
+                        Pattern pattern =
+                            r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                            r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                            r"{0,253}[a-zA-Z0-9])?)*$";
+                        RegExp regexp = new RegExp(pattern.toString());
+                        if (!regexp.hasMatch(value ?? "") || value == null) {
+                          return 'Introduce un email válido';
+                        } else {
+                          return null;
+                        }
+                      },
+                    ),
+                    SizedBox(height: 40.0,),
+                    _pleaseWait
+                        ? Stack (
+                      key:  ObjectKey("stack"),
+                      alignment: AlignmentDirectional.center,
+                      children: [tmpBuilder, _pleaseWaitWidget],
+                    )
+                        : Stack (key:  ObjectKey("stack"), children: [tmpBuilder],)
+                  ],
+                ),
+              )
+            ],
+          ),
+        )
+    );
+  }
+}
 class _LargeScreenView extends StatefulWidget {
   final int reason;           //  1 the call comes from the drawer. 2 the call comes from cart.view.dart
   _LargeScreenView (this.reason);
@@ -282,7 +489,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
     final Widget tmpBuilder = Container(
       child: GestureDetector (
         onTap: () async {
-          if (_formKey.currentState.validate()) {
+          if (_formKey.currentState!.validate()) {
             try {
               debugPrint ('El valor de _email.text es: ' + _email.text);
               _showPleaseWait(true);
@@ -321,7 +528,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                 ShowSnackBar.showSnackBar(context, json.decode(res.body)['message'].toString());
               }
             } catch (e) {
-              ShowSnackBar.showSnackBar(context, e, error: true);
+              ShowSnackBar.showSnackBar(context, e.toString(), error: true);
             }
           }
         },
@@ -440,13 +647,13 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                                       }
                                   ),
                                 ),
-                                validator: (String value) {
+                                validator: (String? value) {
                                   Pattern pattern =
                                       r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
                                       r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
                                       r"{0,253}[a-zA-Z0-9])?)*$";
-                                  RegExp regexp = new RegExp(pattern);
-                                  if (!regexp.hasMatch(value) || value == null) {
+                                  RegExp regexp = new RegExp(pattern.toString());
+                                  if (!regexp.hasMatch(value ?? "") || value == null) {
                                     return 'Introduce un email válido';
                                   } else {
                                     return null;

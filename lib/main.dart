@@ -13,7 +13,7 @@ import 'package:plataforma_compras/models/addressesList.model.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
-  HttpClient createHttpClient(SecurityContext context) {
+  HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
         //final isValidHost = host == "54.87.206.162";     // PRODUCTION
@@ -70,11 +70,11 @@ class MyApp extends StatelessWidget {
 
 final ThemeData _tanteLadenTheme = _buildTanteLadenTheme();
 
-ThemeData _buildTanteLadenTheme(){
+ThemeData _buildTanteLadenTheme() {
   final ThemeData base = ThemeData.from(
     colorScheme: ColorScheme.fromSwatch(
       primarySwatch: Colors.amber,
-      primaryColorDark: tanteLadenAmber500,
+      //primaryColorDark: tanteLadenAmber500,
       accentColor: tanteLadenOrange900,
       cardColor: tanteLadenBackgroundWhite,
       //backgroundColor: tanteLadenSurfaceWhite,
@@ -82,7 +82,7 @@ ThemeData _buildTanteLadenTheme(){
       errorColor: tanteLadenErrorRed
     ),
   );
-  return base.copyWith(
+  return base.copyWith (
     primaryColor: tanteLadenAmber500,
     primaryIconTheme: base.primaryIconTheme.copyWith(
       color: tanteLadenBrown500
@@ -103,6 +103,5 @@ ThemeData _buildTanteLadenTheme(){
       selectionColor: tanteLadenAmber100,
       selectionHandleColor: tanteLadenAmber100
     ),
-    errorColor: tanteLadenErrorRed,
   );
 }

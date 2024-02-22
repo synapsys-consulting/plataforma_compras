@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
 
 class ProductType {
   ProductType ({
-    @required this.productType
+    required this.productType
 });
   final String productType;
   factory ProductType.fromJson (Map<String, dynamic> json) {

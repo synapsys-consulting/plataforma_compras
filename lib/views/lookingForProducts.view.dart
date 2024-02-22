@@ -21,7 +21,7 @@ class LookingForProducts extends StatefulWidget {
 class _LookingForProductsState extends State<LookingForProducts> {
   final TextEditingController _searchController = TextEditingController();
   List<MultiPricesProductAvail> _productList = [];
-  Timer _throttle;
+  late Timer _throttle;
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    if (_productList != null) _productList.clear();
+    _productList.clear();
     super.dispose();
   }
   @override
@@ -452,7 +452,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
     );
   }
   _onSearchChanged() {
-    if (_throttle?.isActive ?? false) _throttle.cancel();
+    if (_throttle.isActive) _throttle.cancel();
     _throttle = Timer (const Duration(microseconds: 100), () {
       if (_searchController.text != '') {
         _getProductResults(_searchController.text);
@@ -480,8 +480,8 @@ class _LookingForProductsState extends State<LookingForProducts> {
           productPrice: catalog.getItem(i).productPrice,
           totalBeforeDiscount: catalog.getItem(i).totalBeforeDiscount,
           taxAmount: catalog.getItem(i).taxAmount,
-          personeId: catalog.getItem(i).personeId,
-          personeName: catalog.getItem(i).personeName,
+          personId: catalog.getItem(i).personeId,
+          personName: catalog.getItem(i).personeName,
           businessName: catalog.getItem(i).businessName,
           email: catalog.getItem(i).email,
           taxId: catalog.getItem(i).taxId,
@@ -514,7 +514,7 @@ class _LookingForProductsState extends State<LookingForProducts> {
 }
 
 class _AccentColorOverride extends StatelessWidget {
-  const _AccentColorOverride ({Key key, this.color, this.child})
+  const _AccentColorOverride ({Key? key, required this.color, required this.child})
       : super(key: key);
 
   final Color color;

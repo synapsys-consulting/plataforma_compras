@@ -16,7 +16,7 @@ import 'package:plataforma_compras/models/defaultAddressList.model.dart';
 import 'package:plataforma_compras/models/addressesList.model.dart';
 
 class DetailAddressView extends StatefulWidget {
-  DetailAddressView({Key key, @required this.address, @required this.personeId, @required this.userId, @required this.fromWhereCalledIs}) : super(key: key);
+  DetailAddressView({Key? key, required this.address, required this.personeId, required this.userId, required this.fromWhereCalledIs}) : super(key: key);
   final AddressGeoLocation address;
   final String personeId;
   final String userId;
@@ -27,7 +27,7 @@ class DetailAddressView extends StatefulWidget {
   }
 }
 class _DetailAddressViewState extends State<DetailAddressView> {
-  AddressGeoLocation _addressOut;
+  AddressGeoLocation _addressOut = new AddressGeoLocation();
   bool _pleaseWait = false;
   final PleaseWaitWidget _pleaseWaitWidget = PleaseWaitWidget(key: ObjectKey("pleaseWaitWidget"));
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
@@ -41,7 +41,6 @@ class _DetailAddressViewState extends State<DetailAddressView> {
   void initState() {
     super.initState();
     _pleaseWait = false;
-    _addressOut = new AddressGeoLocation();
   }
   @override
   void dispose() {
@@ -75,13 +74,13 @@ class _DetailAddressViewState extends State<DetailAddressView> {
                   //'Authorization': jwt
                 },
                 body: jsonEncode(<String, String>{
-                  'street_name': _addressOut.streetName,
-                  'street_number': _addressOut.streetNumber,
-                  'flat_door': _addressOut.flatDoor,
-                  'postal_code': _addressOut.postalCode,
-                  'locality': _addressOut.locality,
-                  'country': _addressOut.country,
-                  'optional': _addressOut.optional,
+                  'street_name': _addressOut.streetName ?? "",
+                  'street_number': _addressOut.streetNumber ?? "",
+                  'flat_door': _addressOut.flatDoor ?? "",
+                  'postal_code': _addressOut.postalCode ?? "",
+                  'locality': _addressOut.locality ?? "",
+                  'country': _addressOut.country ?? "",
+                  'optional': _addressOut.optional ?? "",
                   'persone_id': widget.personeId,
                   'user_id': widget.userId
                 })
@@ -91,7 +90,7 @@ class _DetailAddressViewState extends State<DetailAddressView> {
               final Address resultAddress = Address.fromJson(resultJson);
               final List<Address> resultListAddress = [resultAddress];
               final SharedPreferences prefs = await _prefs;
-              final String token = prefs.get ('token') ?? '';
+              final String token = prefs.get ('token').toString();
               Map<String, dynamic> payload;
               payload = json.decode(
                   utf8.decode(
@@ -127,7 +126,7 @@ class _DetailAddressViewState extends State<DetailAddressView> {
           } catch (e) {
             _showPleaseWait (false);
             debugPrint ('El error es: ' + e.toString());
-            ShowSnackBar.showSnackBar(context, e, error: true);
+            ShowSnackBar.showSnackBar(context, e.toString(), error: true);
           }
         },
       ),
@@ -163,13 +162,14 @@ class _DetailAddressViewState extends State<DetailAddressView> {
       ),
       body: ResponsiveWidget (
         smallScreen: _SmallScreenView (address: widget.address, personeId: widget.personeId, addressOut: _addressOut),
+        mediumScreen: _MediumScreenView(address: widget.address, personeId: widget.personeId, addressOut: _addressOut),
         largeScreen: _LargeScreenView (address: widget.address, personeId:  widget.personeId, addressOut: _addressOut),
       ),
     );
   }
 }
 class _SmallScreenView extends StatefulWidget {
-  _SmallScreenView ({Key key, @required this.address, @required this.personeId, @required this.addressOut}) : super(key: key);
+  _SmallScreenView ({Key? key, required this.address, required this.personeId, required this.addressOut}) : super(key: key);
   final AddressGeoLocation address;
   final String personeId;
   final AddressGeoLocation addressOut;
@@ -190,12 +190,12 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   @override
   void initState() {
     super.initState();
-    _streetNameController.text = widget.address.streetName;
-    _streetNumberController.text = widget.address.streetNumber;
-    _flatDoorController.text = widget.address.flatDoor;
-    _postalCodeController.text = widget.address.postalCode;
-    _localityController.text = widget.address.locality;
-    _countryController.text = widget.address.country;
+    _streetNameController.text = widget.address.streetName ?? "";
+    _streetNumberController.text = widget.address.streetNumber ?? "";
+    _flatDoorController.text = widget.address.flatDoor ?? "";
+    _postalCodeController.text = widget.address.postalCode ?? "";
+    _localityController.text = widget.address.locality ?? "";
+    _countryController.text = widget.address.country ?? "";
     widget.addressOut.streetName = widget.address.streetName;
     widget.addressOut.streetNumber = widget.address.streetNumber;
     widget.addressOut.flatDoor = widget.address.flatDoor;
@@ -271,7 +271,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                           ),
                         ),
                         controller: _streetNameController,
-                        validator: (String value) {
+                        validator: (String? value) {
                           if (value == null) {
                             return 'Introduce una calle';
                           } else {
@@ -291,7 +291,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             ),
                           ),
                           controller: _streetNumberController,
-                          validator: (String value) {
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un número';
                             } else {
@@ -327,7 +327,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             ),
                           ),
                           controller: _postalCodeController,
-                          validator: (String value) {
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un número postal';
                             } else {
@@ -363,7 +363,235 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
                             ),
                           ),
                           controller: _countryController,
-                          validator: (String value) {
+                          validator: (String? value) {
+                            if (value == null) {
+                              return 'Introduce un país';
+                            } else {
+                              return null;
+                            }
+                          },
+                        )
+                    )
+                  ],
+                ),
+                Row(
+                  children: [
+                    Flexible(
+                        flex: 1,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'Observaciones',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _optionalController,
+                        )
+                    )
+                  ],
+                )
+              ],
+            )
+        )
+    );
+  }
+}
+class _MediumScreenView extends StatefulWidget {
+  _MediumScreenView ({Key? key, required this.address, required this.personeId, required this.addressOut}) : super(key: key);
+  final AddressGeoLocation address;
+  final String personeId;
+  final AddressGeoLocation addressOut;
+
+  @override
+  _MediumScreenViewState createState() => _MediumScreenViewState();
+}
+class _MediumScreenViewState extends State<_MediumScreenView> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _streetNameController = TextEditingController();
+  final TextEditingController _streetNumberController = TextEditingController();
+  final TextEditingController _flatDoorController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
+  final TextEditingController _localityController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _optionalController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _streetNameController.text = widget.address.streetName ?? "";
+    _streetNumberController.text = widget.address.streetNumber ?? "";
+    _flatDoorController.text = widget.address.flatDoor ?? "";
+    _postalCodeController.text = widget.address.postalCode ?? "";
+    _localityController.text = widget.address.locality ?? "";
+    _countryController.text = widget.address.country ?? "";
+    widget.addressOut.streetName = widget.address.streetName;
+    widget.addressOut.streetNumber = widget.address.streetNumber;
+    widget.addressOut.flatDoor = widget.address.flatDoor;
+    widget.addressOut.postalCode = widget.address.postalCode;
+    widget.addressOut.locality = widget.address.locality;
+    widget.addressOut.country = widget.address.country;
+    _streetNameController.addListener (_onStreetNameChanged);
+    _streetNumberController.addListener(_onStreetNumberChanged);
+    _flatDoorController.addListener(_onFlatDoorChanged);
+    _postalCodeController.addListener(_onPostalCodeChanged);
+    _localityController.addListener(_onLocalityChanged);
+    _countryController.addListener(_onCountryChanged);
+    _optionalController.addListener(_onOptionalChanged);
+  }
+  @override
+  void dispose() {
+    _streetNameController.removeListener(_onStreetNameChanged);
+    _streetNameController.dispose();
+    _streetNumberController.removeListener(_onStreetNumberChanged);
+    _streetNumberController.dispose();
+    _flatDoorController.removeListener(_onFlatDoorChanged);
+    _flatDoorController.dispose();
+    _postalCodeController.removeListener(_onPostalCodeChanged);
+    _postalCodeController.dispose();
+    _localityController.removeListener(_onLocalityChanged);
+    _localityController.dispose();
+    _countryController.removeListener(_onCountryChanged);
+    _countryController.dispose();
+    _optionalController.removeListener(_onOptionalChanged);
+    _optionalController.dispose();
+    super.dispose();
+  }
+
+  _onStreetNameChanged(){
+    widget.addressOut.streetName = _streetNameController.text;
+  }
+  _onStreetNumberChanged(){
+    widget.addressOut.streetNumber = _streetNumberController.text;
+  }
+  _onFlatDoorChanged() {
+    widget.addressOut.flatDoor = _flatDoorController.text;
+  }
+  _onPostalCodeChanged() {
+    widget.addressOut.postalCode = _postalCodeController.text;
+  }
+  _onLocalityChanged() {
+    widget.addressOut.locality = _localityController.text;
+  }
+  _onCountryChanged() {
+    widget.addressOut.country = _countryController.text;
+  }
+  _onOptionalChanged() {
+    widget.addressOut.optional = _optionalController.text;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: Form(
+            key: _formKey,
+            child: ListView (
+              padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      flex: 3,
+                      child: TextFormField(
+                        decoration: const InputDecoration (
+                          labelText: 'Calle',
+                          labelStyle: TextStyle (
+                            color: tanteLadenIconBrown,
+                          ),
+                        ),
+                        controller: _streetNameController,
+                        validator: (String? value) {
+                          if (value == null) {
+                            return 'Introduce una calle';
+                          } else {
+                            return null;
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 15.0,),
+                    Flexible(
+                        flex: 1,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'Número',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _streetNumberController,
+                          validator: (String? value) {
+                            if (value == null) {
+                              return 'Introduce un número';
+                            } else {
+                              return null;
+                            }
+                          },
+                        )
+                    )
+                  ],
+                ),
+                Row(
+                  children: [
+                    Flexible (
+                        flex: 4,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'Piso, Puerta, ...',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _flatDoorController,
+                        )
+                    ),
+                    SizedBox(width: 15.0,),
+                    Flexible (
+                        flex: 2,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'Cód. Postal',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _postalCodeController,
+                          validator: (String? value) {
+                            if (value == null) {
+                              return 'Introduce un número postal';
+                            } else {
+                              return null;
+                            }
+                          },
+                        )
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Flexible(
+                        flex: 4,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'Ciudad',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _localityController,
+                        )
+                    ),
+                    SizedBox(width: 15.0,),
+                    Flexible(
+                        flex: 4,
+                        child: TextFormField (
+                          decoration: const InputDecoration (
+                            labelText: 'País',
+                            labelStyle: TextStyle (
+                              color: tanteLadenIconBrown,
+                            ),
+                          ),
+                          controller: _countryController,
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un país';
                             } else {
@@ -397,7 +625,7 @@ class _SmallScreenViewState extends State<_SmallScreenView> {
   }
 }
 class _LargeScreenView extends StatefulWidget {
-  _LargeScreenView ({Key key, @required this.address, @required this.personeId, @required this.addressOut}) : super(key: key);
+  _LargeScreenView ({Key? key, required this.address, required this.personeId, required this.addressOut}) : super(key: key);
   final AddressGeoLocation address;
   final String personeId;
   final AddressGeoLocation addressOut;
@@ -418,12 +646,12 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
   @override
   void initState() {
     super.initState();
-    _streetNameController.text = widget.address.streetName;
-    _streetNumberController.text = widget.address.streetNumber;
-    _flatDoorController.text = widget.address.flatDoor;
-    _postalCodeController.text = widget.address.postalCode;
-    _localityController.text = widget.address.locality;
-    _countryController.text = widget.address.country;
+    _streetNameController.text = widget.address.streetName ?? "";
+    _streetNumberController.text = widget.address.streetNumber ?? "";
+    _flatDoorController.text = widget.address.flatDoor ?? "";
+    _postalCodeController.text = widget.address.postalCode ?? "";
+    _localityController.text = widget.address.locality ?? "";
+    _countryController.text = widget.address.country ?? "";
     widget.addressOut.streetName = widget.address.streetName;
     widget.addressOut.streetNumber = widget.address.streetNumber;
     widget.addressOut.flatDoor = widget.address.flatDoor;
@@ -498,7 +726,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                           ),
                         ),
                         controller: _streetNameController,
-                        validator: (String value) {
+                        validator: (String? value) {
                           if (value == null) {
                             return 'Introduce una calle';
                           } else {
@@ -518,7 +746,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             ),
                           ),
                           controller: _streetNumberController,
-                          validator: (String value) {
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un número';
                             } else {
@@ -554,7 +782,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             ),
                           ),
                           controller: _postalCodeController,
-                          validator: (String value) {
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un número postal';
                             } else {
@@ -590,7 +818,7 @@ class _LargeScreenViewState extends State<_LargeScreenView> {
                             ),
                           ),
                           controller: _countryController,
-                          validator: (String value) {
+                          validator: (String? value) {
                             if (value == null) {
                               return 'Introduce un país';
                             } else {

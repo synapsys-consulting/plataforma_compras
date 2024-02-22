@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 
 class UnitType {
   final String idUnit;
   UnitType ({
-    @required this.idUnit
+    required this.idUnit
   });
   factory UnitType.fromJson (Map<String, dynamic> json) {
     return UnitType(
